@@ -59,8 +59,7 @@ npm install
 npm run dev                  # http://localhost:3000
 ```
 
-Admin console: `npm run dev` rồi vào **http://admin.localhost:3000**
-(thêm dòng `127.0.0.1 admin.localhost` vào `/etc/hosts` nếu cần; vite middleware route theo `Host: admin.*`).
+Admin console: `npm run dev` rồi vào **http://localhost:3000/admin** (Unified SPA, RBAC gate).
 
 Các biến trong `.env.local`:
 

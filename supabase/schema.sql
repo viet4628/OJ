@@ -350,6 +350,9 @@ CREATE TABLE IF NOT EXISTS public.contest_problems (
   PRIMARY KEY (contest_id, problem_id)
 );
 
+-- Upgrade existing installs: per-problem max score for OI contests
+ALTER TABLE public.contest_problems ADD COLUMN IF NOT EXISTS score INT DEFAULT 100 NOT NULL;
+
 ALTER TABLE public.contest_problems ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Contest problems viewable with contest" ON public.contest_problems;
@@ -669,7 +672,7 @@ BEGIN
     v_info := '{}'::jsonb;
 
     FOR v_entry IN
-      SELECT problem_id FROM public.contest_problems
+      SELECT problem_id, score FROM public.contest_problems
       WHERE contest_id = p_contest_id
       ORDER BY sort_order, problem_id
     LOOP
@@ -730,7 +733,7 @@ BEGIN
           AND s.problem_id = v_entry.problem_id
           AND NOT COALESCE(s.is_run, false);
 
-        v_tot_score := v_tot_score + v_best;
+        v_tot_score := v_tot_score + (v_best * COALESCE(v_entry.score, 100) / 100);
         v_tot_subs := v_tot_subs + v_sub_cnt;
         v_info := v_info || jsonb_build_object(
           v_entry.problem_id,

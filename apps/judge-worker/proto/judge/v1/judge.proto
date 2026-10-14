@@ -1,0 +1,174 @@
+// SPDX-License-Identifier: Apache-2.0
+
+syntax = "proto3";
+
+package judge.v1;
+
+import "google/protobuf/empty.proto";
+
+// The judging service definition.
+service JudgeService {
+  // Sends a self-test request.
+  rpc SelfTest(SelfTestRequest) returns (stream SelfTestResponse);
+  // Sends a judge request.
+  rpc Submit(SubmitRequest) returns (stream SubmitResponse);
+}
+
+// The request of self-test info, containing user's code and input.
+message SelfTestRequest {
+  // The language of the code.
+  Language language = 1;
+  // The code to be tested.
+  string code = 2;
+  // The input of the program.
+  string stdin = 3;
+}
+
+// The response message containing the self-test results.
+message SelfTestResponse {
+  // The type of the response.
+  oneof self_test_response_type {
+    // Message indicating start of compilation.
+    google.protobuf.Empty compile_start = 1;
+    // Message indicating the compile result.
+    CompileInfo compile_info = 2;
+    // Message indicating the self-test result.
+    SelfTestSummary summary = 3;
+  }
+}
+
+// Message indicating the compile result.
+message CompileInfo {
+  // Compiler exit status.
+  //
+  // 0 indicates the compiler exited normally.
+  // For interpreted languages, a non-zero exit status indicates semantic errors found in the code.
+  // For compiled languages, it means compilation errors.
+  int32 exit_status = 1;
+  // Compiler stdout.
+  string stdout = 2;
+  // Compiler stderr.
+  string stderr = 3;
+}
+
+// Message indicating the self-test result.
+message SelfTestSummary {
+  // The exit status of the user's program.
+  //
+  // 0 indicates the program exited normally.
+  int32 exit_status = 1;
+  // The stdout of the program.
+  string stdout = 2;
+  // The stderr of the program.
+  //
+  // This is not used by the judge system, but may be useful for debugging.
+  string stderr = 3;
+  // Execution time of the program, in ms. Unset if TLE and killed by judger.
+  optional int32 execution_time = 4;
+  // Memory usage of the program, in kiB. Unset if MLE and killed by judger.
+  optional int32 memory_usage = 5;
+}
+
+// The request containing the user's code and judge info.
+//
+// We only showed part of the fields.
+message SubmitRequest {
+  // The language of the code.
+  Language language = 1;
+  // The code to be judged.
+  string code = 2;
+  // The problem id.
+  int32 problem_id = 3;
+  // The cases id.
+  //
+  // If the test case is updated, the test case id MUST be changed, so that the judger can request the latest test case.
+  int32 cases_id = 4;
+}
+
+// The response message containing the judge results.
+message SubmitResponse {
+  // The type of the response.
+  oneof submit_response_type {
+    // Message indicating start of compilation.
+    google.protobuf.Empty compile_start = 1;
+    // Message indicating the compile result.
+    CompileInfo compile_info = 2;
+    // Message indicating the single case judge result.
+    //
+    // Case info may not be sent in order, so case id SHOULD be checked.
+    CaseInfo case_info = 3;
+    // Message indicating the judge result of all cases.
+    CasesSummary cases_summary = 4;
+  }
+}
+
+// Message indicating the single case judge result.
+message CaseInfo {
+  // The ID of the test case, usually starting from 1.
+  int32 case_id = 1;
+  // The exit status of the user's program.
+  int32 exit_status = 2;
+  // The judge result of the program.
+  JudgeResult result = 3;
+  // The score of the case.
+  int32 score = 4;
+  // Wall/CPU time used by the program, in milliseconds.
+  optional int32 time_ms = 5;
+  // Peak resident memory of the program, in KiB.
+  optional int32 memory_kib = 6;
+}
+
+// Message indicating the judge result of all cases.
+message CasesSummary {
+  // The judge result of the program.
+  JudgeResult result = 1;
+  // The score of the program.
+  int32 score = 2;
+  // Maximum time across cases, in milliseconds.
+  optional int32 max_time_ms = 3;
+  // Maximum memory across cases, in KiB.
+  optional int32 max_memory_kib = 4;
+}
+
+// The judge result.
+enum JudgeResult {
+  // The judge result is unspecified.
+  //
+  // This is considered error and SHOULD NOT happen.
+  JUDGE_RESULT_UNSPECIFIED = 0;
+  // The judge result is Accepted (AC).
+  JUDGE_RESULT_ACCEPTED = 1;
+  // The judge result is Compilation Error (CE).
+  JUDGE_RESULT_COMPILE_ERROR = 2;
+  // The judge result is Wrong Answer (WA).
+  JUDGE_RESULT_WRONG_ANSWER = 3;
+  // The judge result is Presentation Error (PE).
+  JUDGE_RESULT_PRESENTATION_ERROR = 4;
+  // The judge result is Runtime Error (RE).
+  JUDGE_RESULT_RUNTIME_ERROR = 5;
+  // The judge result is Time Limit Exceeded (TLE).
+  JUDGE_RESULT_TIME_LIMIT_EXCEEDED = 6;
+  // The judge result is Memory Limit Exceeded (MLE).
+  JUDGE_RESULT_MEMORY_LIMIT_EXCEEDED = 7;
+  // The judge result is Output Limit Exceeded (OLE).
+  JUDGE_RESULT_OUTPUT_LIMIT_EXCEEDED = 8;
+}
+
+// Represents a language supported by the judge system.
+message Language {
+  // The name of the language, should be identical to one of registered languages.
+  string name = 1;
+  // Additional configuration for the language.
+  map<string, ConfigType> configs = 4;
+}
+
+// Represents type of the configuration item.
+message ConfigType {
+  // The type of the configuration item.
+  oneof config_type {
+    // The configuration item is a boolean.
+    bool boolean = 1;
+    // The configuration item is an enum. The value must be one of the specified variants.
+    string enum = 2;
+  }
+}

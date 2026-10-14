@@ -42,6 +42,7 @@ export default function AdminContestsTab() {
   const [cpContest, setCpContest] = useState<Contest | null>(null);
   const [cpProblems, setCpProblems] = useState<Problem[]>([]);
   const [cpSelected, setCpSelected] = useState<string[]>([]);
+  const [cpScores, setCpScores] = useState<Record<string, number>>({});
   const [cpLoading, setCpLoading] = useState(false);
   const [cpSaving, setCpSaving] = useState(false);
   const [cpError, setCpError] = useState<string | null>(null);
@@ -58,6 +59,11 @@ export default function AdminContestsTab() {
     e.preventDefault();
     setContestSaving(true);
     setContestError(null);
+    if (new Date(contestForm.start_time) >= new Date(contestForm.end_time)) {
+      setContestSaving(false);
+      setContestError('Thời gian kết thúc phải sau thời gian bắt đầu');
+      return;
+    }
     const payload = {
       title: contestForm.title,
       description: contestForm.description,
@@ -111,10 +117,12 @@ export default function AdminContestsTab() {
     setCpError(null);
     setCpLoading(true);
     setCpSelected([]);
+    setCpScores({});
     try {
       const [all, current] = await Promise.all([getAllProblems(), getContestProblemsAdmin(c.id)]);
       setCpProblems(all);
       setCpSelected(current.map((r) => r.problem_id));
+      setCpScores(Object.fromEntries(current.map((r) => [r.problem_id, (r as any).score ?? 100])));
     } catch (err: any) {
       setCpError(err.message || 'Không tải được danh sách bài');
     } finally {
@@ -124,13 +132,17 @@ export default function AdminContestsTab() {
 
   const toggleCp = (id: string) => {
     setCpSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    setCpScores((prev) => (prev[id] ? prev : { ...prev, [id]: 100 }));
   };
 
   const saveCp = async () => {
     if (!cpContest) return;
     setCpSaving(true);
     setCpError(null);
-    const res = await setContestProblems(cpContest.id, cpSelected);
+    const res = await setContestProblems(
+      cpContest.id,
+      cpSelected.map((id) => ({ problem_id: id, score: cpScores[id] ?? 100 }))
+    );
     setCpSaving(false);
     if (!res.ok) {
       setCpError(res.error || 'Lưu thất bại');
@@ -361,6 +373,17 @@ export default function AdminContestsTab() {
                         <span className="text-[10px] font-black text-[var(--accent-text)] bg-[var(--accent)]/10 border border-[var(--accent)]/20 px-2 py-0.5 rounded font-code">
                           #{cpSelected.indexOf(p.id) + 1}
                         </span>
+                      )}
+                      {checked && (
+                        <label className="flex items-center gap-1 text-[10px] text-[var(--text-secondary)]">
+                          Điểm:
+                          <input
+                            type="number"
+                            value={cpScores[p.id] ?? 100}
+                            onChange={(e) => setCpScores((prev) => ({ ...prev, [p.id]: Number(e.target.value) || 100 }))}
+                            className="w-16 rounded border border-[var(--border)] bg-white px-1.5 py-0.5 text-[10px]"
+                          />
+                        </label>
                       )}
                     </label>
                   );

@@ -1,0 +1,33 @@
+// SPDX-License-Identifier: Apache-2.0
+
+syntax = "proto3";
+
+package cases.v1;
+
+// Fetch cases from backend server.
+service CasesService {
+  // Fetch cases from the backend server.
+  //
+  // Server should return cases in chunks. Each chunk should be less than 1 MiB.
+  //
+  // Server should return all chunks in order, or correctly cancel the stream.
+  //
+  // Server should also put a `cases_id` item in metadata.
+  rpc FetchCases(FetchCasesRequest) returns (stream FetchCasesResponse);
+}
+
+// Request to fetch cases from the backend server.
+message FetchCasesRequest {
+  // The id of the problem.
+  int32 problem_id = 1;
+}
+
+// Response to fetch cases from the backend server.
+message FetchCasesResponse {
+  // Chunk of the tarball, containing poblem config and cases.
+  //
+  // Chunk size should be less than 1 MiB.
+  //
+  // The tarball should be compressed in zstd.
+  bytes chunk = 1;
+}

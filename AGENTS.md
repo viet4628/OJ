@@ -13,7 +13,7 @@ CodeJudge VN is an automated distributed Online Judge platform inspired by SASTO
 
 | Component | Path | Tech Stack | Key Responsibilities |
 |:---|:---|:---|:---|
-| **Web Frontend** | `apps/web/` | React 18, Vite 5, TS, Tailwind v3, Monaco Editor | User portal (`index.html`) & Admin portal (`admin.html` via `admin.localhost`). |
+| **Web Frontend** | `apps/web/` | React 18, Vite 5, TS, Tailwind v3, Monaco Editor | Single SPA (`index.html`) with unified RBAC portals: `/teacher`, `/admin`. |
 | **Judge Worker** | `apps/judge-worker/` | Node.js 22, TypeScript, gRPC, Supabase Client | Daemon: Realtime + 2s polling, atomic claim, CasesProvider gRPC server (`:50052`). |
 | **Judging Engine** | `engine/rsjudge/` | Rust (Edition 2024), Tokio, Tonic gRPC, cgroups, rlimits | High-performance sandbox: compile & run code under `RLIMIT_*`, streaming testcase results. |
 | **Database & Auth** | `supabase/` | PostgreSQL 15, Supabase Auth, Realtime, RLS, Storage | Schema (`schema.sql`), testcases private bucket, RBAC (`user_permissions`), RPC functions. |
@@ -23,7 +23,7 @@ CodeJudge VN is an automated distributed Online Judge platform inspired by SASTO
 
 | Action | Command | Scope |
 |:---|:---|:---|
-| **Web Dev Server** | `npm --prefix apps/web run dev` | Starts Vite on `http://localhost:3000` (and `admin.localhost:3000`) |
+| **Web Dev Server** | `npm --prefix apps/web run dev` | Starts Vite on `http://localhost:3000` |
 | **Web Build** | `npm --prefix apps/web run build` | Strict TypeScript check (`tsc`) + Vite production bundle |
 | **Worker Dev Server** | `npm --prefix apps/judge-worker run dev` | Runs worker daemon with `tsx` |
 | **Worker Build** | `npm --prefix apps/judge-worker run build` | Compiles TypeScript daemon (`tsc`) |
@@ -56,11 +56,12 @@ CodeJudge VN is an automated distributed Online Judge platform inspired by SASTO
 - **Trial Runs (`is_run = true`)**: Custom test runs must set `is_run = true` so they never pollute ranklists, user stats, or submission history.
 
 ### 3. Frontend & UI Directives
-- **Dual-Entry Architecture**: Maintain dual-entry configuration in `apps/web/vite.config.ts` (`index.html` for user app, `admin.html` for admin console). Do not break `adminSubdomain()` middleware.
+- **Unified RBAC SPA**: Single entry `index.html`; admin/teacher portals are routes (`/admin`, `/teacher`) inside the main SPA, protected by `AdminGate`/RBAC. No domain/subdomain separation.
+- **Structure Review Before Growth**: Before major feature work, review folder/module layout against scalable standards; when the codebase is still small, refactor into a feature-based structure (`src/features/*`, shared `lib/`, `components/`) early to avoid large-scale churn later.
 - **Role & Portal Separation**:
   - User portal (`/`): Standard student learning, problem-solving, contests, and rankings.
-  - Teacher Workspace (`/teacher`): Dedicated educator workspace inside the main SPA React app (`TeacherPortal.tsx`). NEVER route teachers to `admin.html` or mix teacher routes into the admin bundle. Reuses problem/contest management components gated with granular permissions.
-  - Admin Console (`/admin` via `admin.html` / `admin.localhost`): Strictly restricted to `role === 'admin'`. Non-admins must be blocked by `AdminGate.tsx` and redirected away.
+  - Teacher Workspace (`/teacher`): Dedicated educator workspace inside the main SPA React app (`TeacherPortal.tsx`). NEVER route teachers to a separate admin bundle/domain. Reuses problem/contest management components gated with granular permissions.
+  - Admin Console (`/admin` route): Strictly restricted to `role === 'admin'` (RBAC). Non-admins must be blocked by `AdminGate.tsx` and redirected away (unified domain).
   - Clean Header Navbar: Top navigation header must NEVER contain cluttered portal switch buttons. Access to Teacher Workspace (`/teacher`) or Admin Console (`/admin`) must strictly reside inside the user avatar profile dropdown menu.
 - **Tailwind CSS v3**: Stick to Tailwind v3 conventions. Do not use unconfigured Tailwind v4 syntax.
 - **Monaco Editor Stability**: Handle editor lifecycle, cleanup listeners, and keep Monaco language mapping (`cpp`, `python`, `rust`, `java`) synchronized.

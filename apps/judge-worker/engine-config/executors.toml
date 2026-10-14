@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: Apache-2.0
+# Executors cho CodeJudge VN — tên ngôn ngữ khớp LANG_TO_ENGINE trong worker.
+
+[C]
+version = "$(gcc --version | head -n1)"
+exec_type = "binary"
+compile = "gcc {...flags} -fmax-errors=10 -lm -Wall -o {out_file} {src_file}"
+
+[C.options.O2]
+type = "bool"
+target = "flags"
+default = true
+enable = "-O2"
+
+["C++"]
+version = "$(g++ --version | head -n1)"
+exec_type = "binary"
+compile = "g++ {...flags} -fmax-errors=10 -lm -Wall -o {out_file} {src_file}"
+
+["C++".options.O2]
+type = "bool"
+target = "flags"
+default = true
+enable = "-O2"
+
+["C++".options.version]
+type = "enum"
+target = "flags"
+default = "C++17"
+
+["C++".options.version.variants]
+"C++14" = "-std=c++14"
+"C++17" = "-std=c++17"
+"C++20" = "-std=c++20"
+
+[Python]
+exec_type = "source_code"
+version = "$(python3 -V)"
+check = "python3 -m py_compile {src_file}"
+execute = "python3 -I -S {src_file}"
+
+[Rust]
+exec_type = "binary"
+version = "$(rustc --version)"
+compile = "rustc -O -o {out_file} {src_file}"
+

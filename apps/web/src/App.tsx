@@ -1,24 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import SearchModal from './components/SearchModal';
 import AuthModal from './components/AuthModal';
-import Home from './pages/user/Home';
-import Landing from './pages/user/Landing';
-import Problems from './pages/user/Problems';
-import ProblemDetail from './pages/user/ProblemDetail';
-import Submissions from './pages/user/Submissions';
-import Ranklist from './pages/user/Ranklist';
-import About from './pages/user/About';
-import Contests from './pages/user/Contests';
-import ContestDetail from './pages/user/ContestDetail';
-import ContestProblem from './pages/user/ContestProblem';
-import ResetPassword from './pages/user/ResetPassword';
-import UserHome from './pages/user/UserHome';
-import Settings from './pages/user/Settings';
-import Classes from './pages/user/Classes';
-import ClassDetail from './pages/user/ClassDetail';
-import TeacherPortal from './pages/teacher/TeacherPortal';
+import Home from './features/user/Home';
+import Landing from './features/user/Landing';
+import Problems from './features/user/Problems';
+import ProblemDetail from './features/user/ProblemDetail';
+import Submissions from './features/user/Submissions';
+import Ranklist from './features/user/Ranklist';
+import About from './features/user/About';
+import Contests from './features/user/Contests';
+import ContestDetail from './features/user/ContestDetail';
+import ContestProblem from './features/user/ContestProblem';
+import ResetPassword from './features/user/ResetPassword';
+import UserHome from './features/user/UserHome';
+import Settings from './features/user/Settings';
+import Classes from './features/user/Classes';
+import ClassDetail from './features/user/ClassDetail';
+import TeacherPortal from './features/teacher/TeacherPortal';
+const AdminGate = lazy(() => import('./features/admin/AdminGate'));
 import { supabase, getMySubmissionCount, type AppUser } from './lib/api';
 
 export default function App() {
@@ -31,6 +32,7 @@ export default function App() {
     Boolean(location.pathname.match(/^\/problems\/[^/]+$/)) ||
     Boolean(location.pathname.match(/^\/contests\/[^/]+\/problems\/[^/]+$/));
   const isLanding = location.pathname === '/' && !isAuthLoading && !user;
+  const isAdminArea = location.pathname === '/admin' || location.pathname.startsWith('/admin/');
 
   // Load current auth session from Supabase
   useEffect(() => {
@@ -96,7 +98,7 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-[var(--bg-primary)] text-[var(--text-primary)] antialiased font-sans">
       {/* Show global Header ONLY on standard pages. ProblemDetail has its own dedicated single top bar */}
-      {!isFullScreen && (
+      {!isFullScreen && !isAdminArea && (
         <Header
           onOpenSearch={() => setIsSearchOpen(true)}
           onOpenAuth={() => setIsAuthOpen(true)}
@@ -128,6 +130,13 @@ export default function App() {
             <Route path="/contests/:id/problems/:pid" element={<ContestProblem user={user} onOpenAuth={() => setIsAuthOpen(true)} />} />
           </Routes>
         </main>
+      ) : isAdminArea ? (
+        <main className="flex-1 w-full min-h-screen bg-[var(--bg-primary)] px-4 sm:px-6 lg:px-8 py-6">
+          <Routes>
+            <Route path="/admin" element={<Suspense fallback={<div className="text-xs text-[var(--text-secondary)]">Đang tải quản trị...</div>}><AdminGate /></Suspense>} />
+            <Route path="/admin/*" element={<Suspense fallback={<div className="text-xs text-[var(--text-secondary)]">Đang tải quản trị...</div>}><AdminGate /></Suspense>} />
+          </Routes>
+        </main>
       ) : (
         <>
           {!isLanding && !(isAuthLoading && location.pathname === '/') && (
@@ -154,7 +163,7 @@ export default function App() {
       )}
 
       {/* Footer — only show on standard pages */}
-      {!isFullScreen && !isLanding && (
+      {!isFullScreen && !isAdminArea && !isLanding && (
         <footer className="bg-white border-t border-[var(--border)] py-5 px-6 text-center text-xs text-[var(--text-secondary)]">
           <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">

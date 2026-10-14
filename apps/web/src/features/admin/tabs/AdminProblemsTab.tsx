@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   Sparkles,
   Edit,
+  Download,
   Trash2,
   Plus,
   X,
@@ -16,6 +17,7 @@ import {
   deleteTestcase,
   type Problem,
 } from '../../../lib/api';
+import { createZip, downloadBlob } from '../../../lib/zip';
 
 export interface ProblemForm {
   title: string;
@@ -480,6 +482,23 @@ export default function AdminProblemsTab({ mode, onModeChange }: AdminProblemsTa
                 />{' '}
                 Test mẫu
               </label>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!tcProblem || tcList.length === 0) return;
+                  const entries = tcList.flatMap((tc, idx) => {
+                    const n = String(idx).padStart(2, '0');
+                    return [
+                      { name: `input${n}.txt`, data: tc.input_content || '' },
+                      { name: `output${n}.txt`, data: tc.output_content || '' },
+                    ];
+                  });
+                  downloadBlob(createZip(entries), `${tcProblem.slug || 'problem'}-testcases.zip`, 'application/zip');
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] border border-[var(--border)] text-xs font-bold transition-colors cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" /> Tải ZIP (HackerRank)
+              </button>
               <button
                 onClick={handleAddTc}
                 className="ml-auto inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--text-primary)] font-bold text-xs transition-colors cursor-pointer"

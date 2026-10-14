@@ -248,13 +248,13 @@ export default function Header({ onOpenSearch, onOpenAuth, user, onLogout, isAut
                     )}
 
                     {user.role === 'admin' && (
-                      <a
-                        href="/admin"
+                      <Link
+                        to="/admin"
                         className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 font-bold transition-colors"
                       >
                         <ShieldCheck className="w-3.5 h-3.5" />
                         <span>Quản Trị Admin</span>
-                      </a>
+                      </Link>
                     )}
 
                     <Link
