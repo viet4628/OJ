@@ -1,0 +1,14 @@
+{
+  "name": "notary-online-judge",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix apps/web run dev",
+    "dev:web": "npm --prefix apps/web run dev",
+    "dev:worker": "npm --prefix apps/judge-worker run dev",
+    "build": "npm --prefix apps/web run build && npm --prefix apps/judge-worker run build",
+    "build:web": "npm --prefix apps/web run build",
+    "build:worker": "npm --prefix apps/judge-worker run build",
+    "clean": "rm -rf apps/web/node_modules apps/web/dist apps/judge-worker/node_modules apps/judge-worker/dist e2e/node_modules e2e/test-results"
+  }
+}

@@ -1,0 +1,41 @@
+# CodeJudge VN — Judge Worker + rsjudge engine (docker compose)
+# Usage:  SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... docker compose up -d --build
+services:
+  worker:
+    build:
+      context: .
+      dockerfile: apps/judge-worker/Dockerfile
+    container_name: notary-oj-worker
+    restart: unless-stopped
+    environment:
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      # Engine mode: judge qua rsjudge, testcase provider ở port 50052.
+      RSJUDGE_ENDPOINT: engine:50051
+      RSJUDGE_PROVIDER_BIND: 0.0.0.0:50052
+    ports:
+      - "50052:50052"
+    mem_limit: 1g
+    cpus: 2
+    pids_limit: 512
+    security_opt:
+      - seccomp=unconfined   # bwrap cần unshare; isolation chuyển xuống sandbox layer
+
+  engine:
+    build:
+      context: .
+      dockerfile: apps/judge-worker/Dockerfile
+    container_name: notary-oj-engine
+    restart: unless-stopped
+    command:
+      - rsjudge
+      - --config-dir
+      - /etc/rsjudge
+      - --cases-endpoint
+      - http://worker:50052
+    mem_limit: 2g
+    cpus: 2
+    pids_limit: 512
+
+# Ghi chú: chỉ nên chạy 1 instance worker / DB (claim chống trùng qua cập nhật
+# trạng thái PENDING->JUDGING). Muốn scale: tách queue PG notify/Redis trước.
