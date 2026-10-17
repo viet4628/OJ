@@ -152,7 +152,7 @@ export default function App() {
                 <Route path="/classes" element={<Classes user={user} onOpenAuth={() => setIsAuthOpen(true)} />} />
                 <Route path="/classes/:classId" element={<ClassDetail user={user} onOpenAuth={() => setIsAuthOpen(true)} />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/users/:id" element={<UserHome />} />
+                <Route path="/users/:id" element={<UserHome currentUser={user} />} />
                 <Route path="/settings" element={<Settings user={user} onOpenAuth={() => setIsAuthOpen(true)} onProfileSaved={() => void refreshUser()} />} />
                 <Route path="/teacher" element={<TeacherPortal user={user} onOpenAuth={() => setIsAuthOpen(true)} />} />
                 <Route path="/teacher/*" element={<TeacherPortal user={user} onOpenAuth={() => setIsAuthOpen(true)} />} />
@@ -162,15 +162,12 @@ export default function App() {
         </>
       )}
 
-      {/* Footer — only show on standard pages */}
+      {/* Footer — Minimal GitHub style */}
       {!isFullScreen && !isAdminArea && !isLanding && (
-        <footer className="bg-white border-t border-[var(--border)] py-5 px-6 text-center text-xs text-[var(--text-secondary)]">
-          <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-[var(--text-primary)]">CodeJudge VN</span>
-              <span>• Nền tảng Chấm Bài Tự Động Supabase & rsjudge Engine</span>
-            </div>
-            <p>© 2026 CodeJudge. Tất cả các quyền được bảo lưu.</p>
+        <footer className="bg-[var(--bg-secondary)] border-t border-[var(--border)] py-4 px-6 text-xs text-[var(--text-muted)]">
+          <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+            <span className="font-semibold text-[var(--text-primary)]">CodeJudge VN</span>
+            <p>© 2026 CodeJudge VN</p>
           </div>
         </footer>
       )}

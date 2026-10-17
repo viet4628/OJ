@@ -1,20 +1,21 @@
 import { useEffect, useState } from 'react';
+import MorphIcon from '../../../components/MorphIcon';
 import {
-  GraduationCap,
-  Plus,
-  Users,
-  BookOpen,
-  Copy,
-  Check,
-  Trash2,
-  Clock,
-  ArrowLeft,
-  X,
-  Search,
-  Award,
-  CheckCircle2,
-  XCircle,
-} from 'lucide-react';
+  GraduationCap as GraduationCapData,
+  Plus as PlusData,
+  Users as UsersData,
+  BookOpen as BookOpenData,
+  Copy as CopyData,
+  Check as CheckData,
+  Trash2 as Trash2Data,
+  Clock as ClockData,
+  ArrowLeft as ArrowLeftData,
+  X as XData,
+  Search as SearchData,
+  Award as AwardData,
+  CheckCircle2 as CheckCircle2Data,
+  XCircle as XCircleData,
+} from 'lucide';
 import {
   getClassrooms,
   getClassroomDetail,
@@ -235,7 +236,7 @@ export default function TeacherClassroomsTab() {
               onClick={() => setActiveClassId(null)}
               className="p-2 rounded-xl bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border)] transition-colors cursor-pointer"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <MorphIcon icon={ArrowLeftData} size={16} />
             </button>
             <div>
               <div className="flex items-center gap-2">
@@ -247,7 +248,7 @@ export default function TeacherClassroomsTab() {
                     className="hover:opacity-75 transition-opacity cursor-pointer"
                     title="Sao chép mã lớp"
                   >
-                    {copiedCode ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                    {copiedCode ? <MorphIcon icon={CheckData} size={12} className="text-[var(--accent-text)]" /> : <MorphIcon icon={CopyData} size={12} />}
                   </button>
                 </div>
               </div>
@@ -262,7 +263,7 @@ export default function TeacherClassroomsTab() {
               onClick={handleOpenAddProblem}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5" /> Giao Bài Tập
+              <MorphIcon icon={PlusData} size={14} /> Giao Bài Tập
             </button>
           </div>
         </div>
@@ -272,7 +273,7 @@ export default function TeacherClassroomsTab() {
           <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between">
             <span>{notice}</span>
             <button onClick={() => setNotice(null)} className="text-emerald-600 hover:text-emerald-900 cursor-pointer">
-              <X className="w-4 h-4" />
+              <MorphIcon icon={XData} size={16} />
             </button>
           </div>
         )}
@@ -287,7 +288,7 @@ export default function TeacherClassroomsTab() {
                 : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
-            <BookOpen className="w-4 h-4" /> Bài Tập ({classProblems.length})
+            <MorphIcon icon={BookOpenData} size={14} /> Bài Tập ({classProblems.length})
           </button>
           <button
             onClick={() => setActiveSubTab('students')}
@@ -297,7 +298,7 @@ export default function TeacherClassroomsTab() {
                 : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
-            <Users className="w-4 h-4" /> Học Sinh ({members.length})
+            <MorphIcon icon={UsersData} size={14} /> Học Sinh ({members.length})
           </button>
           <button
             onClick={() => setActiveSubTab('gradebook')}
@@ -307,7 +308,7 @@ export default function TeacherClassroomsTab() {
                 : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
-            <Award className="w-4 h-4" /> Bảng Điểm & Tiến Độ
+            <MorphIcon icon={AwardData} size={14} /> Bảng Điểm & Tiến Độ
           </button>
         </div>
 
@@ -322,14 +323,14 @@ export default function TeacherClassroomsTab() {
               <div className="space-y-4">
                 {classProblems.length === 0 ? (
                   <div className="text-center py-12 border border-dashed border-[var(--border)] rounded-2xl bg-[var(--bg-secondary)] space-y-3">
-                    <BookOpen className="w-8 h-8 text-[var(--text-muted)] mx-auto" />
+                    <MorphIcon icon={BookOpenData} size={28} className="text-[var(--text-muted)] mx-auto" />
                     <div className="text-xs font-bold text-[var(--text-primary)]">Chưa có bài tập nào trong lớp</div>
                     <p className="text-[11px] text-[var(--text-muted)]">Hãy thêm bài tập từ kho đề để học sinh bắt đầu làm bài.</p>
                     <button
                       onClick={handleOpenAddProblem}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white text-xs font-bold cursor-pointer"
                     >
-                      <Plus className="w-3.5 h-3.5" /> Giao bài tập ngay
+                      <MorphIcon icon={PlusData} size={14} /> Giao bài tập ngay
                     </button>
                   </div>
                 ) : (
@@ -378,7 +379,7 @@ export default function TeacherClassroomsTab() {
                                       isExpired ? 'text-red-500 font-bold' : 'text-[var(--text-secondary)]'
                                     }`}
                                   >
-                                    <Clock className="w-3 h-3" />
+                                    <MorphIcon icon={ClockData} size={12} />
                                     {new Date(cp.deadline!).toLocaleString('vi-VN', {
                                       hour: '2-digit',
                                       minute: '2-digit',
@@ -398,7 +399,7 @@ export default function TeacherClassroomsTab() {
                                   className="p-1.5 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
                                   title="Gỡ khỏi lớp"
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <MorphIcon icon={Trash2Data} size={14} />
                                 </button>
                               </td>
                             </tr>
@@ -430,7 +431,7 @@ export default function TeacherClassroomsTab() {
                       onClick={() => handleCopyCode(activeClass.code)}
                       className="px-3 py-2 rounded-xl bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition-colors flex items-center gap-1.5 cursor-pointer"
                     >
-                      {copiedCode ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copiedCode ? <MorphIcon icon={CheckData} size={14} /> : <MorphIcon icon={CopyData} size={14} />}
                       <span>{copiedCode ? 'Đã sao chép' : 'Sao chép mã'}</span>
                     </button>
                   </div>
@@ -438,7 +439,7 @@ export default function TeacherClassroomsTab() {
 
                 {members.length === 0 ? (
                   <div className="text-center py-12 border border-dashed border-[var(--border)] rounded-2xl bg-[var(--bg-secondary)] space-y-2">
-                    <Users className="w-8 h-8 text-[var(--text-muted)] mx-auto" />
+                    <MorphIcon icon={UsersData} size={28} className="text-[var(--text-muted)] mx-auto" />
                     <div className="text-xs font-bold text-[var(--text-primary)]">Chưa có học sinh nào trong lớp</div>
                     <p className="text-[11px] text-[var(--text-muted)]">Hãy chia sẻ mã mời trên để học sinh tham gia.</p>
                   </div>
@@ -474,7 +475,7 @@ export default function TeacherClassroomsTab() {
                                 className="p-1.5 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
                                 title="Xóa khỏi lớp"
                               >
-                                <Trash2 className="w-3.5 h-3.5" />
+                                <MorphIcon icon={Trash2Data} size={14} />
                               </button>
                             </td>
                           </tr>
@@ -491,7 +492,7 @@ export default function TeacherClassroomsTab() {
               <div className="space-y-4">
                 {classProblems.length === 0 || members.length === 0 ? (
                   <div className="text-center py-12 border border-dashed border-[var(--border)] rounded-2xl bg-[var(--bg-secondary)] space-y-2">
-                    <Award className="w-8 h-8 text-[var(--text-muted)] mx-auto" />
+                    <MorphIcon icon={AwardData} size={28} className="text-[var(--text-muted)] mx-auto" />
                     <div className="text-xs font-bold text-[var(--text-primary)]">Chưa có dữ liệu tiến độ</div>
                     <p className="text-[11px] text-[var(--text-muted)]">
                       Lớp học cần có ít nhất 1 bài tập và 1 học sinh để xem ma trận điểm.
@@ -543,7 +544,7 @@ export default function TeacherClassroomsTab() {
                                             : 'bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30'
                                         }`}
                                       >
-                                        {isAc ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                                        {isAc ? <MorphIcon icon={CheckCircle2Data} size={12} /> : <MorphIcon icon={XCircleData} size={12} />}
                                         {prog.score}đ
                                       </span>
                                     ) : (
@@ -583,7 +584,7 @@ export default function TeacherClassroomsTab() {
                   onClick={() => setIsAddProblemOpen(false)}
                   className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
                 >
-                  <X className="w-4 h-4" />
+                  <MorphIcon icon={XData} size={16} />
                 </button>
               </div>
 
@@ -591,7 +592,7 @@ export default function TeacherClassroomsTab() {
               <div className="space-y-2">
                 <label className="text-xs font-bold text-[var(--text-secondary)]">Chọn bài tập từ ngân hàng đề</label>
                 <div className="relative">
-                  <Search className="w-4 h-4 absolute left-3 top-2.5 text-[var(--text-muted)]" />
+                  <MorphIcon icon={SearchData} size={16} className="absolute left-3 top-2.5 text-[var(--text-muted)]" />
                   <input
                     type="text"
                     placeholder="Tìm theo tên bài hoặc slug..."
@@ -692,7 +693,7 @@ export default function TeacherClassroomsTab() {
           onClick={() => setIsCreateOpen(true)}
           className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
         >
-          <Plus className="w-4 h-4" /> Tạo Lớp Học Mới
+          <MorphIcon icon={PlusData} size={14} /> Tạo Lớp Học Mới
         </button>
       </div>
 
@@ -701,7 +702,7 @@ export default function TeacherClassroomsTab() {
         <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between">
           <span>{notice}</span>
           <button onClick={() => setNotice(null)} className="text-emerald-600 hover:text-emerald-900 cursor-pointer">
-            <X className="w-4 h-4" />
+            <MorphIcon icon={XData} size={16} />
           </button>
         </div>
       )}
@@ -719,7 +720,7 @@ export default function TeacherClassroomsTab() {
         </div>
       ) : classrooms.length === 0 ? (
         <div className="text-center py-16 border border-dashed border-[var(--border)] rounded-2xl bg-[var(--bg-secondary)] space-y-3">
-          <GraduationCap className="w-10 h-10 text-[var(--text-muted)] mx-auto" />
+          <MorphIcon icon={GraduationCapData} size={36} className="text-[var(--text-muted)] mx-auto" />
           <div className="text-sm font-bold text-[var(--text-primary)]">Bạn chưa có lớp học nào</div>
           <p className="text-xs text-[var(--text-muted)] max-w-sm mx-auto">
             Bấm "Tạo Lớp Học Mới" để bắt đầu mở lớp và chia sẻ mã mời cho học sinh.
@@ -728,7 +729,7 @@ export default function TeacherClassroomsTab() {
             onClick={() => setIsCreateOpen(true)}
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-bold cursor-pointer"
           >
-            <Plus className="w-4 h-4" /> Tạo Lớp Ngay
+            <MorphIcon icon={PlusData} size={14} /> Tạo Lớp Ngay
           </button>
         </div>
       ) : (
@@ -741,10 +742,10 @@ export default function TeacherClassroomsTab() {
             >
               <div className="space-y-2">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
-                    <GraduationCap className="w-5 h-5" />
+                  <div className="w-10 h-10 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)]">
+                    <MorphIcon icon={GraduationCapData} size={16} />
                   </div>
-                  <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] font-mono text-xs font-bold text-amber-600 dark:text-amber-400">
+                  <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] font-mono text-xs font-bold text-[var(--text-secondary)]">
                     <span>Mã: {c.code}</span>
                   </div>
                 </div>
@@ -762,10 +763,10 @@ export default function TeacherClassroomsTab() {
               <div className="pt-3 border-t border-[var(--border)] flex items-center justify-between text-xs text-[var(--text-secondary)]">
                 <div className="flex items-center gap-3">
                   <span className="flex items-center gap-1 font-semibold">
-                    <Users className="w-3.5 h-3.5 text-sky-500" /> {c.student_count || 0} học sinh
+                    <MorphIcon icon={UsersData} size={13} className="text-[var(--text-muted)]" /> {c.student_count || 0} học sinh
                   </span>
                   <span className="flex items-center gap-1 font-semibold">
-                    <BookOpen className="w-3.5 h-3.5 text-emerald-500" /> {c.problem_count || 0} bài tập
+                    <MorphIcon icon={BookOpenData} size={13} className="text-[var(--text-muted)]" /> {c.problem_count || 0} bài tập
                   </span>
                 </div>
 
@@ -777,7 +778,7 @@ export default function TeacherClassroomsTab() {
                   className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
                   title="Xóa lớp học"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <MorphIcon icon={Trash2Data} size={13} />
                 </button>
               </div>
             </div>
@@ -797,14 +798,14 @@ export default function TeacherClassroomsTab() {
           >
             <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
               <div className="flex items-center gap-2">
-                <GraduationCap className="w-5 h-5 text-amber-500" />
+                <MorphIcon icon={GraduationCapData} size={16} className="text-[var(--accent-text)]" />
                 <h3 className="text-sm font-black text-[var(--text-primary)]">Tạo Lớp Học Mới</h3>
               </div>
               <button
                 onClick={() => setIsCreateOpen(false)}
                 className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
               >
-                <X className="w-4 h-4" />
+                <MorphIcon icon={XData} size={16} />
               </button>
             </div>
 

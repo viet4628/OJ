@@ -116,3 +116,138 @@ export function downloadBlob(data: Uint8Array | string, filename: string, mime =
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+const dec = new TextDecoder('utf-8');
+
+/**
+ * Native in-browser ZIP extractor supporting STORE and DEFLATE without dependencies.
+ */
+export async function parseZip(buffer: ArrayBuffer): Promise<{ name: string; text: string }[]> {
+  const bytes = new Uint8Array(buffer);
+  const view = new DataView(buffer);
+  const entries: { name: string; text: string }[] = [];
+
+  let eocdOffset = -1;
+  for (let i = bytes.length - 22; i >= 0; i--) {
+    if (view.getUint32(i, true) === 0x06054b50) {
+      eocdOffset = i;
+      break;
+    }
+  }
+  if (eocdOffset === -1) throw new Error('File ZIP không hợp lệ hoặc bị hỏng.');
+
+  const totalEntries = view.getUint16(eocdOffset + 10, true);
+  let cdOffset = view.getUint32(eocdOffset + 16, true);
+
+  for (let i = 0; i < totalEntries; i++) {
+    if (view.getUint32(cdOffset, true) !== 0x02014b50) break;
+    const method = view.getUint16(cdOffset + 10, true);
+    const compSize = view.getUint32(cdOffset + 20, true);
+    const nameLen = view.getUint16(cdOffset + 28, true);
+    const extraLen = view.getUint16(cdOffset + 30, true);
+    const commentLen = view.getUint16(cdOffset + 32, true);
+    const localHeaderOffset = view.getUint32(cdOffset + 42, true);
+
+    const name = dec.decode(bytes.slice(cdOffset + 46, cdOffset + 46 + nameLen));
+    const localNameLen = view.getUint16(localHeaderOffset + 26, true);
+    const localExtraLen = view.getUint16(localHeaderOffset + 28, true);
+    const dataOffset = localHeaderOffset + 30 + localNameLen + localExtraLen;
+    const compData = bytes.slice(dataOffset, dataOffset + compSize);
+
+    let dataText = '';
+    if (method === 0) {
+      dataText = dec.decode(compData);
+    } else if (method === 8) {
+      const ds = new DecompressionStream('deflate-raw');
+      const writer = ds.writable.getWriter();
+      writer.write(compData);
+      writer.close();
+      const res = await new Response(ds.readable).arrayBuffer();
+      dataText = dec.decode(res);
+    }
+
+    if (!name.endsWith('/') && !name.startsWith('__MACOSX')) {
+      entries.push({ name, text: dataText });
+    }
+    cdOffset += 46 + nameLen + extraLen + commentLen;
+  }
+  return entries;
+}
+
+export interface PairedTestcase {
+  name: string;
+  input: string;
+  output: string;
+}
+
+/**
+ * Pairs extracted text files according to HackerRank and competitive programming standards.
+ * Supports: input00.txt / output00.txt, 1.in / 1.out, test1.in / test1.out, etc.
+ */
+export function pairTestcases(entries: { name: string; text: string }[]): PairedTestcase[] {
+  const map = new Map<string, string>();
+  for (const e of entries) {
+    const base = e.name.split('/').pop() || e.name;
+    map.set(base.toLowerCase(), e.text);
+  }
+
+  const pairs: PairedTestcase[] = [];
+  const handled = new Set<string>();
+
+  for (const [key, text] of map.entries()) {
+    if (handled.has(key)) continue;
+
+    // Pattern 1: input00.txt -> output00.txt
+    const m1 = key.match(/^(?:input|in)[-_]?(\d+)\.(?:txt|in|data)$/);
+    if (m1) {
+      const num = m1[1];
+      const outCandidates = [
+        `output${num}.txt`,
+        `output_${num}.txt`,
+        `output-${num}.txt`,
+        `out${num}.txt`,
+        `out_${num}.txt`,
+        `out-${num}.txt`,
+        `output${num}.out`,
+        `input${num}.out`,
+        `output${num}.ans`,
+        `${num}.out`,
+        `${num}.ans`,
+      ];
+      for (const cand of outCandidates) {
+        if (map.has(cand)) {
+          pairs.push({ name: `Test #${num}`, input: text, output: map.get(cand) || '' });
+          handled.add(key);
+          handled.add(cand);
+          break;
+        }
+      }
+      continue;
+    }
+
+    // Pattern 2: XX.in -> XX.out / XX.ans
+    const m2 = key.match(/^(.+)\.in$/);
+    if (m2) {
+      const base = m2[1];
+      const candOut = `${base}.out`;
+      const candAns = `${base}.ans`;
+      const match = map.has(candOut) ? candOut : map.has(candAns) ? candAns : null;
+      if (match) {
+        pairs.push({ name: `Test #${base}`, input: text, output: map.get(match) || '' });
+        handled.add(key);
+        handled.add(match);
+      }
+    }
+  }
+
+  // Sort pairs numerically if possible
+  pairs.sort((a, b) => {
+    const na = parseInt(a.name.replace(/\D/g, ''), 10);
+    const nb = parseInt(b.name.replace(/\D/g, ''), 10);
+    if (!isNaN(na) && !isNaN(nb)) return na - nb;
+    return a.name.localeCompare(b.name);
+  });
+
+  return pairs;
+}
+

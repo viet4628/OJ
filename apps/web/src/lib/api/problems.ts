@@ -182,6 +182,30 @@ export async function addTestcase(input: {
   if (error) return { ok: false, error: error.message };
   return { ok: true };
 }
+
+export async function addTestcasesBatch(
+  cases: {
+    problem_id: string;
+    input_content: string;
+    output_content: string;
+    score: number;
+    is_sample: boolean;
+  }[]
+): Promise<{ ok: boolean; error?: string; count?: number }> {
+  if (cases.length === 0) return { ok: true, count: 0 };
+  const rows = cases.map((c) => ({
+    problem_id: c.problem_id,
+    input_path: 'inline',
+    output_path: 'inline',
+    input_content: c.input_content,
+    output_content: c.output_content,
+    score: c.score,
+    is_sample: c.is_sample,
+  }));
+  const { error } = await supabase.from('testcases').insert(rows);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, count: cases.length };
+}
 export async function deleteTestcase(id: string): Promise<{ ok: boolean; error?: string }> {
   const { data, error } = await supabase.from('testcases').delete().eq('id', id).select('id');
   if (error) return { ok: false, error: error.message };

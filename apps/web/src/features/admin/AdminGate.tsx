@@ -1,11 +1,18 @@
 import { useEffect, useState } from 'react';
-import { Code2, LogIn, Lock, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import MorphIcon from '../../components/MorphIcon';
+import {
+  Code2 as Code2Data,
+  LogIn as LogInData,
+  Lock as LockData,
+  ArrowLeft as ArrowLeftData,
+} from 'lucide';
 import { supabase } from '../../lib/supabase';
-import { getUserPermissions } from '../../lib/api';
 import Admin from './Admin';
 
 export default function AdminGate() {
   const [phase, setPhase] = useState<'loading' | 'anon' | 'forbidden' | 'ok'>('loading');
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +29,12 @@ export default function AdminGate() {
       .select('role')
       .eq('id', user.id)
       .single();
-    setPhase(profile?.role === 'admin' ? 'ok' : 'forbidden');
+    if (profile?.role === 'admin') {
+      setCurrentUserId(user.id);
+      setPhase('ok');
+    } else {
+      setPhase('forbidden');
+    }
   };
 
   useEffect(() => {
@@ -52,16 +64,16 @@ export default function AdminGate() {
     );
   }
 
-  if (phase === 'ok') return <Admin />;
+  if (phase === 'ok') return <Admin userId={currentUserId} />;
 
   return (
     <div className="flex items-center justify-center p-4 min-h-[70vh]">
-      <div className="w-full max-w-md bg-white border border-[var(--border)] rounded-2xl p-6 space-y-5 shadow-sm">
-        <div className="text-center space-y-2">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-[var(--accent)] text-[var(--text-primary)] flex items-center justify-center shadow-sm">
-            <Code2 className="w-7 h-7" />
+      <div className="w-full max-w-sm bg-[var(--bg-secondary)] border border-[var(--border)] rounded-md p-5 space-y-4 shadow-sm">
+        <div className="text-center space-y-1.5">
+          <div className="w-10 h-10 mx-auto rounded-md bg-[var(--accent)] text-white flex items-center justify-center shadow-xs">
+            <MorphIcon icon={Code2Data} size={20} />
           </div>
-          <h1 className="text-lg font-black text-[var(--text-primary)]">Quản Trị CodeJudge</h1>
+          <h1 className="text-sm font-semibold text-[var(--text-primary)]">Quản Trị CodeJudge</h1>
           <p className="text-xs text-[var(--text-secondary)]">
             {phase === 'forbidden'
               ? 'Tài khoản này không có quyền quản trị hệ thống'
@@ -70,8 +82,8 @@ export default function AdminGate() {
         </div>
 
         {phase === 'forbidden' && (
-          <div className="flex items-start gap-2 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-semibold">
-            <Lock className="w-4 h-4 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2 p-2.5 rounded-md bg-red-500/10 border border-red-500/20 text-xs text-[var(--danger)] font-medium">
+            <MorphIcon icon={LockData} size={14} className="shrink-0 mt-0.5" />
             Tài khoản của bạn không phải admin. Giáo viên vui lòng sử dụng Cổng Giáo Viên trên trang chủ.
           </div>
         )}
@@ -85,8 +97,8 @@ export default function AdminGate() {
               autoFocus
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="teacher@example.com"
-              className="w-full bg-white border border-[var(--border)] rounded-lg px-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+              placeholder="admin@example.com"
+              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#0969da] focus:ring-1 focus:ring-[#0969da] transition-colors"
             />
           </div>
           <div className="space-y-1">
@@ -97,12 +109,12 @@ export default function AdminGate() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-white border border-[var(--border)] rounded-lg px-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#0969da] focus:ring-1 focus:ring-[#0969da] transition-colors"
             />
           </div>
 
           {error && (
-            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-semibold animate-fade-in">
+            <div className="p-2.5 rounded-md bg-red-500/10 border border-red-500/20 text-xs text-[var(--danger)] font-medium animate-fade-in">
               {error}
             </div>
           )}
@@ -110,9 +122,9 @@ export default function AdminGate() {
           <button
             type="submit"
             disabled={busy}
-            className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--text-primary)] font-bold text-xs shadow-sm transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium text-xs border border-[rgba(27,31,36,0.15)] shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
           >
-            <LogIn className="w-4 h-4" /> {busy ? 'Đang Đăng Nhập...' : 'Đăng Nhập'}
+            <MorphIcon icon={LogInData} size={14} /> {busy ? 'Đang Đăng Nhập...' : 'Đăng Nhập'}
           </button>
 
           {phase === 'forbidden' && (
@@ -122,7 +134,7 @@ export default function AdminGate() {
                 await supabase.auth.signOut();
                 setPhase('anon');
               }}
-              className="w-full text-center text-[11px] font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+              className="w-full text-center text-[11px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
             >
               Đăng xuất và thử tài khoản khác
             </button>
@@ -130,12 +142,12 @@ export default function AdminGate() {
         </form>
 
         <div className="pt-2 text-center border-t border-[var(--border)]">
-          <a
-            href="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Về Trang Chủ Học Sinh
-          </a>
+            <MorphIcon icon={ArrowLeftData} size={13} /> Về Trang Chủ Học Sinh
+          </Link>
         </div>
       </div>
     </div>

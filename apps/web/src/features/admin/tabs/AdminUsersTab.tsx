@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
+import MorphIcon from '../../../components/MorphIcon';
 import {
-  UserRound,
-  CheckCircle2,
-  Lock,
-  GraduationCap,
-  KeyRound,
-  X,
-  Save,
-} from 'lucide-react';
+  UserRound as UserRoundData,
+  CheckCircle2 as CheckCircle2Data,
+  Lock as LockData,
+  GraduationCap as GraduationCapData,
+  KeyRound as KeyRoundData,
+  X as XData,
+  Save as SaveData,
+} from 'lucide';
 import {
   getProfiles,
   updateProfileRole,
@@ -28,26 +29,25 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [busyUserId, setBusyUserId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
-  /* permission modal */
+  // RBAC Permission Modal State
   const [permUser, setPermUser] = useState<Profile | null>(null);
   const [permCodes, setPermCodes] = useState<string[]>([]);
   const [permLoading, setPermLoading] = useState(false);
   const [permSaving, setPermSaving] = useState(false);
   const [permError, setPermError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchUsers = () => {
     let cancelled = false;
     setLoading(true);
-    setError(null);
     getProfiles()
-      .then((list) => {
-        if (!cancelled) setProfiles(list);
+      .then((data) => {
+        if (!cancelled) setProfiles(data);
       })
-      .catch((err: any) => {
-        if (!cancelled) setError(err.message || 'Không tải được danh sách');
+      .catch((err) => {
+        if (!cancelled) setError(err.message || 'Không thể tải danh sách người dùng');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -55,46 +55,53 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
     return () => {
       cancelled = true;
     };
+  };
+
+  useEffect(() => {
+    return fetchUsers();
   }, []);
 
-  const handleToggleRole = async (p: Profile) => {
-    const next: Profile['role'] = p.role === 'teacher' ? 'user' : 'teacher';
-    setBusyUserId(p.id);
-    setError(null);
-    setNotice(null);
+  const handleToggleRole = async (target: Profile) => {
+    if (target.id === myUserId) {
+      alert('Không thể tự thay đổi vai trò của chính mình.');
+      return;
+    }
+    const nextRole: 'user' | 'teacher' = target.role === 'teacher' ? 'user' : 'teacher';
+    const actionName = nextRole === 'teacher' ? 'nâng lên Giáo Viên' : 'hạ xuống Học Sinh';
+    if (!window.confirm(`Xác nhận ${actionName} cho tài khoản "${target.full_name || target.email}"?`)) {
+      return;
+    }
+    setBusyUserId(target.id);
     try {
-      await updateProfileRole(p.id, next);
-      if (next === 'teacher') {
-        const existing = await getUserPermissions(p.id);
-        if (existing.length === 0) {
-          await setUserPermissions(p.id, DEFAULT_TEACHER_PERMS);
-        }
-      }
-      setProfiles((prev) => prev.map((u) => (u.id === p.id ? { ...u, role: next } : u)));
-      setNotice(`Đã đổi vai trò "${p.full_name || p.email}" thành ${next === 'teacher' ? 'GIÁO VIÊN' : 'HỌC SINH'}`);
+      await updateProfileRole(target.id, nextRole);
+      setNotice(`Đã đổi vai trò của "${target.full_name || target.email}" thành ${nextRole === 'teacher' ? 'Giáo Viên' : 'Học Sinh'}.`);
+      fetchUsers();
+      setTimeout(() => setNotice(null), 3000);
     } catch (err: any) {
-      setError(err.message || 'Không thể cập nhật quyền');
+      alert(err.message || 'Thao tác thất bại');
     } finally {
       setBusyUserId(null);
     }
   };
 
-  const openPermModal = async (p: Profile) => {
-    setPermUser(p);
-    setPermError(null);
+  const openPermModal = async (u: Profile) => {
+    setPermUser(u);
     setPermLoading(true);
-    setPermCodes([]);
+    setPermError(null);
     try {
-      setPermCodes(await getUserPermissions(p.id));
-    } catch (err: any) {
-      setPermError(err.message);
+      const perms = await getUserPermissions(u.id);
+      setPermCodes(perms);
+    } catch {
+      setPermError('Không thể tải quyền của người dùng');
     } finally {
       setPermLoading(false);
     }
   };
 
   const togglePerm = (code: string) => {
-    setPermCodes((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
+    setPermCodes((prev) =>
+      prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]
+    );
   };
 
   const savePerms = async () => {
@@ -103,38 +110,39 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
     setPermError(null);
     try {
       await setUserPermissions(permUser.id, permCodes);
-      setNotice(`Đã lưu phân quyền cho "${permUser.full_name || permUser.email}"`);
+      setNotice(`Đã cập nhật ${permCodes.length} quyền cho ${permUser.full_name || permUser.email}`);
       setPermUser(null);
+      setTimeout(() => setNotice(null), 3000);
     } catch (err: any) {
-      setPermError(err.message || 'Không lưu được phân quyền');
+      setPermError(err.message || 'Lỗi khi lưu phân quyền');
     } finally {
       setPermSaving(false);
     }
   };
 
-  const visibleProfiles = profiles.filter((p) => p.id !== myUserId);
+  const visibleProfiles = profiles;
 
   return (
-    <div className="bg-white rounded-xl border border-[var(--border)] p-5 space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] p-4 space-y-4">
+      <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]">
         <div>
-          <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
-            <UserRound className="w-4 h-4 text-[var(--accent-text)]" /> Quản Lý Người Dùng
+          <h3 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
+            <MorphIcon icon={UserRoundData} size={14} className="text-[var(--accent-text)]" /> Quản Lý Người Dùng
           </h3>
           <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
             Đổi vai trò Học Sinh ⇄ Giáo Viên, hoặc mở Phân Quyền để cấp quyền chi tiết (RBAC).
           </p>
         </div>
-        <span className="text-xs text-[var(--text-muted)] font-code">{profiles.length} người dùng</span>
+        <span className="text-[11px] text-[var(--text-muted)] font-mono">{profiles.length} người dùng</span>
       </div>
 
       {notice && (
-        <div className="flex items-start gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-semibold animate-fade-in">
-          <CheckCircle2 className="w-4 h-4 shrink-0 text-[var(--accent-text)]" /> {notice}
+        <div className="flex items-start gap-2 p-2.5 rounded-md bg-[var(--accent)]/10 border border-[var(--accent)]/30 text-xs text-[var(--accent-text)] font-medium">
+          <MorphIcon icon={CheckCircle2Data} size={14} className="shrink-0" /> {notice}
         </div>
       )}
       {error && (
-        <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-semibold animate-fade-in">
+        <div className="p-2.5 rounded-md bg-red-500/10 border border-red-500/20 text-xs text-[var(--danger)] font-medium">
           {error}
         </div>
       )}
@@ -142,84 +150,84 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
       {loading ? (
         <div className="space-y-2">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-14 rounded-lg bg-[var(--bg-secondary)] animate-pulse" />
+            <div key={i} className="h-12 rounded-md bg-[var(--bg-primary)] animate-pulse" />
           ))}
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto border border-[var(--border)] rounded-md">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[var(--bg-secondary)] uppercase text-[var(--text-secondary)] border-b border-[var(--border)] font-bold text-[11px]">
+            <thead className="bg-[var(--bg-primary)] text-[var(--text-secondary)] border-b border-[var(--border)] font-medium text-[11px]">
               <tr>
-                <th className="px-4 py-3">Người Dùng</th>
-                <th className="px-4 py-3">Vai Trò</th>
-                <th className="px-4 py-3">Tham Gia</th>
-                <th className="px-4 py-3 text-right">Thao Tác</th>
+                <th className="px-3 py-2">Người Dùng</th>
+                <th className="px-3 py-2">Vai Trò</th>
+                <th className="px-3 py-2">Tham Gia</th>
+                <th className="px-3 py-2 text-right">Thao Tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
               {visibleProfiles.map((p) => (
-                <tr key={p.id} className="hover:bg-[var(--bg-secondary)] transition-colors">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-[var(--bg-secondary)] border border-[var(--border)] flex items-center justify-center text-[11px] font-black text-[var(--accent-text)] shrink-0">
+                <tr key={p.id} className="hover:bg-[var(--bg-primary)] transition-colors">
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-[var(--bg-tertiary)] border border-[var(--border)] flex items-center justify-center text-[10px] font-mono text-[var(--accent-text)] shrink-0">
                         {(p.full_name || p.email || '?').charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <div className="font-bold text-[var(--text-primary)] truncate">{p.full_name || 'Chưa đặt tên'}</div>
-                        <div className="font-code text-[11px] text-[var(--text-muted)] truncate">{p.email}</div>
+                        <div className="font-medium text-[var(--text-primary)] truncate">{p.full_name || 'Chưa đặt tên'}</div>
+                        <div className="font-mono text-[10px] text-[var(--text-muted)] truncate">{p.email}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-2">
                     <span
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold border ${
+                      className={`inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-mono border ${
                         p.role === 'admin'
-                          ? 'bg-slate-900 text-white border-slate-900'
+                          ? 'bg-[var(--bg-tertiary)] text-[var(--text-primary)] border-[var(--border)]'
                           : p.role === 'teacher'
-                          ? 'bg-amber-50 text-amber-700 border-amber-200'
-                          : 'bg-sky-50 text-sky-700 border-sky-200'
+                          ? 'bg-[var(--accent)]/10 text-[var(--accent-text)] border-[var(--accent)]/30'
+                          : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border-[var(--border)]'
                       }`}
                     >
                       {p.role === 'admin' ? (
                         <>
-                          <Lock className="w-3 h-3" /> ADMIN
+                          <MorphIcon icon={LockData} size={10} /> ADMIN
                         </>
                       ) : p.role === 'teacher' ? (
                         <>
-                          <GraduationCap className="w-3 h-3" /> GIÁO VIÊN
+                          <MorphIcon icon={GraduationCapData} size={10} /> GIÁO VIÊN
                         </>
                       ) : (
                         <>
-                          <UserRound className="w-3 h-3" /> HỌC SINH
+                          <MorphIcon icon={UserRoundData} size={10} /> HỌC SINH
                         </>
                       )}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-[var(--text-secondary)] font-code">
+                  <td className="px-3 py-2 text-[var(--text-muted)] font-mono text-[11px]">
                     {new Date(p.created_at).toLocaleDateString('vi-VN')}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-2">
                     <div className="flex items-center justify-end gap-1.5">
                       {p.role === 'admin' ? (
-                        <span className="text-[10px] text-[var(--text-muted)] font-semibold">Quản DB</span>
+                        <span className="text-[10px] text-[var(--text-muted)] font-mono">Quản DB</span>
                       ) : (
                         <>
                           <button
                             onClick={() => openPermModal(p)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border border-[var(--border)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] transition-colors cursor-pointer"
                           >
-                            <KeyRound className="w-3.5 h-3.5 text-[var(--accent-text)]" /> Phân Quyền
+                            <MorphIcon icon={KeyRoundData} size={11} className="text-[var(--accent-text)]" /> Phân Quyền
                           </button>
                           <button
                             onClick={() => handleToggleRole(p)}
                             disabled={busyUserId === p.id}
-                            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-colors cursor-pointer disabled:opacity-50 ${
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium border transition-colors cursor-pointer disabled:opacity-50 ${
                               p.role === 'teacher'
-                                ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
-                                : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
+                                ? 'bg-red-500/10 text-[var(--danger)] border-red-500/20 hover:bg-red-500/20'
+                                : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] border-[var(--border)] hover:bg-[var(--bg-tertiary)]'
                             }`}
                           >
-                            <GraduationCap className="w-3.5 h-3.5" />
+                            <MorphIcon icon={GraduationCapData} size={11} />
                             {busyUserId === p.id ? 'Đang Lưu...' : p.role === 'teacher' ? 'Thu hồi → HS' : 'Cấp GV'}
                           </button>
                         </>
@@ -236,45 +244,45 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
       {/* permission modal */}
       {permUser && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in"
           onClick={() => setPermUser(null)}
         >
           <div
-            className="w-full max-w-md bg-white rounded-2xl border border-[var(--border)] p-5 space-y-4 max-h-[85vh] overflow-y-auto"
+            className="w-full max-w-md bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] shadow-2xl p-4 space-y-3 max-h-[85vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
           >
-            <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
+            <div className="flex items-center justify-between border-b border-[var(--border)] pb-2.5">
               <div>
-                <h3 className="text-sm font-black text-[var(--text-primary)] flex items-center gap-2">
-                  <KeyRound className="w-4 h-4 text-[var(--accent-text)]" /> Phân Quyền
+                <h3 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
+                  <MorphIcon icon={KeyRoundData} size={14} className="text-[var(--accent-text)]" /> Phân Quyền
                 </h3>
                 <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">{permUser.full_name || permUser.email}</p>
               </div>
               <button
                 onClick={() => setPermUser(null)}
-                className="p-1.5 rounded-lg hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] transition-colors cursor-pointer"
+                className="p-1 rounded-md hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] transition-colors cursor-pointer"
               >
-                <X className="w-4 h-4" />
+                <MorphIcon icon={XData} size={16} />
               </button>
             </div>
 
             {permLoading ? (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-10 rounded-lg bg-[var(--bg-secondary)] animate-pulse" />
+                  <div key={i} className="h-9 rounded-md bg-[var(--bg-primary)] animate-pulse" />
                 ))}
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {PERMISSION_GROUPS.map((group) => (
-                  <div key={group} className="space-y-1.5">
-                    <p className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-wider">{group}</p>
+                  <div key={group} className="space-y-1">
+                    <p className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider">{group}</p>
                     {PERMISSION_DEFS.filter((d) => d.group === group).map((d) => (
                       <label
                         key={d.code}
-                        className="flex items-center gap-2.5 p-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-xs font-semibold text-[var(--text-primary)] cursor-pointer transition-colors hover:bg-[var(--bg-tertiary)]"
+                        className="flex items-center gap-2 p-2 rounded-md border border-[var(--border)] bg-[var(--bg-primary)] text-xs font-medium text-[var(--text-primary)] cursor-pointer transition-colors hover:bg-[var(--bg-tertiary)]"
                       >
                         <input
                           type="checkbox"
@@ -283,7 +291,7 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
                           className="accent-[var(--accent)]"
                         />
                         {d.label}
-                        <span className="ml-auto font-code text-[10px] text-[var(--text-muted)]">{d.code}</span>
+                        <span className="ml-auto font-mono text-[10px] text-[var(--text-muted)]">{d.code}</span>
                       </label>
                     ))}
                   </div>
@@ -292,22 +300,22 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
             )}
 
             {permError && (
-              <div className="p-2.5 rounded-lg bg-red-50 text-red-700 text-[11px] font-semibold">{permError}</div>
+              <div className="p-2 rounded-md bg-red-500/10 border border-red-500/20 text-[var(--danger)] text-[11px] font-medium">{permError}</div>
             )}
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[var(--border)]">
+            <div className="flex items-center justify-end gap-2 pt-2.5 border-t border-[var(--border)]">
               <button
                 onClick={() => setPermUser(null)}
-                className="px-3 py-1.5 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-primary)] text-xs font-semibold border border-[var(--border)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer"
+                className="px-3 py-1.5 rounded-md bg-[var(--bg-primary)] text-[var(--text-primary)] text-xs font-medium border border-[var(--border)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer"
               >
                 Đóng
               </button>
               <button
                 onClick={savePerms}
                 disabled={permSaving}
-                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--text-primary)] font-bold text-xs transition-colors disabled:opacity-50 cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium text-xs border border-[rgba(27,31,36,0.15)] shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
               >
-                <Save className="w-3.5 h-3.5" /> {permSaving ? 'Đang Lưu...' : 'Lưu Quyền'}
+                <MorphIcon icon={SaveData} size={14} /> {permSaving ? 'Đang Lưu...' : 'Lưu Quyền'}
               </button>
             </div>
           </div>
@@ -316,4 +324,3 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
     </div>
   );
 }
-

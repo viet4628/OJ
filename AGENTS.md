@@ -65,7 +65,10 @@ CodeJudge VN is an automated distributed Online Judge platform inspired by SASTO
   - Clean Header Navbar: Top navigation header must NEVER contain cluttered portal switch buttons. Access to Teacher Workspace (`/teacher`) or Admin Console (`/admin`) must strictly reside inside the user avatar profile dropdown menu.
 - **Tailwind CSS v3**: Stick to Tailwind v3 conventions. Do not use unconfigured Tailwind v4 syntax.
 - **Monaco Editor Stability**: Handle editor lifecycle, cleanup listeners, and keep Monaco language mapping (`cpp`, `python`, `rust`, `java`) synchronized.
-- **Visual Standards**: Preserve the sleek modern UI (dark/light theme tokens via CSS variables in `index.css`, Lucide icons, responsive layout).
+- **Visual Standards & Single Dominant Accent**:
+  - Stick to **one single primary accent color** (`--accent` / #16A34A) backed by neutral tokens (`--bg-primary`, `--bg-secondary`, `--bg-tertiary`, `--border`, `--text-primary`, `--text-secondary`, `--text-muted`).
+  - **No Rainbow Styling**: Strictly prohibit scattering ad-hoc colors (`amber`, `purple`, `sky`, `blue`, `indigo`, `pink`) across labels, headings, inputs, and borders. Status colors (`--danger`, `--warning`) are reserved strictly for critical alerts or difficulty badges, never general decoration.
+  - **Strict Icon Restraint**: Zero decorative icon clutter. Do NOT place icons beside every text label, section title, or field name. Icons are permitted only for functional user actions (e.g. search, edit, delete, close, back, upload). NEVER use emojis (`⚖️`, `🎉`, `★`) in production UI text.
 
 ---
 

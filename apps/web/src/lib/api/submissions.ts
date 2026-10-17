@@ -28,10 +28,10 @@ export async function getSubmissions(params?: {
   if (error) return { rows: [], total: 0 };
   return { rows: (data || []) as Submission[], total: count || 0 };
 }
-export async function getSubmissionsByUser(userId: string, limit = 15): Promise<Submission[]> {
+export async function getSubmissionsByUser(userId: string, limit = 50): Promise<Submission[]> {
   const { data, error } = await supabase
     .from('submissions')
-    .select('*, problems(title, slug)')
+    .select('*, problems(title, slug, difficulty, tags)')
     .eq('user_id', userId)
     .eq('is_run', false)
     .order('created_at', { ascending: false })
@@ -57,7 +57,10 @@ export async function getSubmission(submissionId: string): Promise<Submission | 
     .select('*, problems(title, slug), profiles(full_name, email)')
     .eq('id', submissionId)
     .single();
-  if (error) return null;
+  if (error) {
+    console.error('[getSubmission] Error fetching submission:', error);
+    return null;
+  }
   return data as Submission;
 }
 export async function runProblemCode(input: {

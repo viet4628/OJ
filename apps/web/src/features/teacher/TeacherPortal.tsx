@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import MorphIcon from '../../components/MorphIcon';
 import {
-  GraduationCap,
-  Plus,
-  LayoutDashboard,
-  Trophy,
-  ListTree,
-  Lock,
-  Megaphone,
-  ArrowLeft,
-  LogIn,
-} from 'lucide-react';
+  GraduationCap as GraduationCapData,
+  Plus as PlusData,
+  LayoutDashboard as LayoutDashboardData,
+  Trophy as TrophyData,
+  ListTree as ListTreeData,
+  Lock as LockData,
+  Megaphone as MegaphoneData,
+  ArrowLeft as ArrowLeftData,
+  LogIn as LogInData,
+} from 'lucide';
 import { getUserPermissions, type AppUser } from '../../lib/api';
 import AdminOverviewTab from '../admin/tabs/AdminOverviewTab';
 import AdminProblemsTab from '../admin/tabs/AdminProblemsTab';
@@ -96,19 +97,19 @@ export default function TeacherPortal({ user, onOpenAuth }: TeacherPortalProps) 
 
   if (!user) {
     return (
-      <div className="max-w-md mx-auto my-16 bg-white border border-[var(--border)] rounded-2xl p-8 text-center space-y-4 shadow-sm">
-        <div className="mx-auto w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-          <GraduationCap className="w-7 h-7 text-amber-600 dark:text-amber-400" />
+      <div className="max-w-md mx-auto my-16 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-md p-8 text-center space-y-4">
+        <div className="mx-auto w-12 h-12 rounded-md bg-[var(--bg-tertiary)] border border-[var(--border)] flex items-center justify-center">
+          <MorphIcon icon={GraduationCapData} size={24} className="text-[var(--text-secondary)]" />
         </div>
-        <h1 className="text-lg font-black text-[var(--text-primary)]">Cổng Giáo Viên</h1>
+        <h1 className="text-base font-semibold text-[var(--text-primary)]">Cổng Giáo Viên</h1>
         <p className="text-xs text-[var(--text-secondary)]">
           Vui lòng đăng nhập bằng tài khoản Giáo viên để truy cập không gian soạn đề và quản lý kỳ thi.
         </p>
         <button
           onClick={onOpenAuth}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold shadow-sm transition-colors cursor-pointer"
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-medium border border-[rgba(27,31,36,0.15)] shadow-xs transition-colors cursor-pointer"
         >
-          <LogIn className="w-4 h-4" /> Đăng Nhập Ngay
+          <MorphIcon icon={LogInData} size={16} /> Đăng Nhập Ngay
         </button>
       </div>
     );
@@ -118,11 +119,11 @@ export default function TeacherPortal({ user, onOpenAuth }: TeacherPortalProps) 
 
   if (permLoaded && !isAllowed) {
     return (
-      <div className="max-w-md mx-auto my-16 bg-white border border-[var(--border)] rounded-2xl p-8 text-center space-y-4 shadow-sm">
-        <div className="mx-auto w-14 h-14 rounded-full bg-red-50 border border-red-200 flex items-center justify-center">
-          <Lock className="w-7 h-7 text-[var(--danger)]" />
+      <div className="max-w-md mx-auto my-16 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-md p-8 text-center space-y-4">
+        <div className="mx-auto w-12 h-12 rounded-md bg-[var(--bg-tertiary)] border border-[var(--border)] flex items-center justify-center">
+          <MorphIcon icon={LockData} size={24} className="text-[var(--danger)]" />
         </div>
-        <h1 className="text-lg font-black text-[var(--text-primary)]">Chưa Được Cấp Quyền Giáo Viên</h1>
+        <h1 className="text-base font-semibold text-[var(--text-primary)]">Chưa Được Cấp Quyền Giáo Viên</h1>
         <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
           Tài khoản hiện tại (<b className="text-[var(--text-primary)]">{user.username}</b>) đang là tài khoản học sinh.
           Vui lòng liên hệ Quản trị viên để được nâng cấp quyền Giáo viên.
@@ -130,27 +131,27 @@ export default function TeacherPortal({ user, onOpenAuth }: TeacherPortalProps) 
         <div className="pt-2">
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--border)] text-[var(--text-primary)] text-xs font-bold transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--bg-tertiary)] hover:bg-[var(--border)] text-[var(--text-primary)] text-xs font-medium border border-[var(--border)] transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Về Trang Chủ Học Sinh
+            <MorphIcon icon={ArrowLeftData} size={14} /> Về Trang Chủ Học Sinh
           </Link>
         </div>
       </div>
     );
   }
 
-  const menuBtn = (tab: TeacherTab, icon: React.ReactNode, text: string, isSpecialActive = false) => {
+  const menuBtn = (tab: TeacherTab, iconData: any, text: string, isSpecialActive = false) => {
     const isActive = isSpecialActive || (activeTab === tab && (tab !== 'problems' || problemMode === 'list'));
     return (
       <button
         onClick={() => handleTabChange(tab)}
-        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors cursor-pointer ${
+        className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer text-xs ${
           isActive
-            ? 'bg-[var(--accent)]/10 text-[var(--accent-text)] font-bold'
-            : 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]'
+            ? 'bg-[var(--bg-tertiary)] text-[var(--text-primary)] font-semibold'
+            : 'text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] font-normal'
         }`}
       >
-        {icon} {text}
+        <MorphIcon icon={iconData} size={14} className="shrink-0" /> {text}
       </button>
     );
   };
@@ -158,70 +159,69 @@ export default function TeacherPortal({ user, onOpenAuth }: TeacherPortalProps) 
   return (
     <div className="flex flex-col lg:flex-row items-start gap-6">
       {/* LEFT: Sidebar */}
-      <aside className="w-full lg:w-56 shrink-0 lg:sticky lg:top-20 rounded-2xl bg-white border border-[var(--border)] shadow-sm overflow-hidden">
-        <div className="py-5 text-center border-b border-[var(--border)]">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-            <GraduationCap className="w-7 h-7 text-amber-600 dark:text-amber-400" />
+      <aside className="w-full lg:w-56 shrink-0 lg:sticky lg:top-20 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] overflow-hidden">
+        <div className="p-3.5 border-b border-[var(--border)] flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-md bg-[var(--bg-tertiary)] border border-[var(--border)] flex items-center justify-center shrink-0">
+            <MorphIcon icon={GraduationCapData} size={16} className="text-[var(--accent-text)]" />
           </div>
-          <p className="mt-2 text-sm font-black text-[var(--text-primary)]">Cổng Giáo Viên</p>
-          <p className="text-[11px] text-[var(--text-muted)] font-mono">Teacher Workspace</p>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-[var(--text-primary)] truncate">Cổng Giáo Viên</p>
+            <p className="text-[10px] text-[var(--text-muted)] font-mono">Teacher Workspace</p>
+          </div>
         </div>
 
-        <nav className="p-2 space-y-0.5 text-xs font-bold">
-          {menuBtn('overview', <LayoutDashboard className="w-4 h-4" />, 'Tổng Quan')}
+        <nav className="p-2 space-y-0.5 text-xs">
+          {menuBtn('overview', LayoutDashboardData, 'Tổng Quan')}
 
-          <p className="px-3 pt-3 pb-1 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-wider">
+          <p className="px-2.5 pt-3 pb-1 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
             Lớp Học
           </p>
-          {menuBtn('classrooms', <GraduationCap className="w-4 h-4" />, 'Quản Lý Lớp Học')}
+          {menuBtn('classrooms', GraduationCapData, 'Quản Lý Lớp Học')}
 
           {can('problems.manage') && (
             <>
-              <p className="px-3 pt-3 pb-1 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-wider">
+              <p className="px-2.5 pt-3 pb-1 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
                 Bài Tập
               </p>
-              {menuBtn('problems', <ListTree className="w-4 h-4" />, 'Danh Sách Bài Tập', activeTab === 'problems' && problemMode === 'list')}
-              {menuBtn('create', <Plus className="w-4 h-4" />, 'Tạo Bài Tập Mới', activeTab === 'problems' && problemMode === 'create')}
+              {menuBtn('problems', ListTreeData, 'Danh Sách Bài Tập', activeTab === 'problems' && problemMode === 'list')}
+              {menuBtn('create', PlusData, 'Tạo Bài Tập Mới', activeTab === 'problems' && problemMode === 'create')}
             </>
           )}
 
           {can('contests.manage') && (
             <>
-              <p className="px-3 pt-3 pb-1 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-wider">
+              <p className="px-2.5 pt-3 pb-1 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
                 Kỳ Thi & Kiểm Tra
               </p>
-              {menuBtn('contests', <Trophy className="w-4 h-4" />, 'Danh Sách Kỳ Thi')}
+              {menuBtn('contests', TrophyData, 'Danh Sách Kỳ Thi')}
             </>
           )}
 
           {can('announcements.manage') && (
             <>
-              <p className="px-3 pt-3 pb-1 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-wider">
+              <p className="px-2.5 pt-3 pb-1 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
                 Thông Báo
               </p>
-              {menuBtn('announcements', <Megaphone className="w-4 h-4" />, 'Bảng Thông Báo')}
+              {menuBtn('announcements', MegaphoneData, 'Bảng Thông Báo')}
             </>
           )}
 
-          <div className="pt-3 mt-3 border-t border-[var(--border)]">
+          <div className="pt-2 mt-2 border-t border-[var(--border)]">
             <Link
               to="/"
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)] transition-colors text-xs font-bold"
+              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] transition-colors text-xs font-medium"
             >
-              <ArrowLeft className="w-4 h-4" /> Về Trang Học Sinh
+              <MorphIcon icon={ArrowLeftData} size={14} /> Về Trang Học Sinh
             </Link>
           </div>
         </nav>
       </aside>
 
       {/* RIGHT: Content */}
-      <div className="flex-1 min-w-0 w-full space-y-5">
-        <div className="bg-white p-5 rounded-2xl border border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+      <div className="flex-1 min-w-0 w-full space-y-4">
+        <div className="bg-[var(--bg-secondary)] px-4 py-3 rounded-md border border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-0.5">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-bold font-mono">
-              <GraduationCap className="w-3.5 h-3.5" /> Không Gian Giáo Viên
-            </div>
-            <h1 className="text-xl font-black text-[var(--text-primary)]">Trung Tâm Giảng Dạy & Lớp Học</h1>
+            <h1 className="text-sm font-semibold text-[var(--text-primary)]">Trung Tâm Giảng Dạy & Lớp Học</h1>
             <p className="text-[var(--text-secondary)] text-xs">
               Mở lớp học · Quản lý học sinh · Giao bài tập & xem tiến độ trực tiếp
             </p>
@@ -230,9 +230,9 @@ export default function TeacherPortal({ user, onOpenAuth }: TeacherPortalProps) 
           {can('problems.manage') && (
             <button
               onClick={() => handleTabChange('create')}
-              className="px-4 py-2 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-bold text-xs flex items-center gap-1.5 transition-colors w-fit shadow-sm cursor-pointer"
+              className="px-3 py-1.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium text-xs flex items-center gap-1.5 transition-colors w-fit border border-[rgba(27,31,36,0.15)] shadow-xs cursor-pointer"
             >
-              <Plus className="w-4 h-4" /> Tạo Bài Tập Mới
+              <MorphIcon icon={PlusData} size={14} /> Tạo Bài Tập Mới
             </button>
           )}
         </div>
@@ -251,4 +251,3 @@ export default function TeacherPortal({ user, onOpenAuth }: TeacherPortalProps) 
     </div>
   );
 }
-

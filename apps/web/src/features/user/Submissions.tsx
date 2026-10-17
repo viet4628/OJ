@@ -156,8 +156,8 @@ export default function Submissions() {
         <AlertOctagon className="w-3.5 h-3.5" /> MLE
       </span>;
     }
-    return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-blue-50 text-blue-700 border border-blue-200">
-      <RefreshCw className="w-3.5 h-3.5 animate-spin" /> {status === 'JUDGING' ? 'JUDGING' : 'PENDING'}
+    return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-bold">
+      <RefreshCw className="w-3.5 h-3.5 animate-spin" /> {status === 'JUDGING' ? 'ĐANG CHẤM' : 'ĐANG CHỜ'}
     </span>;
   };
 
@@ -265,7 +265,11 @@ export default function Submissions() {
                     <td className="px-5 py-4 text-[var(--text-secondary)] font-code whitespace-nowrap">{formatTime(sub.created_at)}</td>
                     <td className="px-5 py-4 text-[var(--text-secondary)] font-bold">{sub.id.slice(0, 12)}</td>
                     <td className="px-5 py-4 font-bold text-[var(--text-primary)] font-sans text-xs">
-                      <Link to={`/problems/${sub.problems?.slug}`} className="hover:text-[var(--accent-text)] transition-colors">
+                      <Link
+                        to={`/problems/${sub.problems?.slug}?sub=${sub.id}`}
+                        state={{ code: sub.code, language: sub.language, submissionId: sub.id }}
+                        className="hover:text-[var(--accent-text)] transition-colors"
+                      >
                         {sub.problems?.title || 'Bài tập'}
                       </Link>
                     </td>
@@ -369,6 +373,23 @@ export default function Submissions() {
                 {selectedSubmission.code || '// Không có mã nguồn'}
               </pre>
             </div>
+
+            {selectedSubmission.problems?.slug && (
+              <div className="flex items-center justify-end pt-2 border-t border-[var(--border)]">
+                <Link
+                  to={`/problems/${selectedSubmission.problems.slug}?sub=${selectedSubmission.id}`}
+                  state={{
+                    code: selectedSubmission.code,
+                    language: selectedSubmission.language,
+                    submissionId: selectedSubmission.id,
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold shadow-xs transition-colors"
+                >
+                  <Code className="w-3.5 h-3.5" />
+                  <span>Mở bài làm trong Editor</span>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}

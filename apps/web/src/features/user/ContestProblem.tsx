@@ -98,7 +98,7 @@ export default function ContestProblem({ user, onOpenAuth }: { user: { username:
       attempts++;
       if (attempts < 40) setTimeout(poll, 1500);
       else {
-        setSubmissionResult({ status: 'PENDING', passedCount: 0, totalCount: 0, timeMs: 0, memoryMb: 0, testcases: [], note: 'Đang chờ worker xử lý — xem ở trang cá nhân' });
+        setSubmissionResult({ status: 'PENDING', passedCount: 0, totalCount: 0, timeMs: 0, memoryMb: 0, testcases: [], note: 'Hệ thống đang xử lý bài nộp — bạn có thể xem lại kết quả trong lịch sử nộp bài' });
         setIsSubmitting(false);
       }
     };
@@ -276,10 +276,10 @@ export default function ContestProblem({ user, onOpenAuth }: { user: { username:
             <button
               onClick={handleSubmit}
               disabled={!canSubmit}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--text-primary)] text-xs font-black transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-xs"
             >
               {isSubmitting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-              Nộp bài
+              {isSubmitting ? 'Đang chấm bài...' : 'Nộp bài'}
             </button>
           </div>
 
@@ -318,7 +318,7 @@ export default function ContestProblem({ user, onOpenAuth }: { user: { username:
               )}
               {!submissionResult && !submissionError && (
                 <div className="text-[var(--text-muted)] text-[11px] flex items-center gap-2">
-                  <CircleDashed className="w-4 h-4" /> Nộp bài để xem kết quả chấm tự động (worker + rsjudge).
+                  <CircleDashed className="w-4 h-4" /> Nộp bài để xem kết quả chấm tự động.
                 </div>
               )}
               {submissionResult && submissionResult.status !== 'ERROR' && (
@@ -330,7 +330,7 @@ export default function ContestProblem({ user, onOpenAuth }: { user: { username:
                       {submissionResult.status === 'ACCEPTED' ? <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                         : submissionResult.status === 'PENDING' || submissionResult.status === 'JUDGING' ? <RefreshCw className="w-5 h-5 text-blue-500 animate-spin" />
                         : <XCircle className="w-5 h-5 text-red-500" />}
-                      <span>Kết Quả: {submissionResult.status}</span>
+                      <span>{submissionResult.status === 'PENDING' || submissionResult.status === 'JUDGING' ? 'Đang chấm bài...' : `Kết quả: ${submissionResult.status}`}</span>
                     </div>
                     <span className="px-3 py-1 rounded bg-[var(--bg-primary)] border border-[var(--border)] font-code text-[11px] font-black">
                       {submissionResult.totalCount > 0 ? `${submissionResult.passedCount}/${submissionResult.totalCount} tests` : ''} ({submissionResult.timeMs}ms · {submissionResult.memoryMb}MB)
@@ -343,7 +343,7 @@ export default function ContestProblem({ user, onOpenAuth }: { user: { username:
                       <div key={t.id} className="flex items-center justify-between p-2 bg-[var(--bg-secondary)] rounded-lg border border-[var(--border)]">
                         <span className="font-bold text-[var(--text-primary)]">{t.name}</span>
                         <span className={`font-bold ${t.status === 'ACCEPTED' ? 'text-[var(--accent-text)]' : t.status === 'PENDING' || t.status === 'JUDGING' ? 'text-blue-600' : 'text-red-600'}`}>
-                          {t.status === 'ACCEPTED' ? <><Check className="w-3.5 h-3.5" /> AC ({t.timeMs}ms)</> : t.status === 'PENDING' ? <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> {t.status}</> : <><XCircle className="w-3.5 h-3.5" /> {t.status}</>}
+                          {t.status === 'ACCEPTED' ? <><Check className="w-3.5 h-3.5" /> AC ({t.timeMs}ms)</> : t.status === 'PENDING' || t.status === 'JUDGING' ? <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Đang chấm...</> : <><XCircle className="w-3.5 h-3.5" /> {t.status}</>}
                         </span>
                       </div>
                     ))}

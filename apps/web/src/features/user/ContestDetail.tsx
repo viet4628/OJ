@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import {
   Trophy, Calendar, Clock, Loader2, Users, Lock, ChevronRight, Timer,
   CheckCircle2, XCircle, ListOrdered, Award, CircleDashed, Info,
+  BookOpen, ShieldCheck, ArrowRight, Globe,
 } from 'lucide-react';
 import {
   getContest, getContestProblems, getContestRank, getMyContestSubmissions,
@@ -18,6 +19,25 @@ function fmtSeconds(totalSec: number): string {
   const m = Math.floor((totalSec % 3600) / 60);
   const s = totalSec % 60;
   return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}` : `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function fmtDuration(startIso: string, endIso: string): string {
+  const diff = Math.max(0, new Date(endIso).getTime() - new Date(startIso).getTime());
+  const hours = Math.floor(diff / 3600000);
+  const minutes = Math.floor((diff % 3600000) / 60000);
+  if (hours > 0 && minutes > 0) return `${hours} giờ ${minutes} phút`;
+  if (hours > 0) return `${hours} giờ`;
+  return `${minutes} phút`;
+}
+
+function fmtDate(iso: string): string {
+  return new Date(iso).toLocaleString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 export default function ContestDetail() {
@@ -113,9 +133,21 @@ export default function ContestDetail() {
   }
 
   const STATUS_MAP: Record<Contest['status'], { label: string; cls: string; dot: string }> = {
-    UNDERWAY: { label: 'ĐANG DIỄN RA', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500 animate-pulse-glow' },
-    NOT_STARTED: { label: 'CHƯA BẮT ĐẦU', cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    ENDED: { label: 'ĐÃ KẾT THÚC', cls: 'bg-slate-50 text-slate-500 border-[var(--border)]', dot: 'bg-slate-400' },
+    UNDERWAY: {
+      label: 'Đang diễn ra',
+      cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+      dot: 'bg-emerald-500 animate-pulse',
+    },
+    NOT_STARTED: {
+      label: 'Chưa bắt đầu',
+      cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+      dot: 'bg-amber-500',
+    },
+    ENDED: {
+      label: 'Đã kết thúc',
+      cls: 'bg-[var(--bg-tertiary)] text-[var(--text-muted)] border-[var(--border)]',
+      dot: 'bg-[var(--text-muted)]',
+    },
   };
   const STATUS_META = STATUS_MAP[status as Contest['status']];
 
@@ -135,65 +167,230 @@ export default function ContestDetail() {
   return (
     <div className="space-y-5">
       {/* HEADER */}
-      <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border)] shadow-sm p-6">
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[10px] font-bold ${STATUS_META.cls}`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${STATUS_META.dot}`} /> {STATUS_META.label}
+      <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border)] shadow-sm p-6 space-y-4">
+        {/* Navigation & Status Badges */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Link
+            to="/contests"
+            className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--accent-text)] transition-colors font-medium"
+          >
+            ← Quay lại danh sách kỳ thi
+          </Link>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[11px] font-bold ${STATUS_META.cls}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${STATUS_META.dot}`} /> {STATUS_META.label}
+            </span>
+            <span className="px-2.5 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent-text)] border border-[var(--accent)]/20 font-bold text-[11px]">
+              Thể thức {contest.rule_type}
+            </span>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-secondary)] text-[11px] font-medium">
+              {contest.is_public ? (
+                <>
+                  <Globe className="w-3 h-3 text-[var(--text-muted)]" /> Công khai
+                </>
+              ) : (
+                <>
+                  <Lock className="w-3 h-3 text-[var(--text-muted)]" /> Nội bộ
+                </>
+              )}
+            </span>
+          </div>
+        </div>
+
+        {/* Title & Action Box */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pt-1">
+          <div className="space-y-3 flex-1 min-w-0">
+            <h1 className="text-2xl font-black text-[var(--text-primary)] tracking-tight">
+              {contest.title}
+            </h1>
+            <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-xs text-[var(--text-secondary)]">
+              <span className="inline-flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+                <span>Bắt đầu: <strong className="text-[var(--text-primary)] font-semibold">{fmtDate(contest.start_time)}</strong></span>
               </span>
-              <span className="px-2 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent-text)] border border-[var(--accent)]/20 font-bold text-[10px]">{contest.rule_type}</span>
-              {!contest.is_public && <Lock className="w-3.5 h-3.5 text-[var(--text-secondary)]" />}
+              <span className="inline-flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+                <span>Kết thúc: <strong className="text-[var(--text-primary)] font-semibold">{fmtDate(contest.end_time)}</strong></span>
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Timer className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+                <span>Thời lượng: <strong className="text-[var(--text-primary)] font-semibold">{fmtDuration(contest.start_time, contest.end_time)}</strong></span>
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <ListOrdered className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+                <span><strong className="text-[var(--text-primary)] font-semibold">{problems.length}</strong> bài tập</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+                <span><strong className="text-[var(--text-primary)] font-semibold">{rank.length}</strong> thí sinh</span>
+              </span>
             </div>
-            <h1 className="text-xl font-extrabold text-[var(--text-primary)] tracking-tight">{contest.title}</h1>
-            <div className="text-xs text-[var(--text-secondary)] max-w-2xl"><Markdown content={contest.description} /></div>
           </div>
 
-          <div className="shrink-0 min-w-[200px] p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] space-y-2">
-            <div className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1">
-              <Timer className="w-3.5 h-3.5 text-[var(--accent-text)]" />
-              {status === 'NOT_STARTED' ? 'BẮT ĐẦU SAU' : status === 'UNDERWAY' ? 'CÒN LẠI' : 'KẾT THÚC LÚC'}
+          {/* Countdown & Action Card */}
+          <div className="shrink-0 md:w-64 p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] flex flex-col justify-between space-y-3">
+            <div>
+              <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
+                <Timer className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+                {status === 'NOT_STARTED' ? 'Bắt đầu sau' : status === 'UNDERWAY' ? 'Thời gian còn lại' : 'Kỳ thi kết thúc lúc'}
+              </div>
+              <div className="font-code font-black text-xl text-[var(--text-primary)] tabular-nums mt-1">
+                {status === 'ENDED' ? fmtDate(contest.end_time) : countdown}
+              </div>
             </div>
-            <div className="font-code font-black text-lg text-[var(--text-primary)] tabular-nums">
-              {status === 'ENDED' ? new Date(contest.end_time).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }) : countdown}
-            </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[var(--text-secondary)] font-code pt-1 border-t border-[var(--border)]">
-              <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-[var(--accent-text)]" /> {new Date(contest.start_time).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
-              <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-[var(--accent-text)]" /> → {new Date(contest.end_time).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
-              <span className="flex items-center gap-1"><Users className="w-3 h-3 text-[var(--accent-text)]" /> {rank.length} thí sinh</span>
-            </div>
+
+            {status === 'UNDERWAY' ? (
+              <button
+                onClick={() => setTab('problems')}
+                className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+              >
+                Vào làm bài ngay <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            ) : status === 'NOT_STARTED' ? (
+              <button
+                onClick={() => setTab('problems')}
+                className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border)] text-xs font-semibold transition-all cursor-pointer"
+              >
+                Xem danh sách bài ({problems.length})
+              </button>
+            ) : (
+              <button
+                onClick={() => setTab('rank')}
+                className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border)] text-xs font-semibold transition-all cursor-pointer"
+              >
+                Xem bảng xếp hạng
+              </button>
+            )}
           </div>
         </div>
       </div>
 
       {/* TABS */}
       <div className="flex items-center gap-1 bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl p-1.5 shadow-sm w-fit">
-          {tbBtn('overview', <Info className="w-4 h-4" />, 'Tổng Quan')}
-          {tbBtn('problems', <ListOrdered className="w-4 h-4" />, `Bài Tập (${problems.length})`)}
-          {tbBtn('rank', <Award className="w-4 h-4" />, 'Bảng Xếp Hạng')}
+        {tbBtn('overview', <Info className="w-4 h-4" />, 'Tổng Quan & Thể Lệ')}
+        {tbBtn('problems', <ListOrdered className="w-4 h-4" />, `Bài Tập (${problems.length})`)}
+        {tbBtn('rank', <Award className="w-4 h-4" />, `Bảng Xếp Hạng (${rank.length})`)}
       </div>
 
       {/* OVERVIEW */}
       {tab === 'overview' && (
-        <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border)] shadow-sm p-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-amber-500" />
-            <h2 className="text-sm font-extrabold text-[var(--text-primary)]">Giới Thiệu Kỳ Thi</h2>
-          </div>
-          <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{contest.description}</p>
+        <div className="space-y-5">
+          {/* Quick Specs Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg-primary)] space-y-1 shadow-xs">
+              <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider block">Thể thức thi đấu</span>
+              <div className="font-bold text-sm text-[var(--text-primary)]">
+                {contest.rule_type === 'ACM' ? 'ACM / ICPC' : 'OI Subtask'}
+              </div>
+              <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                {contest.rule_type === 'ACM'
+                  ? 'AC nhiều nhất, sai trừ thời gian phạt (penalty 20 phút).'
+                  : 'Chấm subtask theo thang điểm, tích lũy điểm cao nhất từng bài.'}
+              </p>
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-            <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)]">
-              <div className="font-bold text-[var(--text-primary)]">Thể thức</div>
-              <div className="text-[var(--text-secondary)] mt-1">{contest.rule_type === 'ACM' ? 'ACM/ICPC — AC nhanh nhất, sai trừ thời gian' : 'OI — chấm subtask theo điểm'}</div>
+            <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg-primary)] space-y-1 shadow-xs">
+              <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider block">Thời lượng làm bài</span>
+              <div className="font-bold text-sm text-[var(--text-primary)]">
+                {fmtDuration(contest.start_time, contest.end_time)}
+              </div>
+              <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                Từ {new Date(contest.start_time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} đến {new Date(contest.end_time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+              </p>
             </div>
-            <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)]">
-              <div className="font-bold text-[var(--text-primary)]">Thời gian làm bài</div>
-              <div className="text-[var(--text-secondary)] mt-1">{Math.round((new Date(contest.end_time).getTime() - new Date(contest.start_time).getTime()) / 3600000)} giờ</div>
+
+            <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg-primary)] space-y-1 shadow-xs">
+              <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider block">Quy mô đề thi</span>
+              <div className="font-bold text-sm text-[var(--text-primary)]">
+                {problems.length} Bài toán thuật toán
+              </div>
+              <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                Xem chi tiết danh sách và làm bài ở tab &ldquo;Bài Tập&rdquo;.
+              </p>
             </div>
-            <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)]">
-              <div className="font-bold text-[var(--text-primary)]">Bài tập</div>
-              <div className="text-[var(--text-secondary)] mt-1">{problems.length} bài · xem chi tiết ở tab "Bài Tập"</div>
+
+            <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg-primary)] space-y-1 shadow-xs">
+              <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider block">Môi trường & Ngôn ngữ</span>
+              <div className="font-bold text-sm text-[var(--text-primary)]">
+                C++, Python, Rust
+              </div>
+              <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                Thực thi an toàn qua sandbox tự động với giới hạn RAM/CPU.
+              </p>
+            </div>
+          </div>
+
+          {/* Main Description Card */}
+          <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border)] shadow-sm p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-[var(--accent-text)]" />
+                <h2 className="text-sm font-bold text-[var(--text-primary)]">Mô Tả & Thông Tin Kỳ Thi</h2>
+              </div>
+              {contest.rule_type && (
+                <span className="text-[11px] font-mono text-[var(--text-muted)]">
+                  Quy chuẩn {contest.rule_type}
+                </span>
+              )}
+            </div>
+
+            {contest.description && contest.description.trim().length > 0 ? (
+              <div className="p-4 rounded-xl bg-[var(--bg-secondary)]/40 border border-[var(--border)] text-sm leading-relaxed text-[var(--text-primary)]">
+                <Markdown content={contest.description} />
+              </div>
+            ) : (
+              <div className="p-6 rounded-xl bg-[var(--bg-secondary)]/30 border border-[var(--border)] text-center text-xs text-[var(--text-muted)] italic">
+                Ban tổ chức chưa cung cấp thêm phần mô tả chi tiết cho kỳ thi này. Bạn có thể xem ngay danh sách các bài tập ở tab &ldquo;Bài Tập&rdquo;.
+              </div>
+            )}
+          </div>
+
+          {/* Rules & Guidelines */}
+          <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border)] shadow-sm p-6 space-y-4">
+            <div className="flex items-center gap-2 pb-3 border-b border-[var(--border)]">
+              <ShieldCheck className="w-4 h-4 text-[var(--accent-text)]" />
+              <h2 className="text-sm font-bold text-[var(--text-primary)]">Quy Định Chung & Tính Điểm</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-[var(--text-secondary)]">
+              <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] space-y-2">
+                <h3 className="font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                  <Award className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+                  Quy tắc tính điểm ({contest.rule_type})
+                </h3>
+                {contest.rule_type === 'ACM' ? (
+                  <p className="leading-relaxed">
+                    Xếp hạng ưu tiên theo số lượng bài giải được (<strong className="text-[var(--text-primary)]">AC</strong>). Nếu bằng số bài AC, thí sinh có tổng thời gian phạt (<strong className="text-[var(--text-primary)]">Penalty</strong>) nhỏ hơn sẽ xếp trên. Mỗi lần nộp sai trước khi AC bị cộng 20 phút phạt.
+                  </p>
+                ) : (
+                  <p className="leading-relaxed">
+                    Mỗi bài tập được chia thành các testcase với điểm số tương ứng. Điểm số của bạn là <strong className="text-[var(--text-primary)]">điểm cao nhất</strong> đạt được trong các lần nộp. Thứ hạng được xếp theo tổng điểm bài làm.
+                  </p>
+                )}
+              </div>
+
+              <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] space-y-2">
+                <h3 className="font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+                  Quy chế làm bài & Trung thực
+                </h3>
+                <p className="leading-relaxed">
+                  Tất cả bài nộp được kiểm tra tự động qua sandbox cách ly bảo mật. Nghiêm cấm chia sẻ mã nguồn, sao chép code hoặc sử dụng nhiều tài khoản trong suốt thời gian diễn ra kỳ thi. Vi phạm sẽ bị hủy kết quả.
+                </p>
+              </div>
+            </div>
+
+            {/* Bottom Call to Action */}
+            <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-[var(--border)]">
+              <span className="text-xs text-[var(--text-muted)]">
+                Bạn đã nắm rõ thể lệ? Bắt đầu khám phá đề bài và thử sức ngay.
+              </span>
+              <button
+                onClick={() => setTab('problems')}
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold transition-all shadow-xs cursor-pointer self-start sm:self-auto"
+              >
+                Xem danh sách bài tập ({problems.length}) <ArrowRight className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
         </div>

@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import MorphIcon from '../../components/MorphIcon';
 import {
-  ShieldCheck,
-  Plus,
-  LayoutDashboard,
-  Settings,
-  LogOut,
-  Trophy,
-  ListTree,
-  UserRound,
-  Lock,
-  Megaphone,
-  ArrowLeft,
-} from 'lucide-react';
+  ShieldCheck as ShieldCheckData,
+  Plus as PlusData,
+  LayoutDashboard as LayoutDashboardData,
+  Settings as SettingsData,
+  LogOut as LogOutData,
+  Trophy as TrophyData,
+  ListTree as ListTreeData,
+  UserRound as UserRoundData,
+  Lock as LockData,
+  Megaphone as MegaphoneData,
+  ArrowLeft as ArrowLeftData,
+  ChevronRight as ChevronRightData,
+} from 'lucide';
 import { supabase } from '../../lib/supabase';
 import AdminOverviewTab from './tabs/AdminOverviewTab';
 import AdminUsersTab from './tabs/AdminUsersTab';
@@ -20,16 +23,79 @@ import AdminContestsTab from './tabs/AdminContestsTab';
 import AdminAnnouncementsTab from './tabs/AdminAnnouncementsTab';
 import AdminSettingsTab from './tabs/AdminSettingsTab';
 
-type TabName = 'overview' | 'problems' | 'create' | 'users' | 'contests' | 'announcements' | 'settings';
+export type TabName = 'overview' | 'problems' | 'contests' | 'announcements' | 'users' | 'settings';
 
-export default function Admin() {
-  const [activeTab, setActiveTab] = useState<TabName>('overview');
-  const [authChecked, setAuthChecked] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [myUserId, setMyUserId] = useState<string | null>(null);
-  const [problemMode, setProblemMode] = useState<'list' | 'create'>('list');
+interface AdminProps {
+  userId?: string | null;
+}
+
+const TAB_META: Record<
+  TabName,
+  { section: string; title: string; desc: string; icon: any }
+> = {
+  overview: {
+    section: 'Tổng Quan',
+    title: 'Bảng Điều Khiển Hệ Thống',
+    desc: 'Chỉ số hoạt động, lưu lượng nộp bài và tình trạng dịch vụ',
+    icon: LayoutDashboardData,
+  },
+  problems: {
+    section: 'Quản Lý Nội Dung',
+    title: 'Ngân Hàng Bài Tập',
+    desc: 'Danh sách bài tập lập trình, cấu hình giới hạn và bộ testcases chấm ẩn',
+    icon: ListTreeData,
+  },
+  contests: {
+    section: 'Quản Lý Nội Dung',
+    title: 'Quản Lý Kỳ Thi',
+    desc: 'Thiết lập kỳ thi trực tuyến theo thể thức ACM-ICPC và IOI',
+    icon: TrophyData,
+  },
+  announcements: {
+    section: 'Quản Lý Nội Dung',
+    title: 'Quản Lý Thông Báo',
+    desc: 'Đăng và quản lý thông báo hệ thống hiển thị cho học sinh',
+    icon: MegaphoneData,
+  },
+  users: {
+    section: 'Hệ Thống & Tài Khoản',
+    title: 'Người Dùng & Phân Quyền',
+    desc: 'Quản lý tài khoản, chỉ định vai trò Giáo viên và phân bổ quyền RBAC',
+    icon: UserRoundData,
+  },
+  settings: {
+    section: 'Hệ Thống & Tài Khoản',
+    title: 'Cấu Hình Hệ Thống',
+    desc: 'Tên website, slogan, giới hạn tài nguyên mặc định và thông tin hệ thống',
+    icon: SettingsData,
+  },
+};
+
+export default function Admin({ userId }: AdminProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const [authChecked, setAuthChecked] = useState(Boolean(userId));
+  const [isAdmin, setIsAdmin] = useState(Boolean(userId));
+  const [myUserId, setMyUserId] = useState<string | null>(userId || null);
+
+  // Parse active tab from URL path /admin/:tab or fallback
+  const subpath = location.pathname.replace(/^\/admin\/?/, '').split('/')[0];
+  const validTabs: TabName[] = ['overview', 'problems', 'contests', 'announcements', 'users', 'settings'];
+  const activeTab: TabName = validTabs.includes(subpath as TabName)
+    ? (subpath as TabName)
+    : (validTabs.includes(searchParams.get('tab') as TabName) ? (searchParams.get('tab') as TabName) : 'overview');
+
+  const problemMode: 'list' | 'create' = searchParams.get('mode') === 'create' ? 'create' : 'list';
 
   useEffect(() => {
+    if (userId) {
+      setMyUserId(userId);
+      setIsAdmin(true);
+      setAuthChecked(true);
+      return;
+    }
     (async () => {
       const {
         data: { user },
@@ -47,39 +113,47 @@ export default function Admin() {
       setIsAdmin(profile?.role === 'admin');
       setAuthChecked(true);
     })();
-  }, []);
+  }, [userId]);
 
-  const handleTabChange = (tab: TabName) => {
-    if (tab === 'create') {
-      setProblemMode('create');
-      setActiveTab('problems');
-    } else if (tab === 'problems') {
-      setProblemMode('list');
-      setActiveTab('problems');
+  const handleTabChange = (tab: TabName, mode?: 'list' | 'create') => {
+    if (tab === 'problems') {
+      const targetMode = mode || 'list';
+      navigate(targetMode === 'create' ? '/admin/problems?mode=create' : '/admin/problems');
+    } else if (tab === 'overview') {
+      navigate('/admin');
     } else {
-      setActiveTab(tab);
+      navigate(`/admin/${tab}`);
     }
   };
 
-  const menuBtn = (tab: TabName, icon: React.ReactNode, text: string, isSpecialActive = false) => {
-    const isActive = isSpecialActive || (activeTab === tab && (tab !== 'problems' || problemMode === 'list'));
+  const handleProblemModeChange = (mode: 'list' | 'create') => {
+    navigate(mode === 'create' ? '/admin/problems?mode=create' : '/admin/problems');
+  };
+
+  const menuBtn = (tab: TabName, iconData: any, text: string) => {
+    const isActive = activeTab === tab;
     return (
       <button
         onClick={() => handleTabChange(tab)}
-        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors cursor-pointer ${
+        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md transition-colors cursor-pointer text-xs ${
           isActive
-            ? 'bg-[var(--accent)]/10 text-[var(--accent-text)] font-bold'
-            : 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
+            ? 'bg-[var(--bg-tertiary)] text-[var(--text-primary)] font-semibold'
+            : 'text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] font-normal'
         }`}
       >
-        {icon} {text}
+        <div className="flex items-center gap-2">
+          <MorphIcon icon={iconData} size={14} className="shrink-0" />
+          <span>{text}</span>
+        </div>
+        {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />}
       </button>
     );
   };
 
   if (!authChecked) {
     return (
-      <div className="flex items-center justify-center h-64 text-xs text-[var(--text-secondary)]">
+      <div className="flex items-center justify-center h-64 text-xs text-[var(--text-secondary)] font-medium">
+        <div className="w-4 h-4 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin mr-2" />
         Đang kiểm tra quyền truy cập...
       </div>
     );
@@ -87,97 +161,177 @@ export default function Admin() {
 
   if (!isAdmin) {
     return (
-      <div className="max-w-md mx-auto mt-16 bg-white border border-[var(--border)] rounded-2xl p-6 text-center space-y-3 shadow-sm">
-        <div className="mx-auto w-12 h-12 rounded-full bg-red-50 border border-red-200 flex items-center justify-center">
-          <Lock className="w-6 h-6 text-[var(--danger)]" />
+      <div className="max-w-md mx-auto mt-16 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-md p-6 text-center space-y-4">
+        <div className="mx-auto w-10 h-10 rounded-md bg-[var(--bg-tertiary)] border border-[var(--border)] flex items-center justify-center">
+          <MorphIcon icon={LockData} size={20} className="text-[var(--danger)]" />
         </div>
-        <h1 className="text-base font-black text-[var(--text-primary)]">Không Có Quyền Truy Cập</h1>
-        <p className="text-xs text-[var(--text-secondary)]">
-          Trang quản trị chỉ dành cho tài khoản có vai trò <b className="text-[var(--text-primary)]">admin</b>.
+        <h1 className="text-base font-semibold text-[var(--text-primary)]">Không Có Quyền Quản Trị</h1>
+        <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+          Khu vực quản trị chỉ dành cho tài khoản có vai trò <b className="text-[var(--text-primary)]">admin</b>.
+          Giáo viên vui lòng truy cập Cổng Giáo Viên để soạn đề và quản lý bài nộp.
         </p>
         <div className="pt-2">
-          <a
-            href="/"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--accent)] text-[var(--text-primary)] text-xs font-bold transition-colors"
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--bg-tertiary)] hover:bg-[var(--border)] text-[var(--text-primary)] text-xs font-medium border border-[var(--border)] transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Về Trang Chủ Học Sinh
-          </a>
+            <MorphIcon icon={ArrowLeftData} size={14} /> Về Trang Chủ Học Sinh
+          </Link>
         </div>
       </div>
     );
   }
 
+  const currentMeta = TAB_META[activeTab];
+
   return (
-    <div className="flex items-start gap-6">
-      {/* LEFT: Vertical SideMenu */}
-      <aside className="w-52 shrink-0 sticky top-20 rounded-2xl bg-white border border-[var(--border)] shadow-sm overflow-hidden">
-        <div className="py-5 text-center border-b border-[var(--border)]">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 flex items-center justify-center">
-            <ShieldCheck className="w-7 h-7 text-[var(--accent-text)]" />
+    <div className="flex flex-col lg:flex-row items-start gap-6">
+      {/* LEFT: Sidebar Navigation */}
+      <aside className="w-full lg:w-60 shrink-0 lg:sticky lg:top-6 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] overflow-hidden">
+        {/* Brand header */}
+        <div className="p-3 border-b border-[var(--border)] flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-md bg-[var(--bg-tertiary)] border border-[var(--border)] flex items-center justify-center shrink-0">
+            <MorphIcon icon={ShieldCheckData} size={16} className="text-[var(--accent-text)]" />
           </div>
-          <p className="mt-2 text-xs font-black text-[var(--text-primary)]">OJ Admin</p>
-          <p className="text-[10px] text-[var(--text-muted)] font-code">v1.0.0</p>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-[var(--text-primary)] tracking-tight">CodeJudge</span>
+              <span className="px-1 py-0.2 rounded text-[9px] font-mono font-semibold bg-[var(--accent)] text-white uppercase">
+                Admin
+              </span>
+            </div>
+            <p className="text-[10px] text-[var(--text-muted)] truncate font-mono">Quản Trị Hệ Thống</p>
+          </div>
         </div>
 
-        <nav className="p-2 space-y-0.5 text-xs font-bold">
-          {menuBtn('overview', <LayoutDashboard className="w-4 h-4" />, 'Dashboard')}
+        {/* Navigation Groups */}
+        <nav className="p-2 space-y-3">
+          {/* Section: Overview */}
+          <div className="space-y-0.5">
+            <p className="px-2 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+              Tổng Quan
+            </p>
+            {menuBtn('overview', LayoutDashboardData, 'Bảng Điều Khiển')}
+          </div>
 
-          <p className="px-3 pt-3 pb-1 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-wider">General</p>
-          {menuBtn('users', <UserRound className="w-4 h-4" />, 'User & Phân Quyền')}
-          {menuBtn('announcements', <Megaphone className="w-4 h-4" />, 'Thông Báo')}
-          {menuBtn('settings', <Settings className="w-4 h-4" />, 'System Config')}
+          {/* Section: Content Management */}
+          <div className="space-y-0.5">
+            <p className="px-2 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+              Quản Lý Nội Dung
+            </p>
+            {menuBtn('problems', ListTreeData, 'Ngân Hàng Bài Tập')}
+            {menuBtn('contests', TrophyData, 'Kỳ Thi Trực Tuyến')}
+            {menuBtn('announcements', MegaphoneData, 'Thông Báo Hệ Thống')}
+          </div>
 
-          <p className="px-3 pt-3 pb-1 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-wider">Problem</p>
-          {menuBtn('problems', <ListTree className="w-4 h-4" />, 'Problem List', activeTab === 'problems' && problemMode === 'list')}
-          {menuBtn('create', <Plus className="w-4 h-4" />, 'Create Problem', activeTab === 'problems' && problemMode === 'create')}
+          {/* Section: System & RBAC */}
+          <div className="space-y-0.5">
+            <p className="px-2 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+              Hệ Thống & Phân Quyền
+            </p>
+            {menuBtn('users', UserRoundData, 'Người Dùng & RBAC')}
+            {menuBtn('settings', SettingsData, 'Cấu Hình Hệ Thống')}
+          </div>
 
-          <p className="px-3 pt-3 pb-1 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-wider">Contest</p>
-          {menuBtn('contests', <Trophy className="w-4 h-4" />, 'Contest List')}
-
-          <div className="pt-2 mt-2 border-t border-[var(--border)] space-y-1">
-            <a
-              href="/"
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+          {/* Bottom Portal Switch & Sign Out */}
+          <div className="pt-2 border-t border-[var(--border)] space-y-0.5">
+            <Link
+              to="/"
+              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" /> Về Trang Học Sinh
-            </a>
+              <MorphIcon icon={ArrowLeftData} size={14} className="shrink-0" />
+              <span>Về Trang Học Sinh</span>
+            </Link>
             <button
               onClick={async () => {
                 await supabase.auth.signOut();
                 window.location.reload();
               }}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-medium text-[var(--danger)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer"
             >
-              <LogOut className="w-4 h-4" /> Đăng Xuất
+              <MorphIcon icon={LogOutData} size={14} className="shrink-0" />
+              <span>Đăng Xuất</span>
             </button>
           </div>
         </nav>
       </aside>
 
-      {/* RIGHT: Content */}
-      <div className="flex-1 min-w-0 space-y-5">
-        <div className="bg-white p-5 rounded-xl border border-[var(--border)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* RIGHT: Content Area */}
+      <div className="flex-1 min-w-0 w-full space-y-4">
+        {/* Dynamic Context Header */}
+        <div className="bg-[var(--bg-secondary)] px-4 py-3 rounded-md border border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-0.5">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent-text)] border border-[var(--accent)]/20 text-xs font-bold font-code">
-              <ShieldCheck className="w-3.5 h-3.5" /> Quản Trị Hệ Thống
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-[var(--text-muted)]">
+              <span>Admin</span>
+              <MorphIcon icon={ChevronRightData} size={12} />
+              <span>{currentMeta.section}</span>
+              <MorphIcon icon={ChevronRightData} size={12} />
+              <span className="text-[var(--text-primary)] font-semibold">{currentMeta.title}</span>
             </div>
-            <h1 className="text-xl font-black text-[var(--text-primary)]">Trung Tâm Quản Lý Admin</h1>
-            <p className="text-[var(--text-secondary)] text-xs">Người dùng · Phân quyền RBAC · Nội dung · Kỳ thi · Thông báo</p>
+
+            {/* Title & Description */}
+            <div className="flex items-center gap-2 pt-0.5">
+              <MorphIcon icon={currentMeta.icon} size={16} className="text-[var(--accent-text)]" />
+              <h1 className="text-sm font-semibold text-[var(--text-primary)] tracking-tight">
+                {currentMeta.title}
+              </h1>
+            </div>
+            <p className="text-[var(--text-secondary)] text-xs">{currentMeta.desc}</p>
           </div>
-          <button
-            onClick={() => handleTabChange('create')}
-            className="px-4 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--text-primary)] font-bold text-xs flex items-center gap-1.5 transition-colors w-fit cursor-pointer"
-          >
-            <Plus className="w-4 h-4" /> Tạo Bài Tập Mới
-          </button>
+
+          {/* Contextual Actions */}
+          <div className="flex items-center gap-2 shrink-0">
+            {activeTab === 'problems' && (
+              problemMode === 'create' ? (
+                <button
+                  onClick={() => handleProblemModeChange('list')}
+                  className="px-3 py-1.5 rounded-md bg-[var(--bg-tertiary)] hover:bg-[var(--border)] text-[var(--text-primary)] font-medium text-xs flex items-center gap-1.5 transition-colors cursor-pointer border border-[var(--border)]"
+                >
+                  <MorphIcon icon={ListTreeData} size={14} /> Danh Sách Bài Tập
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleProblemModeChange('create')}
+                  className="px-3 py-1.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium text-xs flex items-center gap-1.5 transition-colors cursor-pointer border border-[rgba(27,31,36,0.15)] shadow-xs"
+                >
+                  <MorphIcon icon={PlusData} size={14} /> Tạo Bài Tập Mới
+                </button>
+              )
+            )}
+
+            {activeTab === 'overview' && (
+              <button
+                onClick={() => handleTabChange('problems', 'create')}
+                className="px-3 py-1.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium text-xs flex items-center gap-1.5 transition-colors cursor-pointer border border-[rgba(27,31,36,0.15)] shadow-xs"
+              >
+                <MorphIcon icon={PlusData} size={14} /> Soạn Đề Mới
+              </button>
+            )}
+
+            {activeTab === 'users' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border)] text-xs font-mono">
+                <MorphIcon icon={ShieldCheckData} size={14} className="text-[var(--accent-text)]" /> RBAC Enabled
+              </span>
+            )}
+
+            {activeTab === 'contests' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border)] text-xs font-mono">
+                <MorphIcon icon={TrophyData} size={14} className="text-[var(--text-muted)]" /> ACM-ICPC / OI
+              </span>
+            )}
+          </div>
         </div>
 
-        {activeTab === 'overview' && <AdminOverviewTab />}
+        {/* Tab Panels */}
+        {activeTab === 'overview' && (
+          <AdminOverviewTab onNavigateTab={(tab, mode) => handleTabChange(tab, mode)} />
+        )}
         {activeTab === 'users' && <AdminUsersTab myUserId={myUserId} />}
         {activeTab === 'problems' && (
           <AdminProblemsTab
             mode={problemMode}
-            onModeChange={(m) => setProblemMode(m)}
+            onModeChange={handleProblemModeChange}
           />
         )}
         {activeTab === 'contests' && <AdminContestsTab />}

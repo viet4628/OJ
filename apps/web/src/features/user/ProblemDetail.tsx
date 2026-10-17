@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, useLocation, Link } from 'react-router-dom';
 import DynamicMonacoEditor from '@monaco-editor/react';
 import {
   ChevronLeft,
@@ -35,21 +35,36 @@ import ProblemLeftPane from './problem/ProblemLeftPane';
 import ProblemTestPanel from './problem/ProblemTestPanel';
 
 interface ProblemDetailProps {
-  user: { username: string; rating: number } | null;
+  user: { id?: string; username: string; rating: number } | null;
   onOpenAuth: () => void;
   onLogout: () => void;
 }
 
 export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) {
   const { slug } = useParams();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const navState = location.state as { code?: string; language?: SupportedLanguage; submissionId?: string } | null;
   const { isDark, toggleTheme } = useTheme();
 
   const [problem, setProblem] = useState<Problem | null>(null);
   const [isProblemLoading, setIsProblemLoading] = useState(true);
   const [historySubs, setHistorySubs] = useState<any[]>([]);
   const [rankRows, setRankRows] = useState<any[]>([]);
-  const [language, setLanguage] = useState<SupportedLanguage>('cpp');
-  const [code, setCode] = useState<string>(STARTER_CODES.cpp);
+  const [hasResolvedInitialCode, setHasResolvedInitialCode] = useState<boolean>(() => Boolean(navState?.code));
+  const [language, setLanguage] = useState<SupportedLanguage>(() => navState?.language || 'cpp');
+  const [code, setCode] = useState<string>(() => navState?.code || '');
+  const [loadedSubInfo, setLoadedSubInfo] = useState<{ id: string; status: string; createdAt?: string } | null>(() => {
+    if (navState?.submissionId) {
+      return { id: navState.submissionId, status: 'ACCEPTED' };
+    }
+    return null;
+  });
+  const codeCache = useRef<Record<string, string>>({
+    cpp: navState?.language === 'cpp' && navState.code ? navState.code : STARTER_CODES.cpp,
+    python: navState?.language === 'python' && navState.code ? navState.code : STARTER_CODES.python,
+    rust: navState?.language === 'rust' && navState.code ? navState.code : STARTER_CODES.rust,
+  });
   const [activeLeftTab, setActiveLeftTab] = useState<SidebarTab>('description');
   const [descFontSize, setDescFontSize] = useState<number>(13);
   const [editorFontSize, setEditorFontSize] = useState<number>(13);
@@ -101,7 +116,7 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
 
   // Vertical resizable test panel (at bottom of right pane)
   const [testPanelOpen, setTestPanelOpen] = useState(true);
-  const [testPanelHeight, setTestPanelHeight] = useState(260);
+  const [testPanelHeight, setTestPanelHeight] = useState(200);
   const editorRef = useRef<any>(null);
 
   const vertDragState = useRef<{ startY: number; startH: number; maxH: number } | null>(null);
@@ -184,6 +199,10 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
     (async () => {
       setIsProblemLoading(true);
       setProblem(null);
+      if (!navState?.code) {
+        setHasResolvedInitialCode(false);
+        setLoadedSubInfo(null);
+      }
       const p = await getProblemBySlug(slug);
       setProblem(p);
       if (p) {
@@ -194,14 +213,71 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
         ]);
         setHistorySubs(problemSubs);
         setRankRows(top);
+
+        // If code was already provided synchronously via navigation state, keep it
+        if (navState?.code) {
+          setIsProblemLoading(false);
+          setHasResolvedInitialCode(true);
+          return;
+        }
+
+        // Load previously written / submitted code:
+        const subIdFromUrl = searchParams.get('sub');
+        let restored = false;
+
+        // 1. If explicit ?sub= is in query
+        if (subIdFromUrl) {
+          const sub = await getSubmission(subIdFromUrl);
+          if (sub && sub.code) {
+            const subLang = (sub.language as SupportedLanguage) || 'cpp';
+            codeCache.current[subLang] = sub.code;
+            setLanguage(subLang);
+            setCode(sub.code);
+            setLoadedSubInfo({ id: sub.id, status: sub.status, createdAt: sub.created_at });
+            restored = true;
+          }
+        }
+
+        // 2. If not restored, check user's past submissions for this problem
+        if (!restored) {
+          const effectiveUserId = user?.id || (await supabase.auth.getUser()).data.user?.id;
+          if (effectiveUserId) {
+            const { data: mySubs } = await supabase
+              .from('submissions')
+              .select('id, language, code, status, created_at')
+              .eq('problem_id', p.id)
+              .eq('user_id', effectiveUserId)
+              .eq('is_run', false)
+              .order('created_at', { ascending: false })
+              .limit(10);
+
+            if (mySubs && mySubs.length > 0) {
+              for (const s of mySubs) {
+                if (s.code && s.language && !codeCache.current[s.language]) {
+                  codeCache.current[s.language] = s.code;
+                }
+              }
+              const bestSub = mySubs.find((s) => s.status === 'ACCEPTED') || mySubs[0];
+              if (bestSub && bestSub.code) {
+                const subLang = (bestSub.language as SupportedLanguage) || 'cpp';
+                codeCache.current[subLang] = bestSub.code;
+                setLanguage(subLang);
+                setCode(bestSub.code);
+                setLoadedSubInfo({ id: bestSub.id, status: bestSub.status, createdAt: bestSub.created_at });
+                restored = true;
+              }
+            }
+          }
+        }
+
+        if (!restored) {
+          setCode(codeCache.current[language] || STARTER_CODES[language] || '');
+        }
+        setHasResolvedInitialCode(true);
       }
       setIsProblemLoading(false);
     })();
-  }, [slug]);
-
-  useEffect(() => {
-    setCode(STARTER_CODES[language] || '');
-  }, [language]);
+  }, [slug, searchParams.get('sub')]);
 
   useEffect(() => {
     if (!problem) return;
@@ -251,8 +327,27 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
     });
   };
 
+  const handleLanguageChange = (newLang: SupportedLanguage) => {
+    codeCache.current[language] = code;
+    setLanguage(newLang);
+    const nextCode = codeCache.current[newLang] ?? (STARTER_CODES[newLang] || '');
+    setCode(nextCode);
+  };
+
   const handleResetCode = () => {
-    setCode(STARTER_CODES[language] || '');
+    const starter = STARTER_CODES[language] || '';
+    setCode(starter);
+    codeCache.current[language] = starter;
+    setLoadedSubInfo(null);
+  };
+
+  const handleSelectSubmission = (sub: any) => {
+    if (!sub?.code) return;
+    const subLang = (sub.language as SupportedLanguage) || language;
+    codeCache.current[subLang] = sub.code;
+    setLanguage(subLang);
+    setCode(sub.code);
+    setLoadedSubInfo({ id: sub.id, status: sub.status, createdAt: sub.created_at });
   };
 
   const isBusy = isRunning || isSubmitting;
@@ -261,6 +356,7 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
   const mountedRef = useRef(true);
 
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
       mountedRef.current = false;
       if (pollRef.current !== null) clearTimeout(pollRef.current);
@@ -272,15 +368,32 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
       let attempts = 0;
       const poll = () => {
         if (!mountedRef.current) return resolve(null);
-        getSubmission(submissionId).then((sub) => {
-          if (!mountedRef.current) return resolve(null);
-          if (sub && !['PENDING', 'JUDGING'].includes(sub.status)) return resolve(sub);
-          attempts++;
-          if (attempts < 40) pollRef.current = window.setTimeout(poll, 1500);
-          else resolve(null);
-        });
+        getSubmission(submissionId)
+          .then((sub) => {
+            if (!mountedRef.current) return resolve(null);
+            if (sub && !['PENDING', 'JUDGING'].includes(sub.status)) {
+              return resolve(sub);
+            }
+            attempts++;
+            if (attempts < 30) {
+              const delay = attempts < 5 ? 400 : 800;
+              pollRef.current = window.setTimeout(poll, delay);
+            } else {
+              resolve(null);
+            }
+          })
+          .catch((err) => {
+            console.error('[ProblemDetail] pollSubmission error:', err);
+            attempts++;
+            if (attempts < 30) {
+              pollRef.current = window.setTimeout(poll, 800);
+            } else {
+              resolve(null);
+            }
+          });
       };
-      poll();
+      // Run first poll after 200ms
+      pollRef.current = window.setTimeout(poll, 200);
     });
 
   const handleRun = async () => {
@@ -313,7 +426,7 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
       }
       setRunOutput(tc?.output ?? '');
     } else {
-      setSubmissionError('Đang chờ worker xử lý, xem kết quả trong trang Submissions');
+      setSubmissionError('Hệ thống đang xử lý bài nộp, bạn có thể xem lại kết quả trong lịch sử nộp bài');
     }
     setIsRunning(false);
     setSystemStatus('done');
@@ -362,7 +475,7 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
         timeMs: 0,
         memoryMb: 0,
         testcases: [],
-        note: 'Đang chờ worker xử lý, xem kết quả trong trang Submissions',
+        note: 'Hệ thống đang xử lý bài nộp, bạn có thể xem lại kết quả trong lịch sử nộp bài',
       });
     }
     setSystemStatus('done');
@@ -375,55 +488,55 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
   const difficultyLabel = problem?.difficulty === 'Easy' ? 'DỄ' : problem?.difficulty === 'Medium' ? 'VỪA' : 'KHÓ';
   const difficultyColor =
     problem?.difficulty === 'Easy'
-      ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+      ? 'bg-[var(--accent)]/10 text-[var(--accent-text)] border-[var(--accent)]/30'
       : problem?.difficulty === 'Medium'
-      ? 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30'
-      : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30';
+      ? 'bg-amber-500/10 text-[#9A6700] dark:text-[#D29922] border-amber-500/20'
+      : 'bg-red-500/10 text-[#CF222E] dark:text-[#F85149] border-red-500/20';
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-[var(--bg-primary)] text-[var(--text-primary)]">
       {/* 1. TOP SINGLE HEADER BAR */}
-      <header className="h-12 shrink-0 bg-[var(--bg-primary)] border-b border-[var(--border)] px-4 flex items-center justify-between text-xs select-none shadow-sm transition-colors duration-150">
-        <div className="flex items-center gap-3">
+      <header className="h-11 shrink-0 bg-[var(--bg-primary)] border-b border-[var(--border)] px-3 flex items-center justify-between text-xs select-none transition-colors duration-150">
+        <div className="flex items-center gap-2.5">
           <Link
             to="/problems"
-            className="p-1.5 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] border border-[var(--border)] text-[var(--text-primary)] transition-colors cursor-pointer"
+            className="p-1 rounded-md bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] border border-[var(--border)] text-[var(--text-primary)] transition-colors cursor-pointer"
             title="Quay lại danh sách bài tập"
           >
             <ChevronLeft className="w-4 h-4" />
           </Link>
           <div className="flex items-center gap-2">
-            <h1 className="font-extrabold text-[var(--text-primary)] text-sm tracking-tight">
+            <h1 className="font-semibold text-[var(--text-primary)] text-xs tracking-tight">
               {isProblemLoading ? 'Đang tải...' : problem ? problem.title : 'Không tìm thấy bài tập'}
             </h1>
             {problem && (
-              <span className={`px-2 py-0.5 rounded-md border text-[10px] font-bold ${difficultyColor}`}>
+              <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-semibold border ${difficultyColor}`}>
                 {difficultyLabel}
               </span>
             )}
           </div>
 
-          <div className="hidden sm:flex items-center gap-3 text-[11px] text-[var(--text-secondary)] font-code pl-3 border-l border-[var(--border)]">
-            <span className="flex items-center gap-1 font-semibold" title="Giới hạn thời gian">
-              <Clock className="w-3.5 h-3.5 text-sky-500" /> {(problem?.time_limit_ms || 1000) / 1000}s
+          <div className="hidden sm:flex items-center gap-2.5 text-[11px] text-[var(--text-secondary)] font-mono pl-2.5 border-l border-[var(--border)]">
+            <span className="flex items-center gap-1" title="Giới hạn thời gian">
+              <Clock className="w-3.5 h-3.5 text-[var(--text-muted)]" /> {(problem?.time_limit_ms || 1000) / 1000}s
             </span>
-            <span className="flex items-center gap-1 font-semibold" title="Giới hạn bộ nhớ">
-              <Database className="w-3.5 h-3.5 text-cyan-500" /> {problem?.memory_limit_mb || 256}MB
+            <span className="flex items-center gap-1" title="Giới hạn bộ nhớ">
+              <Database className="w-3.5 h-3.5 text-[var(--text-muted)]" /> {problem?.memory_limit_mb || 256}MB
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0">
           {/* Theme Toggle Button */}
           <button
             onClick={toggleTheme}
-            className="p-1.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-all cursor-pointer flex items-center justify-center"
+            className="p-1.5 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer flex items-center justify-center"
             title={isDark ? 'Chuyển sang chế độ Sáng' : 'Chuyển sang chế độ Tối (Dark mode)'}
             aria-label="Toggle Theme"
           >
             <MorphIcon
               icon={isDark ? SunData : MoonData}
-              size={16}
+              size={14}
               spring="snappy"
               className={isDark ? 'text-amber-400' : 'text-slate-700'}
             />
@@ -431,21 +544,21 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
 
           {user ? (
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold font-code text-[var(--accent-text)] bg-[var(--accent)]/10 border border-[var(--accent)]/20">
-                <Trophy className="w-3.5 h-3.5 text-amber-500" />
-                {user.rating} AC
+              <div className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono text-[var(--text-secondary)] border border-[var(--border)] bg-[var(--bg-secondary)]">
+                <Trophy className="w-3 h-3 text-[var(--text-muted)]" />
+                <span>{user.rating} AC</span>
               </div>
-              <div className="flex items-center gap-2 pl-2 border-l border-[var(--border)]">
-                <div className="w-7 h-7 rounded-full bg-[var(--accent)] text-white font-black flex items-center justify-center text-xs shadow-sm">
+              <div className="flex items-center gap-1.5 pl-2 border-l border-[var(--border)]">
+                <div className="w-6 h-6 rounded-full bg-[var(--accent)] text-white font-bold flex items-center justify-center text-[10px]">
                   {user.username.charAt(0).toUpperCase()}
                 </div>
-                <span className="font-bold text-[var(--text-primary)] hidden md:inline">{user.username}</span>
+                <span className="font-medium text-xs text-[var(--text-primary)] hidden md:inline">{user.username}</span>
               </div>
             </div>
           ) : (
             <button
               onClick={onOpenAuth}
-              className="px-3.5 py-1.5 rounded-lg bg-[var(--accent)] text-white font-bold hover:bg-[var(--accent-hover)] transition-all shadow-sm cursor-pointer"
+              className="px-3 py-1 rounded-md bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent-hover)] transition-colors cursor-pointer shadow-xs"
             >
               Đăng Nhập
             </button>
@@ -470,6 +583,7 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
           copiedId={copiedId}
           onCopy={handleCopy}
           widthPercent={leftWidthPercent}
+          onSelectSubmission={handleSelectSubmission}
         />
 
         {/* Horizontal Resizer between Left Pane and Right Editor */}
@@ -505,12 +619,12 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
         {/* Right Code Editor & Test Pane */}
         <div className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-hidden min-w-0">
           {/* Top Editor Toolbar */}
-          <div className="h-11 shrink-0 bg-[var(--bg-secondary)] border-b border-[var(--border)] px-4 flex items-center justify-between select-none">
+          <div className="h-10 shrink-0 bg-[var(--bg-secondary)] border-b border-[var(--border)] px-3 flex items-center justify-between select-none">
             <div className="flex items-center gap-2">
               <select
                 value={language}
-                onChange={(e) => setLanguage(e.target.value as any)}
-                className="bg-[var(--bg-primary)] border border-[var(--border)] text-xs rounded-lg px-3 py-1 text-[var(--text-primary)] font-bold focus:outline-none focus:border-[var(--accent)] cursor-pointer transition-colors shadow-sm"
+                onChange={(e) => handleLanguageChange(e.target.value as any)}
+                className="bg-[var(--bg-primary)] border border-[var(--border)] text-xs rounded-md px-2.5 py-1 text-[var(--text-primary)] font-medium focus:outline-none focus:border-[var(--accent)] cursor-pointer transition-colors shadow-xs"
               >
                 {SUPPORTED_LANGUAGES.map((l) => (
                   <option key={l.value} value={l.value}>
@@ -521,14 +635,24 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
 
               <button
                 onClick={handleResetCode}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-xs font-semibold text-[var(--text-secondary)] transition-colors cursor-pointer"
+                className="flex items-center gap-1 px-2 py-1 rounded-md border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-xs font-medium text-[var(--text-secondary)] transition-colors cursor-pointer shadow-xs"
                 title="Đặt lại mẫu code ban đầu"
               >
                 <RotateCcw className="w-3.5 h-3.5" /> Đặt lại mẫu
               </button>
 
+              {loadedSubInfo && (
+                <span
+                  className="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-primary)] text-[11px] font-mono text-[var(--text-secondary)] shadow-xs"
+                  title={`Khôi phục từ bài nộp #${loadedSubInfo.id.slice(0, 8)} (${loadedSubInfo.status})`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${loadedSubInfo.status === 'ACCEPTED' ? 'bg-[var(--accent)]' : 'bg-amber-500'}`} />
+                  <span>Code bài nộp ({loadedSubInfo.status === 'ACCEPTED' ? 'AC' : loadedSubInfo.status})</span>
+                </span>
+              )}
+
               <span
-                className="hidden sm:inline-flex items-center px-2 py-1 rounded-md bg-[var(--bg-primary)] border border-[var(--border)] font-mono text-[10px] text-[var(--text-muted)]"
+                className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-primary)] font-mono text-[10px] text-[var(--text-muted)]"
                 title="Cỡ chữ code — Ctrl + lăn chuột trong editor để đổi"
               >
                 {editorFontSize}px
@@ -539,39 +663,49 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
               <button
                 onClick={handleRun}
                 disabled={isBusy || !problem}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1 rounded-md border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] text-xs font-semibold shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {isRunning ? (
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-[var(--info)]" />
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-[var(--accent)]" />
                 ) : (
-                  <Play className="w-3.5 h-3.5 fill-current text-[var(--text-primary)]" />
+                  <Play className="w-3 h-3 fill-current text-[var(--text-secondary)]" />
                 )}
-                Chạy thử
+                {isRunning ? 'Đang chạy thử...' : 'Chạy thử'}
               </button>
 
               <button
                 onClick={handleSubmit}
                 disabled={isBusy || !problem}
-                className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-black shadow-sm transition-colors disabled:opacity-50 shrink-0 cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 py-1 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold shadow-xs transition-colors disabled:opacity-50 shrink-0 cursor-pointer"
               >
                 {isSubmitting ? (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                 ) : (
                   <Send className="w-3.5 h-3.5" />
                 )}
-                Nộp bài
+                {isSubmitting ? 'Đang chấm bài...' : 'Nộp bài'}
               </button>
             </div>
           </div>
 
           {/* Monaco Editor Container — Automatically adapts vs-dark / light */}
-          <div className="flex-1 overflow-hidden bg-[#1e1e1e]">
+          <div className="flex-1 overflow-hidden bg-[#1e1e1e] relative">
+            {!hasResolvedInitialCode && (
+              <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-primary)] z-10 text-xs font-mono text-[var(--text-muted)] gap-2">
+                <RefreshCw className="w-4 h-4 animate-spin text-[var(--accent-text)]" />
+                <span>Đang nạp bài làm...</span>
+              </div>
+            )}
             <DynamicMonacoEditor
               height="100%"
               language={SUPPORTED_LANGUAGES.find((l) => l.value === language)?.monaco || 'cpp'}
               theme={isDark ? 'vs-dark' : 'light'}
               value={code}
-              onChange={(value) => setCode(value || '')}
+              onChange={(value) => {
+                const next = value || '';
+                setCode(next);
+                codeCache.current[language] = next;
+              }}
               onMount={(editor, monaco) => {
                 editorRef.current = editor;
                 editor.onDidChangeConfiguration((e) => {
@@ -645,6 +779,7 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
             submissionResult={submissionResult}
             resultRef={resultRef}
             systemStatus={systemStatus}
+            isSubmitting={isSubmitting}
           />
         </div>
       </div>
