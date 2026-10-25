@@ -1,23 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useParams, useSearchParams, useLocation, Link } from 'react-router-dom';
-import DynamicMonacoEditor from '@monaco-editor/react';
-import {
-  ChevronLeft,
-  Clock,
-  Database,
-  Play,
-  Send,
-  RefreshCw,
-  Trophy,
-  RotateCcw,
-} from 'lucide-react';
+import { ChevronLeft, Play, Send, RefreshCw, RotateCcw } from 'lucide-react';
 import MorphIcon from '../../components/MorphIcon';
 import { Sun as SunData, Moon as MoonData } from 'lucide';
 import { type SidebarTab } from '../../components/Sidebar';
 import {
   getProblemBySlug,
+  createContestSubmission,
+  getMyContestSubmissions,
+  getContestStatusFromTime,
+  type Contest,
+  getProblemEditorial,
   createSubmission,
   getSubmission,
+  waitForSubmission,
   getProblemSubmissions,
   runProblemCode,
   getProblemRank,
@@ -26,28 +22,58 @@ import {
   type Submission,
 } from '../../lib/api';
 import {
-  STARTER_CODES,
+  getStarterCode,
   SUPPORTED_LANGUAGES,
   type SupportedLanguage,
 } from '../../constants/languages';
 import { useTheme } from '../../lib/theme';
 import ProblemLeftPane from './problem/ProblemLeftPane';
 import ProblemTestPanel from './problem/ProblemTestPanel';
+import Markdown from '../../components/Markdown';
+import { readCodeDraft, saveCodeDraft } from '../../lib/codeDrafts';
+
+const DynamicMonacoEditor = lazy(() => import('../../components/LocalCodeEditor'));
 
 interface ProblemDetailProps {
   user: { id?: string; username: string; rating: number } | null;
   onOpenAuth: () => void;
-  onLogout: () => void;
+  onLogout?: () => void;
+  contest?: Contest;
+  contestProblem?: Problem;
 }
 
-export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) {
+export default function ProblemDetail({ user, onOpenAuth, contest, contestProblem }: ProblemDetailProps) {
   const { slug } = useParams();
+  const draftScope = `${contest ? `contest:${contest.id}` : 'practice'}:${user?.id || 'guest'}`;
   const [searchParams] = useSearchParams();
+  const classroomId = contest ? undefined : searchParams.get('classroom') || undefined;
   const location = useLocation();
-  const navState = location.state as { code?: string; language?: SupportedLanguage; submissionId?: string } | null;
+  const navState = (contest ? null : location.state) as { code?: string; language?: SupportedLanguage; submissionId?: string } | null;
   const { isDark, toggleTheme } = useTheme();
 
   const [problem, setProblem] = useState<Problem | null>(null);
+  const editorialDialog = useRef<HTMLDialogElement>(null);
+  const [editorialContent, setEditorialContent] = useState<string | null>(null);
+  const [editorialLoading, setEditorialLoading] = useState(false);
+  const [editorialError, setEditorialError] = useState<string | null>(null);
+  const openEditorial = async () => {
+    if (!user) { onOpenAuth(); return; }
+    if (!problem || contest) return;
+    setEditorialContent(null);
+    setEditorialError(null);
+    setEditorialLoading(true);
+    editorialDialog.current?.showModal();
+    try { setEditorialContent(await getProblemEditorial(problem.id)); }
+    catch { setEditorialError('Không tải được lời giải. Vui lòng thử lại.'); }
+    finally { setEditorialLoading(false); }
+  };
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!contest) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [contest?.id]);
+  const contestStatus = contest ? (now < new Date(contest.start_time).getTime() ? 'NOT_STARTED' : now >= new Date(contest.end_time).getTime() ? 'ENDED' : 'UNDERWAY') : null;
   const [isProblemLoading, setIsProblemLoading] = useState(true);
   const [historySubs, setHistorySubs] = useState<any[]>([]);
   const [rankRows, setRankRows] = useState<any[]>([]);
@@ -61,12 +87,10 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
     return null;
   });
   const codeCache = useRef<Record<string, string>>({
-    cpp: navState?.language === 'cpp' && navState.code ? navState.code : STARTER_CODES.cpp,
-    python: navState?.language === 'python' && navState.code ? navState.code : STARTER_CODES.python,
-    rust: navState?.language === 'rust' && navState.code ? navState.code : STARTER_CODES.rust,
+    ...(navState?.code && navState.language ? { [navState.language]: navState.code } : {}),
   });
   const [activeLeftTab, setActiveLeftTab] = useState<SidebarTab>('description');
-  const [descFontSize, setDescFontSize] = useState<number>(13);
+  const [descFontSize, setDescFontSize] = useState<number>(16);
   const [editorFontSize, setEditorFontSize] = useState<number>(13);
 
   // Horizontal resizable split-pane (between left description pane and right editor)
@@ -195,27 +219,34 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
   const activeSample = sampleTestcases.find((t) => t.id === activeTestTab);
 
   useEffect(() => {
-    if (!slug) return;
+    if (!slug && !contestProblem) return;
+    let cancelled = false;
     (async () => {
       setIsProblemLoading(true);
+      codeCache.current = {};
       setProblem(null);
       if (!navState?.code) {
         setHasResolvedInitialCode(false);
         setLoadedSubInfo(null);
       }
-      const p = await getProblemBySlug(slug);
+      const p = contestProblem || await getProblemBySlug(slug!);
+      if (cancelled) return;
       setProblem(p);
       if (p) {
         setActiveTestTab(1);
         const [problemSubs, top] = await Promise.all([
-          getProblemSubmissions(p.id, 10),
-          getProblemRank(p.id),
+          contest ? getMyContestSubmissions(contest.id).then(rows => rows.filter(sub => sub.problem_id === p.id && !sub.is_run)) : getProblemSubmissions(p.id, 10),
+          contest ? Promise.resolve([]) : getProblemRank(p.id),
         ]);
+        if (cancelled) return;
         setHistorySubs(problemSubs);
         setRankRows(top);
 
         // If code was already provided synchronously via navigation state, keep it
         if (navState?.code) {
+          codeCache.current[navState.language || 'cpp'] = navState.code;
+          setLanguage(navState.language || 'cpp');
+          setCode(navState.code);
           setIsProblemLoading(false);
           setHasResolvedInitialCode(true);
           return;
@@ -228,7 +259,8 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
         // 1. If explicit ?sub= is in query
         if (subIdFromUrl) {
           const sub = await getSubmission(subIdFromUrl);
-          if (sub && sub.code) {
+          if (cancelled) return;
+          if (sub && sub.code && (!contest || sub.contest_id === contest.id && sub.problem_id === p.id && sub.user_id === user?.id && !sub.is_run)) {
             const subLang = (sub.language as SupportedLanguage) || 'cpp';
             codeCache.current[subLang] = sub.code;
             setLanguage(subLang);
@@ -238,46 +270,15 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
           }
         }
 
-        // 2. If not restored, check user's past submissions for this problem
         if (!restored) {
-          const effectiveUserId = user?.id || (await supabase.auth.getUser()).data.user?.id;
-          if (effectiveUserId) {
-            const { data: mySubs } = await supabase
-              .from('submissions')
-              .select('id, language, code, status, created_at')
-              .eq('problem_id', p.id)
-              .eq('user_id', effectiveUserId)
-              .eq('is_run', false)
-              .order('created_at', { ascending: false })
-              .limit(10);
-
-            if (mySubs && mySubs.length > 0) {
-              for (const s of mySubs) {
-                if (s.code && s.language && !codeCache.current[s.language]) {
-                  codeCache.current[s.language] = s.code;
-                }
-              }
-              const bestSub = mySubs.find((s) => s.status === 'ACCEPTED') || mySubs[0];
-              if (bestSub && bestSub.code) {
-                const subLang = (bestSub.language as SupportedLanguage) || 'cpp';
-                codeCache.current[subLang] = bestSub.code;
-                setLanguage(subLang);
-                setCode(bestSub.code);
-                setLoadedSubInfo({ id: bestSub.id, status: bestSub.status, createdAt: bestSub.created_at });
-                restored = true;
-              }
-            }
-          }
-        }
-
-        if (!restored) {
-          setCode(codeCache.current[language] || STARTER_CODES[language] || '');
+          setCode(readCodeDraft(draftScope, p.id, language) ?? getStarterCode(p, language));
         }
         setHasResolvedInitialCode(true);
       }
       setIsProblemLoading(false);
     })();
-  }, [slug, searchParams.get('sub')]);
+    return () => { cancelled = true; };
+  }, [slug, contestProblem?.id, contest?.id, searchParams.get('sub'), user?.id]);
 
   useEffect(() => {
     if (!problem) return;
@@ -288,7 +289,7 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
         { event: 'UPDATE', schema: 'public', table: 'submissions', filter: `problem_id=eq.${problem.id}` },
         async (payload) => {
           const sub = await getSubmission(payload.new.id as string);
-          if (sub && !sub.is_run) {
+          if (sub && !sub.is_run && (!contest || sub.contest_id === contest.id && sub.user_id === user?.id)) {
             setHistorySubs((prev) => {
               const exists = prev.some((x) => x.id === sub.id);
               return exists ? prev.map((x) => (x.id === sub.id ? sub : x)) : [sub, ...prev].slice(0, 10);
@@ -301,7 +302,7 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [problem?.id]);
+  }, [problem?.id, contest?.id, user?.id]);
 
   useEffect(() => {
     if (systemStatus === 'done') {
@@ -330,12 +331,14 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
   const handleLanguageChange = (newLang: SupportedLanguage) => {
     codeCache.current[language] = code;
     setLanguage(newLang);
-    const nextCode = codeCache.current[newLang] ?? (STARTER_CODES[newLang] || '');
+    const nextCode = codeCache.current[newLang] ?? (problem ? readCodeDraft(draftScope, problem.id, newLang) : null) ?? getStarterCode(problem, newLang);
     setCode(nextCode);
   };
 
   const handleResetCode = () => {
-    const starter = STARTER_CODES[language] || '';
+    const starter = getStarterCode(problem, language);
+    if (code !== starter && !window.confirm('Đặt lại code theo mẫu ban đầu? Thay đổi hiện tại sẽ bị xóa.')) return;
+    if (problem) saveCodeDraft(draftScope, problem.id, language, null);
     setCode(starter);
     codeCache.current[language] = starter;
     setLoadedSubInfo(null);
@@ -352,52 +355,26 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
 
   const isBusy = isRunning || isSubmitting;
 
-  const pollRef = useRef<number | null>(null);
+  const pollController = useRef<AbortController | null>(null);
   const mountedRef = useRef(true);
 
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
-      if (pollRef.current !== null) clearTimeout(pollRef.current);
+      pollController.current?.abort();
     };
-  }, []);
+  }, [problem?.id]);
 
-  const pollSubmission = (submissionId: string): Promise<Submission | null> =>
-    new Promise((resolve) => {
-      let attempts = 0;
-      const poll = () => {
-        if (!mountedRef.current) return resolve(null);
-        getSubmission(submissionId)
-          .then((sub) => {
-            if (!mountedRef.current) return resolve(null);
-            if (sub && !['PENDING', 'JUDGING'].includes(sub.status)) {
-              return resolve(sub);
-            }
-            attempts++;
-            if (attempts < 30) {
-              const delay = attempts < 5 ? 400 : 800;
-              pollRef.current = window.setTimeout(poll, delay);
-            } else {
-              resolve(null);
-            }
-          })
-          .catch((err) => {
-            console.error('[ProblemDetail] pollSubmission error:', err);
-            attempts++;
-            if (attempts < 30) {
-              pollRef.current = window.setTimeout(poll, 800);
-            } else {
-              resolve(null);
-            }
-          });
-      };
-      // Run first poll after 200ms
-      pollRef.current = window.setTimeout(poll, 200);
-    });
+  const pollSubmission = (submissionId: string) => {
+    pollController.current?.abort();
+    const controller = new AbortController();
+    pollController.current = controller;
+    return waitForSubmission(submissionId, controller.signal);
+  };
 
   const handleRun = async () => {
-    if (!problem || isBusy) return;
+    if (!problem || isBusy || contest && getContestStatusFromTime(contest.start_time, contest.end_time) === 'NOT_STARTED') return;
     setSubmissionError(null);
     setIsRunning(true);
     setSystemStatus('judging');
@@ -415,6 +392,7 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
     }
 
     const sub = await pollSubmission(res.id);
+    if (!mountedRef.current) return;
     if (sub) {
       const tc = (sub.details as any[])?.[0];
       if (sub.status === 'COMPILE_ERROR') {
@@ -433,14 +411,16 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
   };
 
   const handleSubmit = async () => {
-    if (!problem || isBusy) return;
+    if (!problem || isBusy || contest && getContestStatusFromTime(contest.start_time, contest.end_time) !== 'UNDERWAY') return;
     setSubmissionError(null);
     setIsSubmitting(true);
     setSystemStatus('judging');
     setTestPanelOpen(true);
     setSubmissionResult({ status: 'PENDING', passedCount: 0, totalCount: 0, timeMs: 0, memoryMb: 0, testcases: [] });
 
-    const res = await createSubmission({ problem_id: problem.id, language, code });
+    const res = contest
+      ? await createContestSubmission({ contest_id: contest.id, problem_id: problem.id, language, code })
+      : await createSubmission({ problem_id: problem.id, language, code, classroom_id: classroomId });
     if (!res.ok || !res.id) {
       setSubmissionError(res.error || 'Nộp bài thất bại');
       setSubmissionResult({ status: 'ERROR', passedCount: 0, totalCount: 0, timeMs: 0, memoryMb: 0, testcases: [] });
@@ -450,14 +430,16 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
     }
 
     const sub = await pollSubmission(res.id);
+    if (!mountedRef.current) return;
     if (sub) {
+      setHistorySubs(prev => [sub, ...prev.filter(row => row.id !== sub.id)].slice(0, 100));
       setSubmissionResult({
         status: sub.status,
         passedCount: (sub.details as any[])?.filter((d) => d.status === 'ACCEPTED').length || 0,
         totalCount: (sub.details as any[])?.length || 0,
         timeMs: sub.time_used_ms,
         memoryMb: sub.memory_used_mb,
-        testcases: (sub.details as any[]).map((d, idx) => ({
+        testcases: ((sub.details || []) as any[]).map((d, idx) => ({
           id: idx + 1,
           name: `Testcase #${idx + 1}${d.is_sample ? ' (Mẫu)' : ''}`,
           isSample: !!d.is_sample,
@@ -495,13 +477,24 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-[var(--bg-primary)] text-[var(--text-primary)]">
+      {!contest && <dialog ref={editorialDialog} aria-labelledby="editorial-title" className="w-[calc(100%_-_2rem)] max-w-2xl max-h-[80vh] rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-primary)] p-5 backdrop:bg-black/50">
+        <div className="flex items-center justify-between mb-4">
+          <h2 id="editorial-title" className="font-semibold">Lời giải</h2>
+          <button onClick={() => editorialDialog.current?.close()} className="border border-[var(--border)] px-3 py-1 rounded">Đóng</button>
+        </div>
+        {editorialLoading ? <p role="status">Đang tải lời giải...</p> : editorialError ? <p role="alert">{editorialError}</p>
+          : editorialContent ? <Markdown content={editorialContent} />
+          : <p>Lời giải chỉ mở sau khi bạn AC và không có kỳ thi đang diễn ra với bài này. Giáo viên có thể chưa đăng lời giải.</p>}
+      </dialog>}
       {/* 1. TOP SINGLE HEADER BAR */}
       <header className="h-11 shrink-0 bg-[var(--bg-primary)] border-b border-[var(--border)] px-3 flex items-center justify-between text-xs select-none transition-colors duration-150">
         <div className="flex items-center gap-2.5">
+          {!contest && <button onClick={openEditorial} disabled={!problem} className="text-[var(--accent-text)] hover:underline disabled:opacity-50">Xem lời giải</button>}
+          {classroomId && <Link to={`/classes/${classroomId}`} className="text-[var(--accent-text)] hover:underline">Về lớp học</Link>}
           <Link
-            to="/problems"
+            to={contest ? `/contests/${contest.id}` : '/problems'}
             className="p-1 rounded-md bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] border border-[var(--border)] text-[var(--text-primary)] transition-colors cursor-pointer"
-            title="Quay lại danh sách bài tập"
+            title={contest ? `Về kỳ thi: ${contest.title}` : 'Quay lại danh sách bài tập'}
           >
             <ChevronLeft className="w-4 h-4" />
           </Link>
@@ -518,10 +511,10 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
 
           <div className="hidden sm:flex items-center gap-2.5 text-[11px] text-[var(--text-secondary)] font-mono pl-2.5 border-l border-[var(--border)]">
             <span className="flex items-center gap-1" title="Giới hạn thời gian">
-              <Clock className="w-3.5 h-3.5 text-[var(--text-muted)]" /> {(problem?.time_limit_ms || 1000) / 1000}s
+               {(problem?.time_limit_ms || 1000) / 1000}s
             </span>
             <span className="flex items-center gap-1" title="Giới hạn bộ nhớ">
-              <Database className="w-3.5 h-3.5 text-[var(--text-muted)]" /> {problem?.memory_limit_mb || 256}MB
+               {problem?.memory_limit_mb || 256}MB
             </span>
           </div>
         </div>
@@ -545,7 +538,7 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
           {user ? (
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono text-[var(--text-secondary)] border border-[var(--border)] bg-[var(--bg-secondary)]">
-                <Trophy className="w-3 h-3 text-[var(--text-muted)]" />
+
                 <span>{user.rating} AC</span>
               </div>
               <div className="flex items-center gap-1.5 pl-2 border-l border-[var(--border)]">
@@ -566,11 +559,17 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
         </div>
       </header>
 
+      {contest && contestStatus !== 'UNDERWAY' && (
+        <p role="status" className="px-4 py-2 text-xs border-b border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-secondary)]">
+          {contestStatus === 'NOT_STARTED' ? `Kỳ thi chưa bắt đầu. Mở lúc ${new Date(contest.start_time).toLocaleString('vi-VN')}.` : 'Kỳ thi đã kết thúc. Bạn có thể chạy thử nhưng không thể nộp bài thêm.'}
+        </p>
+      )}
       {/* 2. WORKSPACE CONTAINER */}
       <div ref={workspaceRef} className="flex flex-1 overflow-hidden">
         {/* Left Sidebar & Left Description Pane with Dynamic Width */}
         <ProblemLeftPane
           problem={problem}
+          contestId={contest?.id}
           slug={slug}
           isProblemLoading={isProblemLoading}
           activeLeftTab={activeLeftTab}
@@ -623,6 +622,7 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
             <div className="flex items-center gap-2">
               <select
                 value={language}
+                disabled={isProblemLoading || !hasResolvedInitialCode}
                 onChange={(e) => handleLanguageChange(e.target.value as any)}
                 className="bg-[var(--bg-primary)] border border-[var(--border)] text-xs rounded-md px-2.5 py-1 text-[var(--text-primary)] font-medium focus:outline-none focus:border-[var(--accent)] cursor-pointer transition-colors shadow-xs"
               >
@@ -635,6 +635,7 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
 
               <button
                 onClick={handleResetCode}
+                disabled={isProblemLoading || !hasResolvedInitialCode}
                 className="flex items-center gap-1 px-2 py-1 rounded-md border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-xs font-medium text-[var(--text-secondary)] transition-colors cursor-pointer shadow-xs"
                 title="Đặt lại mẫu code ban đầu"
               >
@@ -662,7 +663,7 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={handleRun}
-                disabled={isBusy || !problem}
+                disabled={isBusy || !problem || contestStatus === 'NOT_STARTED'}
                 className="flex items-center gap-1.5 px-3 py-1 rounded-md border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] text-xs font-semibold shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {isRunning ? (
@@ -675,7 +676,7 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
 
               <button
                 onClick={handleSubmit}
-                disabled={isBusy || !problem}
+                disabled={isBusy || !problem || !!contest && contestStatus !== 'UNDERWAY'}
                 className="flex items-center gap-1.5 px-3.5 py-1 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold shadow-xs transition-colors disabled:opacity-50 shrink-0 cursor-pointer"
               >
                 {isSubmitting ? (
@@ -696,7 +697,7 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
                 <span>Đang nạp bài làm...</span>
               </div>
             )}
-            <DynamicMonacoEditor
+            <Suspense fallback={<p role="status">Đang tải trình soạn thảo...</p>}><DynamicMonacoEditor
               height="100%"
               language={SUPPORTED_LANGUAGES.find((l) => l.value === language)?.monaco || 'cpp'}
               theme={isDark ? 'vs-dark' : 'light'}
@@ -705,6 +706,7 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
                 const next = value || '';
                 setCode(next);
                 codeCache.current[language] = next;
+                if (problem && hasResolvedInitialCode) saveCodeDraft(draftScope, problem.id, language, next);
               }}
               onMount={(editor, monaco) => {
                 editorRef.current = editor;
@@ -730,7 +732,7 @@ export default function ProblemDetail({ user, onOpenAuth }: ProblemDetailProps) 
                 smoothScrolling: true,
                 mouseWheelZoom: true,
               }}
-            />
+            /></Suspense>
           </div>
 
           {/* Resizer */}

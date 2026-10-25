@@ -1,6 +1,11 @@
 import { supabase } from '../supabase';
 import type { Submission } from './types';
 
+export async function rejudgeSubmission(submissionId: string): Promise<void> {
+  const { error } = await supabase.rpc('rejudge_submission', { p_submission_id: submissionId });
+  if (error) throw new Error(error.message);
+}
+
 export async function getSubmissions(params?: {
   mine?: boolean;
   status?: string;
@@ -9,7 +14,7 @@ export async function getSubmissions(params?: {
 }): Promise<{ rows: Submission[]; total: number }> {
   let query = supabase
     .from('submissions')
-    .select('*, problems(title, slug), profiles(full_name, email)', { count: 'exact' })
+    .select('*, problems(title, slug), profiles:profiles_public(full_name, email)', { count: 'exact' })
     .eq('is_run', false)
     .order('created_at', { ascending: false });
 
@@ -39,29 +44,71 @@ export async function getSubmissionsByUser(userId: string, limit = 50): Promise<
   if (error) return [];
   return (data || []) as Submission[];
 }
-export async function createSubmission(input: { problem_id: string; language: string; code: string }): Promise<{ ok: boolean; error?: string; id?: string }> {
+export async function createSubmission(input: { problem_id: string; language: string; code: string; classroom_id?: string }): Promise<{ ok: boolean; error?: string; id?: string }> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: 'Bạn cần đăng nhập để nộp bài' };
 
   const { data, error } = await supabase
     .from('submissions')
-    .insert({ user_id: user.id, problem_id: input.problem_id, language: input.language, code: input.code })
+    .insert({ user_id: user.id, problem_id: input.problem_id, language: input.language, code: input.code, classroom_id: input.classroom_id })
     .select('id')
     .single();
   if (error) return { ok: false, error: error.message };
   return { ok: true, id: data?.id };
 }
-export async function getSubmission(submissionId: string): Promise<Submission | null> {
+export async function getSubmission(submissionId: string, signal?: AbortSignal): Promise<Submission | null> {
   const { data, error } = await supabase
     .from('submissions')
-    .select('*, problems(title, slug), profiles(full_name, email)')
+    .select('*, problems(title, slug), profiles:profiles_public(full_name, email)')
     .eq('id', submissionId)
+    .abortSignal(signal ?? AbortSignal.timeout(10000))
     .single();
   if (error) {
     console.error('[getSubmission] Error fetching submission:', error);
     return null;
   }
   return data as Submission;
+}
+
+export function waitForSubmission(submissionId: string, signal: AbortSignal): Promise<Submission | null> {
+  if (signal.aborted) return Promise.resolve(null);
+  return new Promise(resolve => {
+    let timer: ReturnType<typeof setTimeout>;
+    let checking = false;
+    let finished = false;
+    let attempts = 0;
+    const started = performance.now();
+    const request = new AbortController();
+    const finish = (row: Submission | null) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      signal.removeEventListener('abort', cancel);
+      request.abort();
+      void supabase.removeChannel(channel);
+      resolve(row);
+    };
+    const cancel = () => finish(null);
+    const poll = async () => {
+      if (checking || finished) return;
+      clearTimeout(timer);
+      checking = true;
+      try {
+        const row = await getSubmission(submissionId, AbortSignal.any([request.signal, AbortSignal.timeout(10000)]));
+        if (finished) return;
+        if (row && !['PENDING', 'JUDGING'].includes(row.status)) return finish(row);
+        if (performance.now() - started >= 15 * 60_000) return finish(null);
+      } finally {
+        checking = false;
+        if (!finished) timer = setTimeout(() => void poll(), Math.min(5000, 400 * 2 ** Math.min(attempts++, 4)));
+      }
+    };
+    const channel = supabase.channel(`submission-${submissionId}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'submissions', filter: `id=eq.${submissionId}` }, () => void poll())
+      .subscribe();
+    signal.addEventListener('abort', cancel, { once: true });
+    timer = setTimeout(() => void poll(), 200);
+  });
 }
 export async function runProblemCode(input: {
   problem_id: string;

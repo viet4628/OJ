@@ -1,21 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { downloadBlob } from '../../../lib/zip';
 import MorphIcon from '../../../components/MorphIcon';
-import {
-  GraduationCap as GraduationCapData,
-  Plus as PlusData,
-  Users as UsersData,
-  BookOpen as BookOpenData,
-  Copy as CopyData,
-  Check as CheckData,
-  Trash2 as Trash2Data,
-  Clock as ClockData,
-  ArrowLeft as ArrowLeftData,
-  X as XData,
-  Search as SearchData,
-  Award as AwardData,
-  CheckCircle2 as CheckCircle2Data,
-  XCircle as XCircleData,
-} from 'lucide';
+import { Plus as PlusData, Users as UsersData, BookOpen as BookOpenData, Copy as CopyData, Check as CheckData, Trash2 as Trash2Data, ArrowLeft as ArrowLeftData, X as XData, Award as AwardData } from 'lucide';
 import {
   getClassrooms,
   getClassroomDetail,
@@ -57,6 +43,17 @@ export default function TeacherClassroomsTab() {
   const [newClassCode, setNewClassCode] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const createDialogRef = useRef<HTMLDialogElement>(null);
+  const createPending = useRef(false);
+
+  useEffect(() => {
+    const dialog = createDialogRef.current;
+    if (isCreateOpen && dialog && !dialog.open) {
+      dialog.showModal();
+      dialog.querySelector<HTMLInputElement>('#class-name')?.focus();
+    }
+    if (!isCreateOpen) dialog?.close();
+  }, [isCreateOpen]);
 
   /* add problem modal */
   const [isAddProblemOpen, setIsAddProblemOpen] = useState(false);
@@ -65,6 +62,8 @@ export default function TeacherClassroomsTab() {
   const [selectedProblemId, setSelectedProblemId] = useState<string>('');
   const [deadlineInput, setDeadlineInput] = useState('');
   const [isAddingProblem, setIsAddingProblem] = useState(false);
+  const [assignmentError, setAssignmentError] = useState<string | null>(null);
+  const [problemsLoading, setProblemsLoading] = useState(false);
 
   /* copied state */
   const [copiedCode, setCopiedCode] = useState(false);
@@ -88,10 +87,11 @@ export default function TeacherClassroomsTab() {
 
   const loadClassDetail = async (id: string) => {
     setDetailLoading(true);
+    setError(null);
     try {
       const res = await getClassroomDetail(id);
       if (res.error) {
-        setNotice(res.error);
+        setError(res.error);
         return;
       }
       setActiveClass(res.classroom);
@@ -107,6 +107,8 @@ export default function TeacherClassroomsTab() {
       } else {
         setProgressList([]);
       }
+    } catch {
+      setError('Không tải được thông tin lớp. Vui lòng thử lại.');
     } finally {
       setDetailLoading(false);
     }
@@ -126,25 +128,29 @@ export default function TeacherClassroomsTab() {
   /* create class */
   const handleCreateClass = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newClassName.trim()) return;
+    if (createPending.current) return;
+    createPending.current = true;
     setIsCreating(true);
     setCreateError(null);
-    const res = await createClassroom({
-      name: newClassName,
-      description: newClassDesc,
-      code: newClassCode || undefined,
-    });
-    setIsCreating(false);
-    if (!res.ok) {
-      setCreateError(res.error || 'Tạo lớp thất bại');
-      return;
+    try {
+      const res = await createClassroom({ name: newClassName, description: newClassDesc, code: newClassCode });
+      if (!res.ok || !res.classroom) {
+        setCreateError(res.error || 'Tạo lớp thất bại');
+        return;
+      }
+      setNotice(`Đã tạo lớp "${res.classroom.name}". Chia sẻ mã mời hoặc giao bài tập đầu tiên cho lớp.`);
+      setIsCreateOpen(false);
+      setNewClassName('');
+      setNewClassDesc('');
+      setNewClassCode('');
+      setClassrooms((rows) => [{ ...res.classroom!, student_count: 0, problem_count: 0 }, ...rows]);
+      setActiveClass(res.classroom);
+      setActiveSubTab('assignments');
+      setActiveClassId(res.classroom.id);
+    } finally {
+      createPending.current = false;
+      setIsCreating(false);
     }
-    setNotice(`Đã tạo lớp "${res.classroom?.name}" thành công`);
-    setIsCreateOpen(false);
-    setNewClassName('');
-    setNewClassDesc('');
-    setNewClassCode('');
-    fetchClassrooms();
   };
 
   /* delete class */
@@ -161,10 +167,29 @@ export default function TeacherClassroomsTab() {
   };
 
   /* copy invite code */
-  const handleCopyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
+  const handleCopyCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
+    } catch {
+      setError('Không sao chép được mã mời. Bạn có thể chọn và sao chép mã hiển thị.');
+    }
+  };
+
+  const exportGradebook = () => {
+    if (!activeClass) return;
+    const rows: (string | number)[][] = [['Họ tên', 'ID', ...classProblems.map(cp => cp.problem?.title || cp.problem_id), 'Tổng điểm']];
+    for (const member of members) {
+      const scores = classProblems.map(cp => progressList.find(item => item.userId === member.user_id && item.problemId === cp.problem_id)?.score ?? 0);
+      rows.push([member.profile?.full_name || member.user_id, member.user_id, ...scores, scores.reduce((a, b) => a + b, 0)]);
+    }
+    const csv = rows.map(row => row.map(value => {
+      // Prevent spreadsheet formula execution in user-controlled names/titles.
+      const text = String(value).replace(/^[\s]*[=+@-]/, match => `'${match}`);
+      return `"${text.replace(/"/g, '""')}"`;
+    }).join(',')).join('\r\n');
+    downloadBlob(`\uFEFF${csv}`, `bang-diem-${activeClass.id}.csv`, 'text/csv;charset=utf-8');
   };
 
   /* open problem picker modal */
@@ -173,26 +198,41 @@ export default function TeacherClassroomsTab() {
     setSelectedProblemId('');
     setDeadlineInput('');
     setProbSearch('');
-    if (availableProblems.length === 0) {
-      const all = await getAllProblems();
-      setAvailableProblems(all);
+    setAssignmentError(null);
+    setProblemsLoading(true);
+    try {
+      setAvailableProblems(await getAllProblems());
+    } catch {
+      setAssignmentError('Không tải được ngân hàng bài tập. Vui lòng mở lại để thử lại.');
+    } finally {
+      setProblemsLoading(false);
     }
   };
 
   /* add problem to class */
   const handleAddProblemSubmit = async () => {
-    if (!activeClassId || !selectedProblemId) return;
+    if (!activeClassId || !selectedProblemId || isAddingProblem) return;
     setIsAddingProblem(true);
-    const deadlineVal = deadlineInput ? new Date(deadlineInput).toISOString() : null;
-    const res = await addClassroomProblem(activeClassId, selectedProblemId, deadlineVal);
-    setIsAddingProblem(false);
-    if (!res.ok) {
-      alert(res.error || 'Không thể thêm bài tập');
-      return;
+    setAssignmentError(null);
+    try {
+      const deadline = deadlineInput ? new Date(deadlineInput) : null;
+      if (deadline && (!Number.isFinite(deadline.getTime()) || deadline.getTime() <= Date.now())) {
+        setAssignmentError('Hạn nộp cần nằm trong tương lai. Để trống nếu không giới hạn.');
+        return;
+      }
+      const res = await addClassroomProblem(activeClassId, selectedProblemId, deadline?.toISOString() || null);
+      if (!res.ok) {
+        setAssignmentError(res.error || 'Không thể thêm bài tập');
+        return;
+      }
+      setIsAddProblemOpen(false);
+      setNotice('Đã giao bài tập cho lớp học');
+      await loadClassDetail(activeClassId);
+    } catch {
+      setAssignmentError('Chưa xác nhận được kết quả giao bài. Vui lòng tải lại lớp trước khi thử lại.');
+    } finally {
+      setIsAddingProblem(false);
     }
-    setIsAddProblemOpen(false);
-    setNotice('Đã thêm bài tập vào lớp học');
-    loadClassDetail(activeClassId);
   };
 
   /* remove problem from class */
@@ -241,12 +281,13 @@ export default function TeacherClassroomsTab() {
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-black text-[var(--text-primary)]">{activeClass.name}</h2>
-                <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-mono text-xs font-bold">
+                <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] font-mono text-xs font-bold">
                   <span>Mã: {activeClass.code}</span>
                   <button
                     onClick={() => handleCopyCode(activeClass.code)}
                     className="hover:opacity-75 transition-opacity cursor-pointer"
                     title="Sao chép mã lớp"
+                    aria-label={copiedCode ? 'Đã sao chép mã lớp' : 'Sao chép mã lớp'}
                   >
                     {copiedCode ? <MorphIcon icon={CheckData} size={12} className="text-[var(--accent-text)]" /> : <MorphIcon icon={CopyData} size={12} />}
                   </button>
@@ -270,11 +311,18 @@ export default function TeacherClassroomsTab() {
 
         {/* Notices */}
         {notice && (
-          <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between">
+          <div className="p-3 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] text-xs flex items-center justify-between">
             <span>{notice}</span>
-            <button onClick={() => setNotice(null)} className="text-emerald-600 hover:text-emerald-900 cursor-pointer">
+            <button onClick={() => setNotice(null)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer">
               <MorphIcon icon={XData} size={16} />
             </button>
+          </div>
+        )}
+
+        {error && <p role="alert" className="text-xs text-[var(--danger)]">{error}</p>}
+        {!detailLoading && members.length === 0 && (
+          <div className="p-3 border border-[var(--border)] rounded-md text-xs text-[var(--text-secondary)]">
+            Mời học sinh vào mục Lớp học và nhập mã <strong className="font-mono text-[var(--text-primary)]">{activeClass.code}</strong> để tham gia.
           </div>
         )}
 
@@ -323,7 +371,7 @@ export default function TeacherClassroomsTab() {
               <div className="space-y-4">
                 {classProblems.length === 0 ? (
                   <div className="text-center py-12 border border-dashed border-[var(--border)] rounded-2xl bg-[var(--bg-secondary)] space-y-3">
-                    <MorphIcon icon={BookOpenData} size={28} className="text-[var(--text-muted)] mx-auto" />
+
                     <div className="text-xs font-bold text-[var(--text-primary)]">Chưa có bài tập nào trong lớp</div>
                     <p className="text-[11px] text-[var(--text-muted)]">Hãy thêm bài tập từ kho đề để học sinh bắt đầu làm bài.</p>
                     <button
@@ -379,7 +427,7 @@ export default function TeacherClassroomsTab() {
                                       isExpired ? 'text-red-500 font-bold' : 'text-[var(--text-secondary)]'
                                     }`}
                                   >
-                                    <MorphIcon icon={ClockData} size={12} />
+
                                     {new Date(cp.deadline!).toLocaleString('vi-VN', {
                                       hour: '2-digit',
                                       minute: '2-digit',
@@ -439,7 +487,7 @@ export default function TeacherClassroomsTab() {
 
                 {members.length === 0 ? (
                   <div className="text-center py-12 border border-dashed border-[var(--border)] rounded-2xl bg-[var(--bg-secondary)] space-y-2">
-                    <MorphIcon icon={UsersData} size={28} className="text-[var(--text-muted)] mx-auto" />
+
                     <div className="text-xs font-bold text-[var(--text-primary)]">Chưa có học sinh nào trong lớp</div>
                     <p className="text-[11px] text-[var(--text-muted)]">Hãy chia sẻ mã mời trên để học sinh tham gia.</p>
                   </div>
@@ -490,9 +538,11 @@ export default function TeacherClassroomsTab() {
             {/* TAB 3: GRADEBOOK & PROGRESS */}
             {activeSubTab === 'gradebook' && (
               <div className="space-y-4">
+                <button onClick={exportGradebook} disabled={detailLoading || !!error} className="px-3 py-2 border border-[var(--border)] rounded text-xs disabled:opacity-50">Xuất bảng điểm CSV</button>
+                <p className="text-xs text-[var(--text-secondary)]">Chỉ tính bài nộp trong lớp, sau khi được giao và trước hạn nộp.</p>
                 {classProblems.length === 0 || members.length === 0 ? (
                   <div className="text-center py-12 border border-dashed border-[var(--border)] rounded-2xl bg-[var(--bg-secondary)] space-y-2">
-                    <MorphIcon icon={AwardData} size={28} className="text-[var(--text-muted)] mx-auto" />
+
                     <div className="text-xs font-bold text-[var(--text-primary)]">Chưa có dữ liệu tiến độ</div>
                     <p className="text-[11px] text-[var(--text-muted)]">
                       Lớp học cần có ít nhất 1 bài tập và 1 học sinh để xem ma trận điểm.
@@ -544,7 +594,7 @@ export default function TeacherClassroomsTab() {
                                             : 'bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30'
                                         }`}
                                       >
-                                        {isAc ? <MorphIcon icon={CheckCircle2Data} size={12} /> : <MorphIcon icon={XCircleData} size={12} />}
+
                                         {prog.score}đ
                                       </span>
                                     ) : (
@@ -572,29 +622,34 @@ export default function TeacherClassroomsTab() {
         {isAddProblemOpen && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
-            onClick={() => setIsAddProblemOpen(false)}
+            onClick={() => { if (!isAddingProblem) setIsAddProblemOpen(false); }}
           >
             <div
+              role="dialog" aria-modal="true" aria-labelledby="assignment-dialog-title"
               className="w-full max-w-lg bg-[var(--bg-primary)] rounded-2xl border border-[var(--border)] p-6 space-y-4 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
-                <h3 className="text-sm font-black text-[var(--text-primary)]">Giao Bài Tập Cho Lớp Học</h3>
+                <h3 id="assignment-dialog-title" className="text-sm font-semibold text-[var(--text-primary)]">Giao Bài Tập Cho Lớp Học</h3>
                 <button
-                  onClick={() => setIsAddProblemOpen(false)}
+                  onClick={() => { if (!isAddingProblem) setIsAddProblemOpen(false); }}
                   className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
                 >
                   <MorphIcon icon={XData} size={16} />
                 </button>
               </div>
 
+              {assignmentError && <p role="alert" className="text-xs text-[var(--danger)]">{assignmentError}</p>}
+              {problemsLoading && <p role="status" className="text-xs text-[var(--text-muted)]">Đang tải bài tập...</p>}
+              {!problemsLoading && !assignmentError && availableProblems.length === 0 && <p className="text-xs text-[var(--text-secondary)]">Ngân hàng chưa có bài tập. Hãy tạo bài tập trước khi giao cho lớp.</p>}
               {/* Search problem */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-[var(--text-secondary)]">Chọn bài tập từ ngân hàng đề</label>
+                <label htmlFor="class-problem-search" className="text-xs font-medium text-[var(--text-secondary)]">Chọn bài tập từ ngân hàng đề</label>
                 <div className="relative">
-                  <MorphIcon icon={SearchData} size={16} className="absolute left-3 top-2.5 text-[var(--text-muted)]" />
+
                   <input
                     type="text"
+                    id="class-problem-search"
                     placeholder="Tìm theo tên bài hoặc slug..."
                     value={probSearch}
                     onChange={(e) => setProbSearch(e.target.value)}
@@ -612,10 +667,13 @@ export default function TeacherClassroomsTab() {
                     .map((p) => {
                       const alreadyInClass = classProblems.some((cp) => cp.problem_id === p.id);
                       return (
-                        <div
+                        <button
+                          type="button"
                           key={p.id}
-                          onClick={() => !alreadyInClass && setSelectedProblemId(p.id)}
-                          className={`p-2.5 flex items-center justify-between text-xs transition-colors ${
+                          disabled={alreadyInClass || isAddingProblem}
+                          aria-pressed={selectedProblemId === p.id}
+                          onClick={() => setSelectedProblemId(p.id)}
+                          className={`w-full text-left p-2.5 flex items-center justify-between text-xs transition-colors ${
                             alreadyInClass
                               ? 'opacity-40 cursor-not-allowed bg-[var(--bg-tertiary)]'
                               : selectedProblemId === p.id
@@ -635,7 +693,7 @@ export default function TeacherClassroomsTab() {
                               <span className="text-[10px] text-amber-500 font-bold">Đã có</span>
                             )}
                           </div>
-                        </div>
+                        </button>
                       );
                     })}
                 </div>
@@ -643,11 +701,13 @@ export default function TeacherClassroomsTab() {
 
               {/* Deadline */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[var(--text-secondary)]">
+                <label htmlFor="class-deadline" className="text-xs font-medium text-[var(--text-secondary)]">
                   Hạn chót nộp bài (tùy chọn)
                 </label>
                 <input
+                  id="class-deadline"
                   type="datetime-local"
+                  disabled={isAddingProblem}
                   value={deadlineInput}
                   onChange={(e) => setDeadlineInput(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] font-mono"
@@ -657,14 +717,14 @@ export default function TeacherClassroomsTab() {
               <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--border)]">
                 <button
                   type="button"
-                  onClick={() => setIsAddProblemOpen(false)}
+                  onClick={() => { if (!isAddingProblem) setIsAddProblemOpen(false); }}
                   className="px-4 py-2 rounded-xl text-xs font-bold text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="button"
-                  disabled={!selectedProblemId || isAddingProblem}
+                  disabled={!selectedProblemId || isAddingProblem || problemsLoading}
                   onClick={handleAddProblemSubmit}
                   className="px-4 py-2 rounded-xl text-xs font-bold bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white disabled:opacity-50 transition-colors cursor-pointer"
                 >
@@ -689,19 +749,22 @@ export default function TeacherClassroomsTab() {
             Tạo lớp học, phát mã mời học sinh tham gia và quản lý bài tập theo từng lớp.
           </p>
         </div>
-        <button
-          onClick={() => setIsCreateOpen(true)}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
-        >
-          <MorphIcon icon={PlusData} size={14} /> Tạo Lớp Học Mới
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={fetchClassrooms} disabled={loading} className="px-3 py-2 rounded-md border border-[var(--border)] text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] disabled:opacity-50">Tải lại danh sách</button>
+          <button
+            onClick={() => { setCreateError(null); setIsCreateOpen(true); }}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-medium transition-colors cursor-pointer"
+          >
+            <MorphIcon icon={PlusData} size={14} /> Tạo Lớp Học Mới
+          </button>
+        </div>
       </div>
 
       {/* Notices */}
       {notice && (
-        <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between">
+        <div className="p-3 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] text-xs flex items-center justify-between">
           <span>{notice}</span>
-          <button onClick={() => setNotice(null)} className="text-emerald-600 hover:text-emerald-900 cursor-pointer">
+          <button onClick={() => setNotice(null)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer">
             <MorphIcon icon={XData} size={16} />
           </button>
         </div>
@@ -718,15 +781,15 @@ export default function TeacherClassroomsTab() {
         <div className="p-12 text-center text-xs text-[var(--text-muted)] animate-pulse">
           Đang tải danh sách lớp học...
         </div>
-      ) : classrooms.length === 0 ? (
+      ) : error && classrooms.length === 0 ? null : classrooms.length === 0 ? (
         <div className="text-center py-16 border border-dashed border-[var(--border)] rounded-2xl bg-[var(--bg-secondary)] space-y-3">
-          <MorphIcon icon={GraduationCapData} size={36} className="text-[var(--text-muted)] mx-auto" />
+
           <div className="text-sm font-bold text-[var(--text-primary)]">Bạn chưa có lớp học nào</div>
           <p className="text-xs text-[var(--text-muted)] max-w-sm mx-auto">
             Bấm "Tạo Lớp Học Mới" để bắt đầu mở lớp và chia sẻ mã mời cho học sinh.
           </p>
           <button
-            onClick={() => setIsCreateOpen(true)}
+            onClick={() => { setCreateError(null); setIsCreateOpen(true); }}
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-bold cursor-pointer"
           >
             <MorphIcon icon={PlusData} size={14} /> Tạo Lớp Ngay
@@ -737,14 +800,12 @@ export default function TeacherClassroomsTab() {
           {classrooms.map((c) => (
             <div
               key={c.id}
-              onClick={() => setActiveClassId(c.id)}
+              onClick={() => { setActiveClass(c); setActiveClassId(c.id); }}
               className="group p-5 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] hover:border-[var(--accent)]/50 transition-all shadow-sm hover:shadow-md cursor-pointer flex flex-col justify-between space-y-4"
             >
               <div className="space-y-2">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)]">
-                    <MorphIcon icon={GraduationCapData} size={16} />
-                  </div>
+
                   <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] font-mono text-xs font-bold text-[var(--text-secondary)]">
                     <span>Mã: {c.code}</span>
                   </div>
@@ -763,10 +824,10 @@ export default function TeacherClassroomsTab() {
               <div className="pt-3 border-t border-[var(--border)] flex items-center justify-between text-xs text-[var(--text-secondary)]">
                 <div className="flex items-center gap-3">
                   <span className="flex items-center gap-1 font-semibold">
-                    <MorphIcon icon={UsersData} size={13} className="text-[var(--text-muted)]" /> {c.student_count || 0} học sinh
+                     {c.student_count || 0} học sinh
                   </span>
                   <span className="flex items-center gap-1 font-semibold">
-                    <MorphIcon icon={BookOpenData} size={13} className="text-[var(--text-muted)]" /> {c.problem_count || 0} bài tập
+                     {c.problem_count || 0} bài tập
                   </span>
                 </div>
 
@@ -787,94 +848,47 @@ export default function TeacherClassroomsTab() {
       )}
 
       {/* Modal: Tạo lớp mới */}
-      {isCreateOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
-          onClick={() => setIsCreateOpen(false)}
-        >
-          <div
-            className="w-full max-w-md bg-[var(--bg-primary)] rounded-2xl border border-[var(--border)] p-6 space-y-4 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
-              <div className="flex items-center gap-2">
-                <MorphIcon icon={GraduationCapData} size={16} className="text-[var(--accent-text)]" />
-                <h3 className="text-sm font-black text-[var(--text-primary)]">Tạo Lớp Học Mới</h3>
-              </div>
-              <button
-                onClick={() => setIsCreateOpen(false)}
-                className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
-              >
-                <MorphIcon icon={XData} size={16} />
-              </button>
-            </div>
-
-            {createError && (
-              <div className="p-3 rounded-xl bg-red-50 text-red-700 text-xs font-semibold">{createError}</div>
-            )}
-
-            <form onSubmit={handleCreateClass} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[var(--text-secondary)]">
-                  Tên lớp học <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ví dụ: Tin học 11A - THPT Chuyên"
-                  value={newClassName}
-                  onChange={(e) => setNewClassName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[var(--text-secondary)]">Mô tả ngắn</label>
-                <textarea
-                  rows={3}
-                  placeholder="Mô tả mục tiêu lớp học, giáo trình hoặc lưu ý cho học sinh..."
-                  value={newClassDesc}
-                  onChange={(e) => setNewClassDesc(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[var(--text-secondary)]">
-                  Mã mời tùy chỉnh (để trống sẽ tự động sinh)
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ví dụ: TIN11A"
-                  value={newClassCode}
-                  onChange={(e) => setNewClassCode(e.target.value.toUpperCase())}
-                  maxLength={10}
-                  className="w-full px-3.5 py-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] font-mono text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] uppercase"
-                />
-                <p className="text-[11px] text-[var(--text-muted)]">Mã gồm 4-10 ký tự chữ và số.</p>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[var(--border)]">
-                <button
-                  type="button"
-                  onClick={() => setIsCreateOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] cursor-pointer"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={isCreating}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white transition-colors cursor-pointer"
-                >
-                  {isCreating ? 'Đang tạo...' : 'Tạo Lớp Học'}
-                </button>
-              </div>
-            </form>
+      <dialog
+        ref={createDialogRef}
+        aria-labelledby="create-class-title"
+        onCancel={(event) => {
+          event.preventDefault();
+          if (!createPending.current) setIsCreateOpen(false);
+        }}
+        className="w-[calc(100%-2rem)] max-w-lg max-h-[90vh] overflow-y-auto rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] p-5 text-[var(--text-primary)] shadow-xl backdrop:bg-black/50"
+      >
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div>
+            <h3 id="create-class-title" className="text-sm font-semibold">Tạo lớp học mới</h3>
+            <p className="text-xs text-[var(--text-secondary)] mt-1">Tạo lớp, chia sẻ mã mời và giao bài tập cho học sinh.</p>
           </div>
+          <button type="button" aria-label="Đóng tạo lớp" disabled={isCreating} onClick={() => setIsCreateOpen(false)} className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] disabled:opacity-50">
+            <MorphIcon icon={XData} size={16} />
+          </button>
         </div>
-      )}
+        {createError && <p role="alert" className="mb-3 text-xs text-[var(--danger)]">{createError}</p>}
+        <form onSubmit={handleCreateClass}>
+          <fieldset disabled={isCreating} className="space-y-4 disabled:opacity-60">
+            <div className="space-y-1.5">
+              <label htmlFor="class-name" className="block text-xs font-medium">Tên lớp học <span className="text-[var(--text-muted)]">(bắt buộc)</span></label>
+              <input id="class-name" type="text" required maxLength={120} autoComplete="off" placeholder="Ví dụ: Tin học 11A" value={newClassName} onChange={(e) => setNewClassName(e.target.value)} className="w-full px-3 py-2 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] text-sm focus:outline-none focus:border-[var(--accent)]" />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="class-description" className="block text-xs font-medium">Mô tả lớp <span className="text-[var(--text-muted)]">(tùy chọn)</span></label>
+              <textarea id="class-description" rows={3} maxLength={2000} placeholder="Mục tiêu học tập, đối tượng hoặc lưu ý cho học sinh..." value={newClassDesc} onChange={(e) => setNewClassDesc(e.target.value)} className="w-full px-3 py-2 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] text-sm focus:outline-none focus:border-[var(--accent)]" />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="class-code" className="block text-xs font-medium">Mã mời <span className="text-[var(--text-muted)]">(tùy chọn)</span></label>
+              <input id="class-code" type="text" autoComplete="off" spellCheck={false} pattern="[A-Z0-9]{4,10}" maxLength={10} title="Mã mời gồm 4–10 chữ cái A–Z hoặc số 0–9" aria-describedby="class-code-hint" placeholder="Để trống để tạo mã tự động" value={newClassCode} onChange={(e) => setNewClassCode(e.target.value.toUpperCase())} className="w-full px-3 py-2 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] font-mono text-sm focus:outline-none focus:border-[var(--accent)]" />
+              <p id="class-code-hint" className="text-xs text-[var(--text-muted)]">4–10 chữ cái hoặc số, không có dấu cách. Để trống để nhận mã ngẫu nhiên gồm 6 ký tự.</p>
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[var(--border)]">
+              <button type="button" onClick={() => setIsCreateOpen(false)} className="px-3 py-2 rounded-md text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]">Hủy</button>
+              <button type="submit" className="px-3 py-2 rounded-md text-xs font-medium bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white">{isCreating ? 'Đang tạo lớp...' : 'Tạo lớp học'}</button>
+            </div>
+          </fieldset>
+        </form>
+      </dialog>
     </div>
   );
 }
-

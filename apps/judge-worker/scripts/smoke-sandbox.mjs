@@ -8,6 +8,7 @@ import { SandboxEngine } from '../dist/sandbox/rsjudge.js';
 
 const results = [];
 let failed = 0;
+let skipped = 0;
 
 function record(name, ok, detail = '') {
   results.push({ name, ok, detail });
@@ -139,7 +140,7 @@ await inTempDir(async (dir) => {
     await fs.access('/usr/bin/rustc');
     r = await runCase(engine, 'rust', src, bin, '10 32\n');
   } catch {
-    record('rust A+B -> ACCEPTED', true, 'SKIP: /usr/bin/rustc không tồn tại trên máy này');
+    skipped++; console.log('SKIP rust: /usr/bin/rustc unavailable');
     return;
   }
   record('rust A+B -> ACCEPTED', r.status === 'ACCEPTED' && r.stdout.trim() === '42',
@@ -156,12 +157,40 @@ await inTempDir(async (dir) => {
     await fs.access('/usr/bin/javac');
     r = await runCase(engine, 'java', src, bin, '-5 47\n');
   } catch {
-    record('java A+B -> ACCEPTED', true, 'SKIP: /usr/bin/javac không tồn tại trên máy này');
+    skipped++; console.log('SKIP java: /usr/bin/javac unavailable (not advertised by UI)');
     return;
   }
   record('java A+B -> ACCEPTED', r.status === 'ACCEPTED' && r.stdout.trim() === '42',
     JSON.stringify(r).slice(0, 200));
 });
 
-console.log(`\n${failed === 0 ? 'ALL PASS' : failed + ' FAILED'} (${results.length} cases)`);
+// Empty input must close stdin, and limits must apply rather than just report RSS.
+await inTempDir(async (dir) => {
+  const src = path.join(dir, 'empty.py');
+  await fs.writeFile(src, 'import sys; print(len(sys.stdin.read()))');
+  const r = await runCase(engine, 'python', src, '', '', 1000);
+  record('empty stdin reaches EOF', r.status === 'ACCEPTED' && r.stdout.trim() === '0' && !r.stderr, JSON.stringify(r));
+});
+await inTempDir(async (dir) => {
+  const src = path.join(dir, 'output.py');
+  await fs.writeFile(src, 'print("x" * (2 * 1024 * 1024))');
+  const r = await runCase(engine, 'python', src, '', '');
+  record('output is capped at 1 MiB', r.status === 'RUNTIME_ERROR' && /Output too large/.test(r.error || '') && Buffer.byteLength(r.stdout) <= 1024 * 1024);
+});
+await inTempDir(async (dir) => {
+  const src = path.join(dir, 'memory.py');
+  await fs.writeFile(src, 'x = bytearray(1024 * 1024 * 1024)');
+  const r = await runCase(engine, 'python', src, '', '');
+  record('memory allocation is prevented', r.status !== 'ACCEPTED' && /MemoryError/.test(r.stderr), JSON.stringify(r));
+});
+await inTempDir(async (dir) => {
+  const unavailable = new SandboxEngine();
+  unavailable.bwrapUsable = false;
+  const src = path.join(dir, 'failclosed.py');
+  await fs.writeFile(src, 'print("must not execute")');
+  let blocked = false;
+  try { await unavailable.executeTestcase('python', src, '', 1000, 256); } catch { blocked = true; }
+  record('unavailable sandbox refuses execution', blocked);
+});
+console.log(`\n${failed === 0 ? 'ALL PASS' : failed + ' FAILED'} (${results.length} executed, ${skipped} skipped)`);
 process.exit(failed === 0 ? 0 : 1);

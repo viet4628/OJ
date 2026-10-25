@@ -1,4 +1,4 @@
-import { execFileSync, spawn } from 'child_process';
+import { execFile, execFileSync, spawn } from 'child_process';
 import * as fs from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
@@ -41,8 +41,7 @@ export class SandboxEngine {
   /**
    * Bubblewrap: cách ly user code bằng namespaces (net/pid/ipc/uts), filesystem
    * read-only trừ thư mục bài làm và /tmp, xoá toàn bộ env của worker.
-   * Không có bwrap (hoặc kernel chặn user namespaces) → fallback chạy trực tiếp
-   * như trước (chỉ còn time/timeout), và cảnh báo đúng một lần.
+   * Không có bwrap (hoặc kernel chặn user namespaces) → từ chối chạy.
    */
   private async bwrapReady(): Promise<boolean> {
     if (this.bwrapUsable === null) {
@@ -57,11 +56,7 @@ export class SandboxEngine {
         console.log('[Sandbox] bwrap sandbox enabled (namespaces: net/pid/ipc/uts, fs read-only).');
       } catch {
         this.bwrapUsable = false;
-        console.warn(
-          '[Sandbox] bwrap KHÔNG khả dụng (thiếu binary hoặc user namespaces bị chặn, ' +
-            'ví dụ Docker seccomp mặc định). Code user sẽ chạy KHÔNG có cách ly namespace — ' +
-            'chỉ giới hạn time/memory/output.'
-        );
+        console.error('[Sandbox] bwrap unavailable: refusing to execute user code.');
       }
     }
     return this.bwrapUsable;
@@ -73,6 +68,7 @@ export class SandboxEngine {
       '--unshare-all',
       '--die-with-parent',
       '--new-session',
+      '--cap-drop', 'ALL',
       // Filesystem tối thiểu cho compiler/runtime, toàn bộ read-only
       '--ro-bind', '/usr', '/usr',
       '--dev', '/dev',
@@ -96,11 +92,16 @@ export class SandboxEngine {
     return args;
   }
 
+  async assertReady(): Promise<void> {
+    if (!(await this.bwrapReady())) throw new Error('Sandbox isolation unavailable');
+  }
+
   async compile(
     language: string,
     sourcePath: string,
     outputBinaryPath: string
   ): Promise<{ success: boolean; error?: string }> {
+    if (!(await this.bwrapReady())) throw new Error('Sandbox isolation unavailable');
     const cmd = this.compileCommand(language, sourcePath, outputBinaryPath);
     if (cmd === null) {
       return { success: false, error: `Unsupported language: ${language}` };
@@ -114,19 +115,15 @@ export class SandboxEngine {
     }
 
     const jobDir = path.dirname(sourcePath);
-    const useBwrap = await this.bwrapReady();
-    const bin = useBwrap ? this.bwrapPath : '/bin/sh';
-    const argv = useBwrap
-      ? [...(await this.bwrapArgs(jobDir)), '/bin/sh', '-c', cmd]
-      : ['/bin/sh', '-c', cmd];
+    const bin = this.bwrapPath;
+    const argv = [...(await this.bwrapArgs(jobDir)), '/bin/sh', '-c', `ulimit -t 120 && ulimit -v 2097152 && ulimit -f 262144 && ${cmd}`];
 
     try {
-      execFileSync(bin, argv, {
+      await new Promise<void>((resolve, reject) => execFile(bin, argv, {
         cwd: jobDir,
         timeout: COMPILE_TIMEOUT_MS,
         maxBuffer: 4 * 1024 * 1024,
-        stdio: ['ignore', 'ignore', 'pipe'],
-      });
+      }, (error, _stdout, stderr) => error ? reject(Object.assign(error, { stderr })) : resolve()));
       return { success: true };
     } catch (err: any) {
       return {
@@ -143,6 +140,7 @@ export class SandboxEngine {
     timeLimitMs: number,
     memoryLimitMb: number
   ): Promise<ExecutionResult> {
+    if (!(await this.bwrapReady())) throw new Error('Sandbox isolation unavailable');
     let toolArgs: string[] | null = null;
     if (language === 'python') toolArgs = ['python3', executableOrScriptPath];
     else if (language === 'cpp' || language === 'rust') toolArgs = [executableOrScriptPath];
@@ -176,11 +174,10 @@ export class SandboxEngine {
     if (hasTime) argv.push('/usr/bin/time', '-v', '-o', statFile);
     if (hasTimeout)
       argv.push('timeout', '--signal=KILL', String((timeLimitMs + 1500) / 1000));
-    if (await this.bwrapReady()) {
-      // Đường tuyệt đối để `timeout` không nhầm flag của bwrap làm option của nó
-      argv.push(this.bwrapPath, ...(await this.bwrapArgs(path.dirname(executableOrScriptPath))));
-    }
-    argv.push(...toolArgs);
+    argv.push(this.bwrapPath, ...(await this.bwrapArgs(path.dirname(executableOrScriptPath))));
+    // Apply limits inside the namespace; pass argv as positional arguments.
+    const addressLimitKb = language === 'java' ? 4 * 1024 * 1024 : memoryLimitMb * 1024;
+    argv.push('/bin/sh', '-c', `ulimit -t ${Math.max(1, Math.ceil(timeLimitMs / 1000))} && ulimit -v ${addressLimitKb} && ulimit -f 1024 && exec "$@"`, 'sandbox', ...toolArgs);
 
     const stdoutSink = { text: '', truncated: false };
     const stderrSink = { text: '', truncated: false };
@@ -227,14 +224,17 @@ export class SandboxEngine {
         });
       });
 
-      if (inputContent) {
-        child.stdin.write(inputContent);
-        child.stdin.end();
-      }
       child.stdin.on('error', () => {});
+      child.stdin.end(inputContent);
 
-      child.stdout.on('data', (data: Buffer) => appendSized(stdoutSink, data, MAX_OUTPUT_BYTES));
-      child.stderr.on('data', (data: Buffer) => appendSized(stderrSink, data, MAX_STDERR_BYTES));
+      child.stdout.on('data', (data: Buffer) => {
+        appendSized(stdoutSink, data, MAX_OUTPUT_BYTES);
+        if (stdoutSink.truncated) child.kill('SIGKILL');
+      });
+      child.stderr.on('data', (data: Buffer) => {
+        appendSized(stderrSink, data, MAX_STDERR_BYTES);
+        if (stderrSink.truncated) child.kill('SIGKILL');
+      });
 
       child.on('close', async (code: number | null, signal: NodeJS.Signals | null) => {
         if (fallbackTimer) clearTimeout(fallbackTimer);
@@ -258,15 +258,17 @@ export class SandboxEngine {
 
         const killedByTimeout =
           code === 124 ||
-          ((signal === 'SIGKILL' || code === 137 || code === 124) && elapsedMs >= timeLimitMs - 200);
+          code === 152 || signal === 'SIGXCPU' ||
+          ((signal === 'SIGKILL' || code === 137) && elapsedMs >= timeLimitMs - 200);
 
         let status: SubmissionStatus = 'ACCEPTED';
         if (code !== 0) {
           status = killedByTimeout ? 'TIME_LIMIT_EXCEEDED' : 'RUNTIME_ERROR';
         }
+        if (cpuSeconds * 1000 > timeLimitMs) status = 'TIME_LIMIT_EXCEEDED';
         if (
           status === 'RUNTIME_ERROR' &&
-          /OutOfMemoryError|Cannot allocate memory|std::bad_alloc/.test(stderrSink.text)
+          /OutOfMemoryError|MemoryError|Cannot allocate memory|std::bad_alloc/.test(stderrSink.text)
         ) {
           status = 'MEMORY_LIMIT_EXCEEDED';
         }

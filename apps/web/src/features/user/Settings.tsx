@@ -1,8 +1,5 @@
 import { useRef, useState } from 'react';
-import {
-  Settings as SettingsIcon, UserRound, Lock, Save, Upload, Loader2,
-  CheckCircle2, AlertCircle, Camera,
-} from 'lucide-react';
+import { Save, Upload, Loader2 } from 'lucide-react';
 import {
   changePassword, updateMyProfile, uploadAvatar, type AppUser,
 } from '../../lib/api';
@@ -32,7 +29,7 @@ export default function Settings({ user, onOpenAuth, onProfileSaved }: SettingsP
   if (!user) {
     return (
       <div className="py-24 text-center space-y-4">
-        <Lock className="w-8 h-8 mx-auto text-[var(--text-muted)]" />
+
         <p className="text-xs text-[var(--text-secondary)]">Bạn cần đăng nhập để cài đặt tài khoản</p>
         <button
           onClick={onOpenAuth}
@@ -119,7 +116,7 @@ export default function Settings({ user, onOpenAuth, onProfileSaved }: SettingsP
       {/* Header */}
       <div className="bg-[var(--bg-primary)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
         <h1 className="text-xl font-extrabold text-[var(--text-primary)] flex items-center gap-2 tracking-tight">
-          <SettingsIcon className="w-5 h-5 text-[var(--accent-text)]" /> Cài Đặt Tài Khoản
+           Cài Đặt Tài Khoản
         </h1>
         <p className="text-[var(--text-secondary)] text-xs mt-1">Quản lý hồ sơ cá nhân và bảo mật tài khoản</p>
       </div>
@@ -127,17 +124,17 @@ export default function Settings({ user, onOpenAuth, onProfileSaved }: SettingsP
       {/* PROFILE SECTION */}
       <form onSubmit={handleSaveProfile} className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border)] shadow-sm p-6 space-y-5">
         <h2 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2 border-b border-[var(--border)] pb-3">
-          <UserRound className="w-4 h-4 text-[var(--accent-text)]" /> Hồ Sơ Cá Nhân
+           Hồ Sơ Cá Nhân
         </h2>
 
         {profileNotice && (
           <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-700 dark:text-emerald-400 font-semibold animate-fade-in">
-            <CheckCircle2 className="w-4 h-4 shrink-0" /> {profileNotice}
+             {profileNotice}
           </div>
         )}
         {profileError && (
           <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400 font-semibold animate-fade-in">
-            <AlertCircle className="w-4 h-4 shrink-0" /> {profileError}
+             {profileError}
           </div>
         )}
 
@@ -166,7 +163,7 @@ export default function Settings({ user, onOpenAuth, onProfileSaved }: SettingsP
                   htmlFor="avatar-input"
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-xs font-semibold text-[var(--text-primary)] cursor-pointer transition-colors"
                 >
-                  <Upload className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+
                   {avatarUploading ? 'Đang tải lên...' : 'Đổi ảnh đại diện'}
                 </label>
                 <p className="text-[11px] text-[var(--text-muted)]">PNG, JPG, WEBP tối đa 2MB</p>
@@ -202,17 +199,17 @@ export default function Settings({ user, onOpenAuth, onProfileSaved }: SettingsP
       {/* SECURITY SECTION */}
       <form onSubmit={handleChangePassword} className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border)] shadow-sm p-6 space-y-5">
         <h2 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2 border-b border-[var(--border)] pb-3">
-          <Lock className="w-4 h-4 text-sky-600 dark:text-sky-400" /> Bảo Mật — Đổi Mật Khẩu
+           Bảo Mật — Đổi Mật Khẩu
         </h2>
 
         {pwNotice && (
           <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-700 dark:text-emerald-400 font-semibold animate-fade-in">
-            <CheckCircle2 className="w-4 h-4 shrink-0" /> {pwNotice}
+             {pwNotice}
           </div>
         )}
         {pwError && (
           <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400 font-semibold animate-fade-in">
-            <AlertCircle className="w-4 h-4 shrink-0" /> {pwError}
+             {pwError}
           </div>
         )}
 

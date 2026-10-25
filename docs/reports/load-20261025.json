@@ -1,0 +1,417 @@
+{
+  "at": "2026-10-24T21:08:38.321Z",
+  "users": 10,
+  "completed": 50,
+  "failures": 0,
+  "elapsedSeconds": 38.678,
+  "p95QueueMs": 6356,
+  "p95FinishMs": 7197,
+  "throughputPerSecond": 1.2927245462536843,
+  "healthFailures": 0,
+  "cleanupFailed": false,
+  "stopped": false,
+  "before": "online-judge-worker-1 42.44MiB / 1GiB 13.44% 12\nonline-judge-engine-1 43.86MiB / 2GiB 0.00% 4",
+  "after": "online-judge-worker-1 57.66MiB / 1GiB 9.50% 12\nonline-judge-engine-1 46.78MiB / 2GiB 0.00% 7",
+  "results": [
+    {
+      "user": 1,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 1472,
+      "queueMs": 477
+    },
+    {
+      "user": 2,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 2473,
+      "queueMs": 1326
+    },
+    {
+      "user": 4,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 2855,
+      "queueMs": 1978
+    },
+    {
+      "user": 7,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 3810,
+      "queueMs": 2633
+    },
+    {
+      "user": 8,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 4211,
+      "queueMs": 3270
+    },
+    {
+      "user": 5,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 4916,
+      "queueMs": 3925
+    },
+    {
+      "user": 3,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 5646,
+      "queueMs": 4604
+    },
+    {
+      "user": 6,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 6350,
+      "queueMs": 5375
+    },
+    {
+      "user": 0,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7021,
+      "queueMs": 6019
+    },
+    {
+      "user": 9,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7636,
+      "queueMs": 6653
+    },
+    {
+      "user": 1,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 6842,
+      "queueMs": 6105
+    },
+    {
+      "user": 2,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 6712,
+      "queueMs": 5820
+    },
+    {
+      "user": 4,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7032,
+      "queueMs": 6207
+    },
+    {
+      "user": 7,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 6700,
+      "queueMs": 5910
+    },
+    {
+      "user": 8,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 6993,
+      "queueMs": 6270
+    },
+    {
+      "user": 5,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7048,
+      "queueMs": 6235
+    },
+    {
+      "user": 3,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7117,
+      "queueMs": 6182
+    },
+    {
+      "user": 6,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7148,
+      "queueMs": 6172
+    },
+    {
+      "user": 0,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 6990,
+      "queueMs": 6314
+    },
+    {
+      "user": 9,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7359,
+      "queueMs": 6327
+    },
+    {
+      "user": 1,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 6996,
+      "queueMs": 6356
+    },
+    {
+      "user": 2,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7059,
+      "queueMs": 6116
+    },
+    {
+      "user": 4,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7072,
+      "queueMs": 6064
+    },
+    {
+      "user": 7,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7109,
+      "queueMs": 6121
+    },
+    {
+      "user": 8,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7035,
+      "queueMs": 6109
+    },
+    {
+      "user": 5,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 6868,
+      "queueMs": 6022
+    },
+    {
+      "user": 3,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 6653,
+      "queueMs": 5894
+    },
+    {
+      "user": 6,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 6653,
+      "queueMs": 5851
+    },
+    {
+      "user": 0,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7092,
+      "queueMs": 6061
+    },
+    {
+      "user": 9,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 6655,
+      "queueMs": 5781
+    },
+    {
+      "user": 1,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7002,
+      "queueMs": 6187
+    },
+    {
+      "user": 2,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 6685,
+      "queueMs": 5943
+    },
+    {
+      "user": 4,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 6667,
+      "queueMs": 5946
+    },
+    {
+      "user": 7,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7002,
+      "queueMs": 5987
+    },
+    {
+      "user": 8,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 6960,
+      "queueMs": 6073
+    },
+    {
+      "user": 5,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7031,
+      "queueMs": 6206
+    },
+    {
+      "user": 3,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7041,
+      "queueMs": 6254
+    },
+    {
+      "user": 6,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7008,
+      "queueMs": 6236
+    },
+    {
+      "user": 0,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 6651,
+      "queueMs": 5990
+    },
+    {
+      "user": 9,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 6999,
+      "queueMs": 6078
+    },
+    {
+      "user": 1,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7002,
+      "queueMs": 6106
+    },
+    {
+      "user": 2,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 6976,
+      "queueMs": 6214
+    },
+    {
+      "user": 4,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7120,
+      "queueMs": 6225
+    },
+    {
+      "user": 7,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 6715,
+      "queueMs": 5919
+    },
+    {
+      "user": 8,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 6743,
+      "queueMs": 6025
+    },
+    {
+      "user": 5,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 6988,
+      "queueMs": 6065
+    },
+    {
+      "user": 3,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7038,
+      "queueMs": 6283
+    },
+    {
+      "user": 6,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7032,
+      "queueMs": 6298
+    },
+    {
+      "user": 0,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7197,
+      "queueMs": 6386
+    },
+    {
+      "user": 9,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 7004,
+      "queueMs": 6156
+    }
+  ],
+  "health": [
+    {
+      "at": "2026-10-24T21:07:55.439Z",
+      "ok": true,
+      "queued": 0,
+      "processing": 0
+    },
+    {
+      "at": "2026-10-24T21:08:04.650Z",
+      "ok": true,
+      "queued": 8,
+      "processing": 1
+    },
+    {
+      "at": "2026-10-24T21:08:09.652Z",
+      "ok": true,
+      "queued": 8,
+      "processing": 1
+    },
+    {
+      "at": "2026-10-24T21:08:14.646Z",
+      "ok": true,
+      "queued": 8,
+      "processing": 1
+    },
+    {
+      "at": "2026-10-24T21:08:19.650Z",
+      "ok": true,
+      "queued": 9,
+      "processing": 1
+    },
+    {
+      "at": "2026-10-24T21:08:24.648Z",
+      "ok": true,
+      "queued": 9,
+      "processing": 1
+    },
+    {
+      "at": "2026-10-24T21:08:29.649Z",
+      "ok": true,
+      "queued": 7,
+      "processing": 1
+    },
+    {
+      "at": "2026-10-24T21:08:34.651Z",
+      "ok": true,
+      "queued": 0,
+      "processing": 1
+    }
+  ]
+}

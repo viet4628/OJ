@@ -1,9 +1,5 @@
 import MorphIcon from './MorphIcon';
-import {
-  FileText as FileTextData,
-  Trophy as TrophyData,
-  History as HistoryData,
-} from 'lucide';
+import { FileText as FileTextData, Trophy as TrophyData, History as HistoryData } from 'lucide';
 
 type SidebarTab = 'description' | 'ranking' | 'history';
 

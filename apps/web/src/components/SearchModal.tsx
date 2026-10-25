@@ -1,14 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MorphIcon from './MorphIcon';
-import {
-  Search as SearchData,
-  Code2 as Code2Data,
-  ChevronRight as ChevronRightData,
-  X as XData,
-  Sparkles as SparklesData,
-  Loader2 as Loader2Data,
-} from 'lucide';
+import { Code2 as Code2Data, ChevronRight as ChevronRightData, X as XData, Loader2 as Loader2Data } from 'lucide';
 import { searchProblems, type Problem } from '../lib/api';
 
 interface SearchModalProps {
@@ -87,7 +80,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       >
         {/* Search Input Bar */}
         <div className="flex items-center px-3.5 py-2.5 border-b border-[var(--border)] gap-2.5 bg-[var(--bg-primary)]">
-          <MorphIcon icon={SearchData} size={16} className="text-[var(--text-muted)] shrink-0" />
+
           <input
             type="text"
             autoFocus
@@ -167,9 +160,6 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             <span><kbd className="px-1 py-0.2 rounded bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-primary)]">Enter</kbd> Mở</span>
             <span><kbd className="px-1 py-0.2 rounded bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-primary)]">Esc</kbd> Đóng</span>
           </div>
-          <span className="flex items-center gap-1 text-[var(--accent-text)]">
-            <MorphIcon icon={SparklesData} size={11} /> Quick Search
-          </span>
         </div>
       </div>
     </div>

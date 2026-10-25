@@ -1,16 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  GraduationCap,
-  Plus,
-  Users,
-  BookOpen,
-  ArrowRight,
-  Sparkles,
-  X,
-  CheckCircle2,
-  LogIn,
-} from 'lucide-react';
+import { Plus, ArrowRight, X, LogIn } from 'lucide-react';
 import {
   getClassrooms,
   joinClassroomByCode,
@@ -80,9 +70,7 @@ export default function Classes({ user, onOpenAuth }: ClassesProps) {
   if (!user) {
     return (
       <div className="max-w-md mx-auto my-16 bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl p-8 text-center space-y-4 shadow-sm">
-        <div className="mx-auto w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-          <GraduationCap className="w-7 h-7 text-amber-600 dark:text-amber-400" />
-        </div>
+
         <div>
           <h2 className="text-lg font-black text-[var(--text-primary)]">Lớp Học CodeJudge</h2>
           <p className="text-xs text-[var(--text-secondary)] mt-1">
@@ -102,12 +90,9 @@ export default function Classes({ user, onOpenAuth }: ClassesProps) {
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-transparent border border-amber-500/20 p-6 shadow-sm">
+      <div className="relative overflow-hidden rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border)] p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
           <div className="space-y-1">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-bold font-mono">
-              <Sparkles className="w-3.5 h-3.5" /> Không Gian Học Tập
-            </div>
             <h1 className="text-2xl font-black text-[var(--text-primary)]">Lớp Học Của Tôi</h1>
             <p className="text-xs text-[var(--text-secondary)] max-w-md">
               Tham gia các lớp học của thầy cô, nhận bài tập về nhà và theo dõi bảng xếp hạng thi đua trong lớp.
@@ -138,10 +123,10 @@ export default function Classes({ user, onOpenAuth }: ClassesProps) {
         </div>
       ) : classrooms.length === 0 ? (
         <div className="text-center py-16 border border-dashed border-[var(--border)] rounded-2xl bg-[var(--bg-secondary)] space-y-3">
-          <GraduationCap className="w-12 h-12 text-[var(--text-muted)] mx-auto" />
+
           <div className="text-sm font-bold text-[var(--text-primary)]">Bạn chưa tham gia lớp học nào</div>
           <p className="text-xs text-[var(--text-muted)] max-w-sm mx-auto">
-            Hỏi giáo viên hoặc trợ giảng của bạn để nhận mã mời lớp học (ví dụ: <code className="font-mono font-bold text-amber-600 dark:text-amber-400">MATH11</code>) và bấm nút bên dưới.
+            Hỏi giáo viên hoặc trợ giảng của bạn để nhận mã mời lớp học (ví dụ: <code className="font-mono font-bold text-[var(--text-secondary)]">MATH11</code>) và bấm nút bên dưới.
           </p>
           <button
             onClick={() => setIsJoinOpen(true)}
@@ -159,14 +144,6 @@ export default function Classes({ user, onOpenAuth }: ClassesProps) {
               className="group p-5 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] hover:border-[var(--accent)]/60 transition-all shadow-sm hover:shadow-md flex flex-col justify-between space-y-4"
             >
               <div className="space-y-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition-all shadow-sm">
-                    <GraduationCap className="w-6 h-6" />
-                  </div>
-                  <div className="flex items-center gap-1 text-[11px] font-mono text-[var(--text-muted)]">
-                    <span className="font-bold">{c.code}</span>
-                  </div>
-                </div>
 
                 <div>
                   <h3 className="text-base font-black text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors">
@@ -191,10 +168,10 @@ export default function Classes({ user, onOpenAuth }: ClassesProps) {
               <div className="pt-3 border-t border-[var(--border)] flex items-center justify-between text-xs text-[var(--text-secondary)]">
                 <div className="flex items-center gap-3 font-semibold">
                   <span className="flex items-center gap-1">
-                    <BookOpen className="w-3.5 h-3.5 text-emerald-500" /> {c.problem_count || 0} bài tập
+                    {c.problem_count || 0} bài tập
                   </span>
                   <span className="flex items-center gap-1">
-                    <Users className="w-3.5 h-3.5 text-sky-500" /> {c.student_count || 0} bạn học
+                    {c.student_count || 0} bạn học
                   </span>
                 </div>
 
@@ -220,7 +197,7 @@ export default function Classes({ user, onOpenAuth }: ClassesProps) {
           >
             <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
               <div className="flex items-center gap-2">
-                <GraduationCap className="w-5 h-5 text-amber-500" />
+
                 <h3 className="text-sm font-black text-[var(--text-primary)]">Tham Gia Lớp Học</h3>
               </div>
               <button

@@ -1,19 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import {
-  GraduationCap,
-  BookOpen,
-  Users,
-  Trophy,
-  Clock,
-  ArrowLeft,
-  CheckCircle2,
-  XCircle,
-  ExternalLink,
-  Calendar,
-  AlertTriangle,
-  Play,
-} from 'lucide-react';
+import { BookOpen, Users, Trophy, ArrowLeft, Play } from 'lucide-react';
 import {
   getClassroomDetail,
   getClassroomProgress,
@@ -91,7 +78,7 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
   if (error || !classroom) {
     return (
       <div className="max-w-md mx-auto my-16 p-8 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-center space-y-4">
-        <GraduationCap className="w-10 h-10 text-red-500 mx-auto" />
+
         <h2 className="text-base font-black text-[var(--text-primary)]">Không Tìm Thấy Lớp Học</h2>
         <p className="text-xs text-[var(--text-muted)]">{error || 'Bạn không có quyền truy cập lớp này hoặc lớp đã bị đóng.'}</p>
         <Link
@@ -151,9 +138,7 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
 
         <div className="p-6 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0 shadow-sm">
-              <GraduationCap className="w-8 h-8" />
-            </div>
+
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-black text-[var(--text-primary)]">{classroom.name}</h1>
@@ -230,7 +215,7 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
         <div className="space-y-4">
           {problems.length === 0 ? (
             <div className="text-center py-16 border border-dashed border-[var(--border)] rounded-2xl bg-[var(--bg-secondary)] space-y-2">
-              <BookOpen className="w-8 h-8 text-[var(--text-muted)] mx-auto" />
+
               <div className="text-xs font-bold text-[var(--text-primary)]">Chưa có bài tập nào được giao</div>
               <p className="text-[11px] text-[var(--text-muted)]">Thầy cô sẽ sớm cập nhật bài tập cho lớp học này.</p>
             </div>
@@ -256,7 +241,7 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <Link
-                            to={`/problems/${p?.slug || cp.problem_id}`}
+                            to={`/problems/${p?.slug || cp.problem_id}?classroom=${classId}`}
                             className="font-bold text-sm text-[var(--text-primary)] hover:text-[var(--accent-text)] transition-colors"
                           >
                             {p?.title || 'Bài tập'}
@@ -282,7 +267,7 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
                                 isExpired ? 'text-red-500 font-bold' : 'text-amber-600 dark:text-amber-400'
                               }`}
                             >
-                              <Clock className="w-3 h-3" /> Hạn nộp: {new Date(cp.deadline!).toLocaleString('vi-VN')}
+                               Hạn nộp: {new Date(cp.deadline!).toLocaleString('vi-VN')}
                               {isExpired && ' (Đã hết hạn)'}
                             </span>
                           )}
@@ -296,11 +281,11 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
                         <div>
                           {isAc ? (
                             <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-bold">
-                              <CheckCircle2 className="w-3.5 h-3.5" /> Đã Hoàn Thành
+                               Đã Hoàn Thành
                             </div>
                           ) : myProg ? (
                             <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 text-xs font-bold">
-                              <XCircle className="w-3.5 h-3.5" /> {myProg.score}đ (Chưa AC)
+                               {myProg.score}đ (Chưa AC)
                             </div>
                           ) : (
                             <div className="text-xs text-[var(--text-muted)] italic">Chưa nộp</div>
@@ -309,7 +294,7 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
                       )}
 
                       <Link
-                        to={`/problems/${p?.slug || cp.problem_id}`}
+                        to={`/problems/${p?.slug || cp.problem_id}?classroom=${classId}`}
                         className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
                       >
                         <Play className="w-3.5 h-3.5 fill-current" />
@@ -348,7 +333,7 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
                       }`}
                     >
                       <td className="px-4 py-3 text-center font-bold">
-                        {idx === 0 ? '🥇 1' : idx === 1 ? '🥈 2' : idx === 2 ? '🥉 3' : idx + 1}
+                        {idx + 1}
                       </td>
                       <td className="px-4 py-3 flex items-center gap-2.5">
                         <div className="w-7 h-7 rounded-full bg-[var(--accent)] flex items-center justify-center text-white text-xs font-black">

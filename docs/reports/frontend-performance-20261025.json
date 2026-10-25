@@ -1,0 +1,9 @@
+{
+  "at": "2026-10-25T16:17:12.293Z",
+  "measurement": "production build asset size; not browser LCP/INP",
+  "entry": "/assets/index-CQLAwiZN.js",
+  "entryBytes": 453399,
+  "entryGzipBytes": 131920,
+  "previousEntryGzipKB": 292.64,
+  "reductionPercent": 54.9
+}

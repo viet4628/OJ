@@ -1,17 +1,6 @@
 import { useState, useEffect } from 'react';
 import MorphIcon from './MorphIcon';
-import {
-  X as XData,
-  LogIn as LogInData,
-  Mail as MailData,
-  Lock as LockData,
-  User as UserData,
-  Code2 as Code2Data,
-  AlertCircle as AlertCircleData,
-  CheckCircle2 as CheckCircle2Data,
-  Loader2 as Loader2Data,
-  KeyRound as KeyRoundData,
-} from 'lucide';
+import { X as XData, LogIn as LogInData, Loader2 as Loader2Data, KeyRound as KeyRoundData } from 'lucide';
 import { supabase, sendPasswordResetEmail } from '../lib/api';
 
 interface AuthModalProps {
@@ -59,11 +48,11 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
           email,
           password,
           options: {
-            data: { username: username.trim() || email.split('@')[0] },
+            data: { full_name: username.trim() || email.split('@')[0] },
           },
         });
         if (signUpError) throw signUpError;
-        setNotice('Tạo tài khoản thành công! Bạn có thể đăng nhập ngay.');
+        setNotice('Tạo tài khoản thành công. Kiểm tra email xác nhận (nếu được yêu cầu), sau đó đăng nhập.');
         setMode('login');
         return;
       }
@@ -100,9 +89,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
       >
         <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-[var(--accent)] text-white flex items-center justify-center">
-              <MorphIcon icon={Code2Data} size={15} />
-            </div>
+
             <div>
               <h2 className="text-xs font-semibold text-[var(--text-primary)]">
                 {mode === 'forgot' ? 'Đặt Lại Mật Khẩu' : mode === 'register' ? 'Tạo Tài Khoản' : 'Đăng Nhập'}
@@ -121,14 +108,14 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
 
         {error && (
           <div className="flex items-start gap-2 p-2.5 rounded-md bg-red-500/10 border border-red-500/20 text-xs text-[var(--danger)] font-medium" role="alert">
-            <MorphIcon icon={AlertCircleData} size={14} className="shrink-0 mt-0.5" />
+
             <span>{error}</span>
           </div>
         )}
 
         {notice && (
           <div className="flex items-start gap-2 p-2.5 rounded-md bg-[var(--accent)]/10 border border-[var(--accent)]/30 text-xs text-[var(--accent-text)] font-medium" role="status">
-            <MorphIcon icon={CheckCircle2Data} size={14} className="shrink-0 mt-0.5" />
+
             <span>{notice}</span>
           </div>
         )}
@@ -138,7 +125,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
             <div className="space-y-1">
               <label className="font-semibold text-[var(--text-secondary)]">Tên Người Dùng</label>
               <div className="relative">
-                <MorphIcon icon={UserData} size={14} className="text-[var(--text-muted)] absolute left-2.5 top-1/2 -translate-y-1/2" />
+
                 <input
                   type="text"
                   required
@@ -155,7 +142,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
           <div className="space-y-1">
             <label className="font-semibold text-[var(--text-secondary)]">Địa Chỉ Email</label>
             <div className="relative">
-              <MorphIcon icon={MailData} size={14} className="text-[var(--text-muted)] absolute left-2.5 top-1/2 -translate-y-1/2" />
+
               <input
                 type="email"
                 required
@@ -170,20 +157,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
 
           {mode !== 'forgot' && (
             <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <label className="font-semibold text-[var(--text-secondary)]">Mật Khẩu</label>
-                {mode === 'login' && (
-                  <button
-                    type="button"
-                    onClick={() => { setMode('forgot'); setError(null); setNotice(null); }}
-                    className="text-[11px] text-[var(--accent-text)] hover:underline cursor-pointer"
-                  >
-                    Quên mật khẩu?
-                  </button>
-                )}
-              </div>
+              <label className="font-semibold text-[var(--text-secondary)]">Mật Khẩu</label>
               <div className="relative">
-                <MorphIcon icon={LockData} size={14} className="text-[var(--text-muted)] absolute left-2.5 top-1/2 -translate-y-1/2" />
+
                 <input
                   type="password"
                   required
@@ -193,12 +169,23 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
                   className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md pl-8 pr-2.5 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#0969da] focus:ring-1 focus:ring-[#0969da] transition-colors"
                 />
               </div>
+              {mode === 'login' && (
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="button"
+                    onClick={() => { setMode('forgot'); setError(null); setNotice(null); }}
+                    className="text-[11px] text-[var(--accent-text)] hover:underline cursor-pointer"
+                  >
+                    Quên mật khẩu?
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
           {mode === 'forgot' && (
             <div className="flex items-start gap-2 p-2.5 rounded-md bg-[var(--bg-tertiary)] border border-[var(--border)] text-[11px] text-[var(--text-secondary)]">
-              <MorphIcon icon={KeyRoundData} size={13} className="shrink-0 mt-0.5 text-[var(--accent-text)]" />
+
               Nhập email đã đăng ký — hệ thống sẽ gửi liên kết đặt lại mật khẩu.
             </div>
           )}

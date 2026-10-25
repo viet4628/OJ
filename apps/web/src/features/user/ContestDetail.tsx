@@ -1,13 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import {
-  Trophy, Calendar, Clock, Loader2, Users, Lock, ChevronRight, Timer,
-  CheckCircle2, XCircle, ListOrdered, Award, CircleDashed, Info,
-  BookOpen, ShieldCheck, ArrowRight, Globe,
-} from 'lucide-react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Loader2, ChevronRight, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
 import {
   getContest, getContestProblems, getContestRank, getMyContestSubmissions,
   getContestStatusFromTime,
+  getMyContestRegistration, registerContest,
   type Contest, type ContestProblemRow, type ContestRankRow,
 } from '../../lib/api';
 import Markdown from '../../components/Markdown';
@@ -42,14 +39,26 @@ function fmtDate(iso: string): string {
 
 export default function ContestDetail() {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const [contest, setContest] = useState<Contest | null>(null);
   const [problems, setProblems] = useState<ContestProblemRow[]>([]);
   const [rank, setRank] = useState<ContestRankRow[]>([]);
   const [mySubs, setMySubs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>('overview');
+  const [tab, setTab] = useState<Tab>(() => searchParams.get('tab') === 'rank' ? 'rank' : 'overview');
   const [now, setNow] = useState(() => Date.now());
+  const [registration, setRegistration] = useState<string | null>(null);
+  const [entryBusy, setEntryBusy] = useState(false);
+  const [entryError, setEntryError] = useState<string | null>(null);
+  const updateRegistration = async (register: boolean) => {
+    if (!id) return;
+    setEntryBusy(true);
+    setEntryError(null);
+    try { setRegistration(register ? await registerContest(id) : await getMyContestRegistration(id)); }
+    catch (err: any) { setEntryError(err.message || 'Không cập nhật được đăng ký'); }
+    finally { setEntryBusy(false); }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -63,6 +72,10 @@ export default function ContestDetail() {
         return;
       }
       setContest(c);
+      if (c.registration_required) {
+        try { setRegistration(await getMyContestRegistration(id)); }
+        catch { setEntryError('Không tải được trạng thái đăng ký. Vui lòng kiểm tra lại.'); }
+      }
       const [probs, rnk, subs] = await Promise.all([
         getContestProblems(id),
         getContestRank(id),
@@ -110,9 +123,12 @@ export default function ContestDetail() {
     if (contest?.rule_type === 'ACM') {
       return [...rank].sort((a, b) =>
         b.accepted_number - a.accepted_number || a.total_time_seconds - b.total_time_seconds
+        || Math.max(0, ...Object.values(a.problem_info).filter(info => info.is_ac).map(info => info.time_seconds || 0))
+          - Math.max(0, ...Object.values(b.problem_info).filter(info => info.is_ac).map(info => info.time_seconds || 0))
+        || a.user_id.localeCompare(b.user_id)
       );
     }
-    return [...rank].sort((a, b) => b.total_score - a.total_score);
+    return [...rank].sort((a, b) => b.total_score - a.total_score || a.user_id.localeCompare(b.user_id));
   }, [rank, contest?.rule_type]);
 
   if (loading) {
@@ -151,7 +167,7 @@ export default function ContestDetail() {
   };
   const STATUS_META = STATUS_MAP[status as Contest['status']];
 
-  const tbBtn = (t: Tab, icon: React.ReactNode, text: string) => (
+  const tbBtn = (t: Tab, text: string) => (
     <button
       onClick={() => setTab(t)}
       className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -160,12 +176,21 @@ export default function ContestDetail() {
           : 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] border border-transparent'
       }`}
     >
-      {icon} {text}
+      {text}
     </button>
   );
 
   return (
     <div className="space-y-5">
+      {contest.freeze_at && now >= new Date(contest.freeze_at).getTime() && status === 'UNDERWAY' && <p className="text-xs border border-[var(--border)] p-3 rounded">Bảng xếp hạng công khai đang đóng băng. Kết quả mới sẽ được công bố khi kỳ thi kết thúc; người quản lý vẫn xem được bảng đầy đủ.</p>}
+      {contest.registration_required && <section className="border border-[var(--border)] rounded-lg p-4 space-y-2 text-xs">
+        <p>{registration === 'APPROVED' ? 'Bạn đã được duyệt tham gia kỳ thi.' : registration === 'PENDING' ? 'Đăng ký đang chờ giáo viên duyệt.' : registration === 'REJECTED' ? 'Đăng ký đã bị từ chối. Vui lòng liên hệ giáo viên.' : 'Kỳ thi yêu cầu đăng ký và được giáo viên duyệt trước khi nộp bài.'}</p>
+        {entryError && <p role="alert">{entryError}</p>}
+        <div className="flex gap-2">
+          <button onClick={() => updateRegistration(true)} disabled={entryBusy || !!registration || status === 'ENDED'} className="border border-[var(--border)] rounded px-3 py-1.5 disabled:opacity-50">Đăng ký dự thi</button>
+          <button onClick={() => updateRegistration(false)} disabled={entryBusy} className="border border-[var(--border)] rounded px-3 py-1.5 disabled:opacity-50">Kiểm tra trạng thái</button>
+        </div>
+      </section>}
       {/* HEADER */}
       <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border)] shadow-sm p-6 space-y-4">
         {/* Navigation & Status Badges */}
@@ -186,11 +211,11 @@ export default function ContestDetail() {
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-secondary)] text-[11px] font-medium">
               {contest.is_public ? (
                 <>
-                  <Globe className="w-3 h-3 text-[var(--text-muted)]" /> Công khai
+                   Công khai
                 </>
               ) : (
                 <>
-                  <Lock className="w-3 h-3 text-[var(--text-muted)]" /> Nội bộ
+                   Nội bộ
                 </>
               )}
             </span>
@@ -205,23 +230,23 @@ export default function ContestDetail() {
             </h1>
             <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-xs text-[var(--text-secondary)]">
               <span className="inline-flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+
                 <span>Bắt đầu: <strong className="text-[var(--text-primary)] font-semibold">{fmtDate(contest.start_time)}</strong></span>
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+
                 <span>Kết thúc: <strong className="text-[var(--text-primary)] font-semibold">{fmtDate(contest.end_time)}</strong></span>
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <Timer className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+
                 <span>Thời lượng: <strong className="text-[var(--text-primary)] font-semibold">{fmtDuration(contest.start_time, contest.end_time)}</strong></span>
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <ListOrdered className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+
                 <span><strong className="text-[var(--text-primary)] font-semibold">{problems.length}</strong> bài tập</span>
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+
                 <span><strong className="text-[var(--text-primary)] font-semibold">{rank.length}</strong> thí sinh</span>
               </span>
             </div>
@@ -231,7 +256,7 @@ export default function ContestDetail() {
           <div className="shrink-0 md:w-64 p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] flex flex-col justify-between space-y-3">
             <div>
               <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
-                <Timer className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+
                 {status === 'NOT_STARTED' ? 'Bắt đầu sau' : status === 'UNDERWAY' ? 'Thời gian còn lại' : 'Kỳ thi kết thúc lúc'}
               </div>
               <div className="font-code font-black text-xl text-[var(--text-primary)] tabular-nums mt-1">
@@ -267,9 +292,9 @@ export default function ContestDetail() {
 
       {/* TABS */}
       <div className="flex items-center gap-1 bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl p-1.5 shadow-sm w-fit">
-        {tbBtn('overview', <Info className="w-4 h-4" />, 'Tổng Quan & Thể Lệ')}
-        {tbBtn('problems', <ListOrdered className="w-4 h-4" />, `Bài Tập (${problems.length})`)}
-        {tbBtn('rank', <Award className="w-4 h-4" />, `Bảng Xếp Hạng (${rank.length})`)}
+        {tbBtn('overview', 'Tổng Quan & Thể Lệ')}
+        {tbBtn('problems', `Bài Tập (${problems.length})`)}
+        {tbBtn('rank', `Bảng Xếp Hạng (${rank.length})`)}
       </div>
 
       {/* OVERVIEW */}
@@ -280,12 +305,12 @@ export default function ContestDetail() {
             <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg-primary)] space-y-1 shadow-xs">
               <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider block">Thể thức thi đấu</span>
               <div className="font-bold text-sm text-[var(--text-primary)]">
-                {contest.rule_type === 'ACM' ? 'ACM / ICPC' : 'OI Subtask'}
+                {contest.rule_type === 'ACM' ? 'ACM / ICPC' : 'OI tính điểm'}
               </div>
               <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
                 {contest.rule_type === 'ACM'
                   ? 'AC nhiều nhất, sai trừ thời gian phạt (penalty 20 phút).'
-                  : 'Chấm subtask theo thang điểm, tích lũy điểm cao nhất từng bài.'}
+                  : 'Chấm theo trọng số testcase, tích lũy điểm cao nhất từng bài.'}
               </p>
             </div>
 
@@ -324,7 +349,7 @@ export default function ContestDetail() {
           <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border)] shadow-sm p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
               <div className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-[var(--accent-text)]" />
+
                 <h2 className="text-sm font-bold text-[var(--text-primary)]">Mô Tả & Thông Tin Kỳ Thi</h2>
               </div>
               {contest.rule_type && (
@@ -348,14 +373,14 @@ export default function ContestDetail() {
           {/* Rules & Guidelines */}
           <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border)] shadow-sm p-6 space-y-4">
             <div className="flex items-center gap-2 pb-3 border-b border-[var(--border)]">
-              <ShieldCheck className="w-4 h-4 text-[var(--accent-text)]" />
+
               <h2 className="text-sm font-bold text-[var(--text-primary)]">Quy Định Chung & Tính Điểm</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-[var(--text-secondary)]">
               <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] space-y-2">
                 <h3 className="font-bold text-[var(--text-primary)] flex items-center gap-1.5">
-                  <Award className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+
                   Quy tắc tính điểm ({contest.rule_type})
                 </h3>
                 {contest.rule_type === 'ACM' ? (
@@ -371,7 +396,7 @@ export default function ContestDetail() {
 
               <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] space-y-2">
                 <h3 className="font-bold text-[var(--text-primary)] flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+
                   Quy chế làm bài & Trung thực
                 </h3>
                 <p className="leading-relaxed">
@@ -401,11 +426,11 @@ export default function ContestDetail() {
         <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border)] shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
             <h2 className="text-sm font-extrabold text-[var(--text-primary)] flex items-center gap-2">
-              <ListOrdered className="w-4 h-4 text-[var(--accent-text)]" /> Bài Tập Trong Kỳ Thi
+               Bài Tập Trong Kỳ Thi
             </h2>
             {status === 'NOT_STARTED' && (
               <span className="text-[11px] text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1">
-                <Lock className="w-3 h-3" /> Đề mở khi bắt đầu (vẫn xem được thông tin)
+                 Đề mở khi bắt đầu (vẫn xem được thông tin)
               </span>
             )}
           </div>
@@ -452,7 +477,7 @@ export default function ContestDetail() {
         <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border)] shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
             <h2 className="text-sm font-extrabold text-[var(--text-primary)] flex items-center gap-2">
-              <Award className="w-4 h-4 text-amber-600" /> Bảng Xếp Hạng {contest.rule_type}
+               Bảng Xếp Hạng {contest.rule_type}
             </h2>
             {contest.rule_type === 'ACM' ? (
               <span className="text-[11px] text-[var(--text-secondary)] font-semibold">AC xếp trước, penalty nhỏ hơn xếp trên</span>
@@ -484,7 +509,7 @@ export default function ContestDetail() {
                 <tbody className="divide-y divide-[var(--border)]">
                   {sortedRank.map((row, i) => (
                     <tr key={row.user_id} className="hover:bg-[var(--bg-secondary)] transition-colors">
-                      <td className="px-4 py-3 font-black">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}</td>
+                      <td className="px-4 py-3 font-black">{i + 1}</td>
                       <td className="px-4 py-3 font-bold text-[var(--text-primary)]">{row.username || row.email?.split('@')[0] || 'user'}</td>
                       <td className="px-4 py-3 text-center font-black text-[var(--accent-text)]">
                         {contest.rule_type === 'ACM' ? `${row.accepted_number} / ${row.submission_number}` : row.total_score}

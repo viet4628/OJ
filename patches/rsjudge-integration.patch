@@ -1,0 +1,3206 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index 20277d2..ce826e9 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -110,7 +110,7 @@ checksum = "82f6aeea286b8eb4dd3431a1be1b59d290ace00f5bfd8e2a159bc2a05e2c1667"
+ dependencies = [
+  "proc-macro2",
+  "quote",
+- "syn 3.0.4",
++ "syn 3.0.9",
+ ]
+ 
+ [[package]]
+@@ -191,9 +191,9 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
+ 
+ [[package]]
+ name = "bitflags"
+-version = "2.13.1"
++version = "2.13.2"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "b588b76d00fde79687d7646a9b5bdf3cc0f655e0bbd080335a95d7e96f3587da"
++checksum = "3ded4057c258ba199e2d26386d3af3780957ecaee6c4ef4041c6b4b8b97c0b06"
+ 
+ [[package]]
+ name = "bumpalo"
+@@ -220,19 +220,21 @@ dependencies = [
+ 
+ [[package]]
+ name = "cc"
+-version = "1.4.4"
++version = "1.8.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "0ad534f4357a5264cce5019c989cf66a4f0dc4e0d1b1d15f8aacec0ff7360273"
++checksum = "6651c9ed80effdc7db0ff72512157f901af5e3549e341e24b1dd4887d836d838"
+ dependencies = [
+  "find-msvc-tools",
+- "shlex",
++ "jobserver",
++ "libc",
++ "shlex 2.0.1",
+ ]
+ 
+ [[package]]
+ name = "cfg-if"
+-version = "1.0.4"
++version = "1.0.5"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
++checksum = "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600"
+ 
+ [[package]]
+ name = "cfg_aliases"
+@@ -293,14 +295,14 @@ dependencies = [
+  "heck",
+  "proc-macro2",
+  "quote",
+- "syn 3.0.4",
++ "syn 3.0.9",
+ ]
+ 
+ [[package]]
+ name = "clap_lex"
+-version = "1.1.0"
++version = "1.1.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "c8d4a3bb8b1e0c1050499d1815f5ab16d04f0959b233085fb31653fbfc9d98f9"
++checksum = "1c133bc6a41be0d194c306b5506d15e6feeea7b1d6604bd3f8310dfb2ca96486"
+ 
+ [[package]]
+ name = "clap_mangen"
+@@ -417,15 +419,15 @@ version = "0.3.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "1e0e367e4e7da84520dedcac1901e4da967309406d1e51017ae1abfb97adbd38"
+ dependencies = [
+- "bitflags 2.13.1",
++ "bitflags 2.13.2",
+  "objc2",
+ ]
+ 
+ [[package]]
+ name = "either"
+-version = "1.18.0"
++version = "1.19.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "252afb9ae5eaa683babdc6a068b3f5726eb19e05070c731f9b2a23a7c3e8ed34"
++checksum = "0e9c71c2167ca323c882b99918929403426e2373ea17242ff5653e0d5e1058be"
+ 
+ [[package]]
+ name = "env_filter"
+@@ -451,9 +453,9 @@ dependencies = [
+ 
+ [[package]]
+ name = "equivalent"
+-version = "1.0.2"
++version = "1.0.3"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
++checksum = "00d174d5400e5e8fd687ad1049e2f578285fa914201b1af7e8b112a4546bd826"
+ 
+ [[package]]
+ name = "errno"
+@@ -471,11 +473,21 @@ version = "2.5.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "da7c62ceae207dd37ea5b845da6a0696c799f85e97da1ab5b7910be3c1c80223"
+ 
++[[package]]
++name = "filetime"
++version = "0.2.29"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "5c287a33c7f0a620c38e641e7f60827713987b3c0f26e8ddc9462cc69cf75759"
++dependencies = [
++ "cfg-if",
++ "libc",
++]
++
+ [[package]]
+ name = "find-msvc-tools"
+-version = "0.1.11"
++version = "0.1.14"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "d45db016d36b838f563236e9193d0ee6ce38f3f68b6c94e914b4929c96bbb890"
++checksum = "aedcfb3409746eddb02b9e19ebda1c3394f759a152e48ee875a0844d1b955484"
+ 
+ [[package]]
+ name = "fixedbitset"
+@@ -560,7 +572,7 @@ checksum = "9fb9654ba8355388abeb8dcb4fc62f511300867002afc858860463bdd9fe0c44"
+ dependencies = [
+  "proc-macro2",
+  "quote",
+- "syn 3.0.4",
++ "syn 3.0.9",
+ ]
+ 
+ [[package]]
+@@ -616,9 +628,9 @@ dependencies = [
+ 
+ [[package]]
+ name = "h2"
+-version = "0.4.19"
++version = "0.4.20"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "ef8e5e5a340588f4452631496976cf8636d4a7ecf600239fdc27615d2530bc16"
++checksum = "7d29020232d6aa3fb1daca64c1127cf662cf97f254ae16c18c05b8ab635fc118"
+ dependencies = [
+  "atomic-waker",
+  "bytes",
+@@ -701,9 +713,9 @@ checksum = "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
+ 
+ [[package]]
+ name = "hyper"
+-version = "1.11.1"
++version = "1.12.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "27b501faa50e7a26c3d3560ca625132f4078a17771f4810baf70475ae48cbe43"
++checksum = "2c3e324da4c95177d6291d4c8730197c0d1822f8a9766814a4a44fa5ab797c9c"
+ dependencies = [
+  "atomic-waker",
+  "bytes",
+@@ -736,15 +748,16 @@ dependencies = [
+ 
+ [[package]]
+ name = "hyper-util"
+-version = "0.1.20"
++version = "0.1.21"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "96547c2556ec9d12fb1578c4eaf448b04993e7fb79cbaad930a656880a6bdfa0"
++checksum = "ddc03d96684f9226b8a787cdb71488417b53ab5ea8fdb1dac946cb9431cc8bff"
+ dependencies = [
+  "bytes",
+  "futures-channel",
+  "futures-util",
+  "http",
+  "http-body",
++ "httparse",
+  "hyper",
+  "libc",
+  "pin-project-lite",
+@@ -817,11 +830,21 @@ version = "1.0.18"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
+ 
++[[package]]
++name = "jobserver"
++version = "0.1.35"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "1c00acbd29eabad4a2392fa0e921c874934dbbf4194312ad20f04a0ed67a3cb3"
++dependencies = [
++ "getrandom",
++ "libc",
++]
++
+ [[package]]
+ name = "js-sys"
+-version = "0.3.104"
++version = "0.3.106"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "0e0c1080212aad755ea003d18543e8768dd432c48819efd73a7bf1e39b7a5a3a"
++checksum = "7883d941dae510fb2d978fc3fe018c71c9e2892fd38854de3e8b92c2e5ad9cc5"
+ dependencies = [
+  "cfg-if",
+  "futures-util",
+@@ -845,15 +868,15 @@ checksum = "a4933f3f57a8e9d9da04db23fb153356ecaf00cbd14aee46279c33dc80925c37"
+ 
+ [[package]]
+ name = "lazy_static"
+-version = "1.5.0"
++version = "1.5.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
++checksum = "20870f649af7073d53e38067b2a84312175d56ea15217e1b15bc83506ec50afb"
+ 
+ [[package]]
+ name = "libc"
+-version = "0.2.189"
++version = "0.2.190"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
++checksum = "ce5d3ddc6d3fa000eb1536d85e147bfe31aacaba692ed6a876f95cb7c855be78"
+ 
+ [[package]]
+ name = "libmimalloc-sys"
+@@ -870,7 +893,7 @@ version = "0.4.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "0e5310a2c5b6ffbc094b5f70a2ca7b79ed36ad90e6f90994b166489a1bce3fcc"
+ dependencies = [
+- "bitflags 2.13.1",
++ "bitflags 2.13.2",
+  "cfg-if",
+  "libc",
+  "libseccomp-sys",
+@@ -933,9 +956,9 @@ checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
+ 
+ [[package]]
+ name = "mio"
+-version = "1.2.2"
++version = "1.2.4"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "30d65c71f1ce40ab09135ce117d742b9f8a19ff91a41a8b57ed50bc2de59c427"
++checksum = "1788edb87fdc09c7e26304471e2f5be8cdefb1b6930d6e3985fc02ff53bf86ee"
+ dependencies = [
+  "libc",
+  "wasi",
+@@ -954,7 +977,7 @@ version = "0.31.3"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "cf20d2fde8ff38632c426f1165ed7436270b44f199fc55284c38276f9db47c3d"
+ dependencies = [
+- "bitflags 2.13.1",
++ "bitflags 2.13.2",
+  "cfg-if",
+  "cfg_aliases",
+  "libc",
+@@ -980,9 +1003,9 @@ dependencies = [
+ 
+ [[package]]
+ name = "objc2"
+-version = "0.6.4"
++version = "0.6.5"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "3a12a8ed07aefc768292f076dc3ac8c48f3781c8f2d5851dd3d98950e8c5a89f"
++checksum = "08849bbd4767dfae9457696856ae1c84fe4e0281bbe4a7abff2d0e06fb7981f8"
+ dependencies = [
+  "objc2-encode",
+ ]
+@@ -993,7 +1016,7 @@ version = "0.3.2"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536"
+ dependencies = [
+- "bitflags 2.13.1",
++ "bitflags 2.13.2",
+  "dispatch2",
+  "objc2",
+ ]
+@@ -1010,7 +1033,7 @@ version = "0.3.2"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272"
+ dependencies = [
+- "bitflags 2.13.1",
++ "bitflags 2.13.2",
+  "objc2",
+ ]
+ 
+@@ -1214,16 +1237,16 @@ version = "0.13.4"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "e9f068eba8e7071c5f9511831b44f32c740d5adf574e990f946ddb53db2f314e"
+ dependencies = [
+- "bitflags 2.13.1",
++ "bitflags 2.13.2",
+  "memchr",
+  "unicase",
+ ]
+ 
+ [[package]]
+ name = "pulldown-cmark-to-cmark"
+-version = "22.0.1"
++version = "22.0.3"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "ab1ad36992cead65f02aa399a373a42730922f1525d988172634fdefdecb8a60"
++checksum = "84bbb29c624230c4bd1047bbdb2aa47e41c860e9665ce62ba9504eebe91bf867"
+ dependencies = [
+  "pulldown-cmark",
+ ]
+@@ -1249,7 +1272,7 @@ version = "0.5.18"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "ed2bf2547551a7053d6fdfafda3f938979645c44812fbfcda098faae3f1a362d"
+ dependencies = [
+- "bitflags 2.13.1",
++ "bitflags 2.13.2",
+ ]
+ 
+ [[package]]
+@@ -1297,6 +1320,7 @@ dependencies = [
+  "clap_complete",
+  "clap_mangen",
+  "env_logger",
++ "indexmap",
+  "log",
+  "mimalloc",
+  "rsjudge-amqp",
+@@ -1310,6 +1334,7 @@ dependencies = [
+  "sysinfo",
+  "tokio",
+  "toml",
++ "tonic",
+ ]
+ 
+ [[package]]
+@@ -1328,18 +1353,25 @@ name = "rsjudge-grpc"
+ version = "0.1.0"
+ dependencies = [
+  "anyhow",
++ "bytes",
+  "futures",
+  "log",
+  "prost",
+  "prost-types",
++ "rsjudge-judger",
+  "rsjudge-traits",
+  "rsjudge-utils",
+  "serde",
++ "serde_json",
++ "tar",
++ "tempfile",
+  "tokio",
+  "tokio-stream",
++ "toml",
+  "tonic",
+  "tonic-prost",
+  "tonic-prost-build",
++ "zstd",
+ ]
+ 
+ [[package]]
+@@ -1348,12 +1380,17 @@ version = "0.1.0"
+ dependencies = [
+  "bytes",
+  "futures",
++ "indexmap",
++ "log",
++ "rsjudge-runner",
+  "rsjudge-traits",
+  "rsjudge-utils",
+  "serde",
+  "serde_json",
++ "shlex 1.3.0",
+  "tempfile",
+  "tokio",
++ "toml",
+ ]
+ 
+ [[package]]
+@@ -1361,8 +1398,11 @@ name = "rsjudge-rest"
+ version = "0.1.0"
+ dependencies = [
+  "axum",
++ "log",
++ "rsjudge-judger",
+  "rsjudge-traits",
+  "serde",
++ "serde_json",
+  "tokio",
+ ]
+ 
+@@ -1411,11 +1451,11 @@ dependencies = [
+ 
+ [[package]]
+ name = "rustix"
+-version = "1.1.4"
++version = "1.1.5"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "b6fe4565b9518b83ef4f91bb47ce29620ca828bd32cb7e408f0062e9930ba190"
++checksum = "891efababe418670775f199f0d233d84843c227a0949a883ce15b37c78d6629d"
+ dependencies = [
+- "bitflags 2.13.1",
++ "bitflags 2.13.2",
+  "errno",
+  "libc",
+  "linux-raw-sys",
+@@ -1477,14 +1517,14 @@ checksum = "e7a5d71263a5a7d47b41f6b3f06ba276f10cc18b0931f1799f710578e2309348"
+ dependencies = [
+  "proc-macro2",
+  "quote",
+- "syn 3.0.4",
++ "syn 3.0.9",
+ ]
+ 
+ [[package]]
+ name = "serde_json"
+-version = "1.0.151"
++version = "1.0.154"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "c841b55ecdae098c80dcae9cf767f6f8a0c2cdb3416bbef72181df4d0fe73f14"
++checksum = "e7e9cc8b1b85264074fbcc02a88680c4096b1e47df8f739dceb03bf482f04bd6"
+ dependencies = [
+  "itoa",
+  "memchr",
+@@ -1506,9 +1546,9 @@ dependencies = [
+ 
+ [[package]]
+ name = "serde_spanned"
+-version = "1.1.1"
++version = "1.1.2"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "6662b5879511e06e8999a8a235d848113e942c9124f211511b16466ee2995f26"
++checksum = "4e7523beb55eece201a2356bee0bbca0d1ab466c14c07703b2e0ee6d42cb0c2c"
+ dependencies = [
+  "serde_core",
+ ]
+@@ -1531,6 +1571,12 @@ version = "1.1.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "dc6fe69c597f9c37bfeeeeeb33da3530379845f10be461a66d16d03eca2ded77"
+ 
++[[package]]
++name = "shlex"
++version = "1.3.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
++
+ [[package]]
+ name = "shlex"
+ version = "2.0.1"
+@@ -1555,9 +1601,9 @@ checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
+ 
+ [[package]]
+ name = "smallvec"
+-version = "1.15.2"
++version = "1.16.3"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "8ed6a63f02c8539c91a8685a86f4099661ba3da017932f6ebbea6de3f0fa7c90"
++checksum = "5b3dc8af474f516a851ff4bd12db780f948b9250ad37211e4eec0bccea54e01b"
+ 
+ [[package]]
+ name = "socket2"
+@@ -1606,9 +1652,9 @@ dependencies = [
+ 
+ [[package]]
+ name = "syn"
+-version = "3.0.4"
++version = "3.0.9"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "e6275cddf4610d1775e6d1fe9469b2e77d0f39fd98fb7450901b821e0c53649f"
++checksum = "d78c8dee4c7bf0e14673097256fed6142ce9d3b85a408189d07482442145823b"
+ dependencies = [
+  "proc-macro2",
+  "quote",
+@@ -1637,6 +1683,17 @@ dependencies = [
+  "windows",
+ ]
+ 
++[[package]]
++name = "tar"
++version = "0.4.46"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "3f6221d9a6003c78398e3b239969f352578258df48c8eb051caadae0015bc840"
++dependencies = [
++ "filetime",
++ "libc",
++ "xattr",
++]
++
+ [[package]]
+ name = "tempfile"
+ version = "3.27.0"
+@@ -1667,14 +1724,14 @@ checksum = "fe5197923287db20a58125f0bc85c062f7f2c892de97b18c356f9efb14b28524"
+ dependencies = [
+  "proc-macro2",
+  "quote",
+- "syn 3.0.4",
++ "syn 3.0.9",
+ ]
+ 
+ [[package]]
+ name = "tokio"
+-version = "1.53.2"
++version = "1.53.3"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "e95f91fcc7a621e8b030f6aa23c71fe9838ae2fb4d8118b75602a328f5144044"
++checksum = "ce3335fa71841cda333a58d7615b03901380ecf09d59b3296d21f8bbac0dde4e"
+ dependencies = [
+  "bytes",
+  "libc",
+@@ -1695,7 +1752,7 @@ checksum = "78773a2a397f451582ce068015985c33193cf6dea8b74d2a639fe457b2f07b0e"
+ dependencies = [
+  "proc-macro2",
+  "quote",
+- "syn 3.0.4",
++ "syn 3.0.9",
+ ]
+ 
+ [[package]]
+@@ -1711,9 +1768,9 @@ dependencies = [
+ 
+ [[package]]
+ name = "tokio-util"
+-version = "0.7.19"
++version = "0.7.20"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "494815d09bf52b5548659851081238f0ca39ff638363907596da739561c62c52"
++checksum = "e464cf451ba96ebfc6f9b6542f17ee8b8956e33f1e40d9690624e59d7a7f8a4b"
+ dependencies = [
+  "bytes",
+  "futures-core",
+@@ -1725,9 +1782,9 @@ dependencies = [
+ 
+ [[package]]
+ name = "toml"
+-version = "1.1.6+spec-1.1.0"
++version = "1.1.8+spec-1.1.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "920602543f0911ab71da12c50d59701da54c196d1a2bf5cb4b75667f137a406a"
++checksum = "20489e00e4d8741d6be680764cc12e270655e375a20d1011e844a9c3379e678d"
+ dependencies = [
+  "indexmap",
+  "serde_core",
+@@ -1740,27 +1797,27 @@ dependencies = [
+ 
+ [[package]]
+ name = "toml_datetime"
+-version = "1.1.1+spec-1.1.0"
++version = "1.1.2+spec-1.1.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "3165f65f62e28e0115a00b2ebdd37eb6f3b641855f9d636d3cd4103767159ad7"
++checksum = "2b86d767906c6c42421dcba507eb9d203e779497710a47782a224bb871653053"
+ dependencies = [
+  "serde_core",
+ ]
+ 
+ [[package]]
+ name = "toml_parser"
+-version = "1.1.3+spec-1.1.0"
++version = "1.1.5+spec-1.1.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "1d38ac1cf9b95face32296c0a3ede1fdc270627c9d9c02a7274dd6d960dc4d56"
++checksum = "baa693a8032d7e1cada7d0041e96126df243179ff061456783ac7f12bda4744c"
+ dependencies = [
+  "winnow",
+ ]
+ 
+ [[package]]
+ name = "toml_writer"
+-version = "1.1.2+spec-1.1.0"
++version = "1.1.3+spec-1.1.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "7d56353a2a665ad0f41a421187180aab746c8c325620617ad883a99a1cbe66d2"
++checksum = "06bdbd8cfc056b8d2e2e85f29b56a3bdbecb527cef81eb39e3e7b98af4652770"
+ 
+ [[package]]
+ name = "tonic"
+@@ -1901,15 +1958,15 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
+ 
+ [[package]]
+ name = "unicase"
+-version = "2.9.0"
++version = "2.10.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "dbc4bc3a9f746d862c45cb89d705aa10f187bb96c76001afab07a0d35ce60142"
++checksum = "357cc3acc6a036009fd6c973ed009037c732d60d0b4f6c673e9041497482a28f"
+ 
+ [[package]]
+ name = "unicode-ident"
+-version = "1.0.24"
++version = "1.0.27"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75"
++checksum = "a2c754d6c33795a1c324727428e5a7dedb5b06195f9890bdbcba760d3e246563"
+ 
+ [[package]]
+ name = "unicode-xid"
+@@ -1945,9 +2002,9 @@ dependencies = [
+ 
+ [[package]]
+ name = "want"
+-version = "0.3.1"
++version = "0.3.2"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "bfa7760aed19e106de2c7c0b581b509f2f25d3dacaf737cb82ac61bc6d760b0e"
++checksum = "ec4cdd0dd910afe868b7ef477227d8d538b46b3075031afee8a9f2acb0a2ed0b"
+ dependencies = [
+  "try-lock",
+ ]
+@@ -1960,9 +2017,9 @@ checksum = "ccf3ec651a847eb01de73ccad15eb7d99f80485de043efb2f370cd654f4ea44b"
+ 
+ [[package]]
+ name = "wasm-bindgen"
+-version = "0.2.127"
++version = "0.2.129"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "1b70935747edd64d89de3efa29d73789b806c15798f8e7dca4d8ac356b50ce70"
++checksum = "9bb54f33acc68fd454578d9820b0bde1a1a3d17aa17bb7b6595806d02886d409"
+ dependencies = [
+  "cfg-if",
+  "once_cell",
+@@ -1973,9 +2030,9 @@ dependencies = [
+ 
+ [[package]]
+ name = "wasm-bindgen-macro"
+-version = "0.2.127"
++version = "0.2.129"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "77775f8f3f7217702089053b94958f8f54061a3f663417df76e19cbdcca29bc1"
++checksum = "2e29d0c35b16e224a7eeb5cd2d25e3e1968fbd65604117b44d3b789d00ee8535"
+ dependencies = [
+  "quote",
+  "wasm-bindgen-macro-support",
+@@ -1983,22 +2040,22 @@ dependencies = [
+ 
+ [[package]]
+ name = "wasm-bindgen-macro-support"
+-version = "0.2.127"
++version = "0.2.129"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "e11d33f857dc2fb11b8bc75aee111aa9cbeb12cd9f25efd3d4c2a3dd4e235284"
++checksum = "6f501a8bc3719dba86ef8ae4728879c08001bea749eb1333ac5b91e040e2a6b7"
+ dependencies = [
+  "bumpalo",
+  "proc-macro2",
+  "quote",
+- "syn 2.0.119",
++ "syn 3.0.9",
+  "wasm-bindgen-shared",
+ ]
+ 
+ [[package]]
+ name = "wasm-bindgen-shared"
+-version = "0.2.127"
++version = "0.2.129"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "7ef64dbcc55df09c7e5a46182d181c2cfa3e925f3da937ea764728b4bbb9dcbf"
++checksum = "23f0c9c52aa7cd7d77769a4cfe2a9adb1b331f489a41d912ce14513d5ab995c6"
+ dependencies = [
+  "unicode-ident",
+ ]
+@@ -2150,6 +2207,16 @@ version = "1.0.4"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "23b97319f7b8343df12cc98938e5c3eb436064524c8d2b4e30a1d3a36eecdf81"
+ 
++[[package]]
++name = "xattr"
++version = "1.6.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "32e45ad4206f6d2479085147f02bc2ef834ac85886624a23575ae137c8aa8156"
++dependencies = [
++ "libc",
++ "rustix",
++]
++
+ [[package]]
+ name = "xtask"
+ version = "0.1.0"
+@@ -2163,3 +2230,31 @@ name = "zmij"
+ version = "1.0.23"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
++
++[[package]]
++name = "zstd"
++version = "0.13.3"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "e91ee311a569c327171651566e07972200e76fcfe2242a4fa446149a3881c08a"
++dependencies = [
++ "zstd-safe",
++]
++
++[[package]]
++name = "zstd-safe"
++version = "7.3.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "64d80649ab6db9d9f6f9c80a40becd948eda4714a0a5ac8c4d157a32231c7882"
++dependencies = [
++ "zstd-sys",
++]
++
++[[package]]
++name = "zstd-sys"
++version = "2.1.1+zstd.1.5.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "aeec9eaf2dffbbd09201e23bd0ffcbaa33bb8e9266a10734fd7ed90a85eca078"
++dependencies = [
++ "cc",
++ "pkg-config",
++]
+diff --git a/Cargo.toml b/Cargo.toml
+index ffd2856..242b172 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -26,7 +26,10 @@ log = "0.4.34"
+ rsjudge-traits = { path = "crates/rsjudge-traits", version = "0.1.0" }
+ rsjudge-utils = { path = "crates/rsjudge-utils", version = "0.1.0" }
+ serde = { version = "1.0.229", features = ["derive"] }
++serde_json = "1.0.150"
++tempfile = "3.27.0"
+ tokio = "1.53.1"
++toml = "1.1.2"
+ 
+ [package]
+ name = "rsjudge"
+@@ -47,7 +50,8 @@ rsjudge-utils.workspace = true
+ 
+ # Optional dependencies
+ rsjudge-amqp = { path = "crates/rsjudge-amqp", version = "0.1.0", optional = true }
+-rsjudge-grpc = { path = "crates/rsjudge-grpc", version = "0.1.0", optional = true }
++indexmap = "2"
++rsjudge-grpc = { path = "crates/rsjudge-grpc", version = "0.1.0", optional = true, features = ["serde"] }
+ rsjudge-rest = { path = "crates/rsjudge-rest", version = "0.1.0", optional = true }
+ 
+ anyhow = "1.0.104"
+@@ -64,8 +68,10 @@ tokio = { workspace = true, features = [
+     "fs",
+     "macros",
+     "process",
++    "sync",
+     "rt-multi-thread",
+ ] }
++tonic = { version = "0.14.6", optional = true }
+ toml = "1.1.4"
+ 
+ # Unused for now:
+@@ -75,7 +81,7 @@ toml = "1.1.4"
+ [features]
+ default = ["grpc", "mimalloc", "rest"]
+ amqp = ["dep:rsjudge-amqp", "rsjudge-amqp/serde"]
+-grpc = ["dep:rsjudge-grpc", "rsjudge-grpc/serde"]
++grpc = ["dep:rsjudge-grpc", "rsjudge-grpc/serde", "dep:tonic"]
+ mimalloc = ["dep:mimalloc"]
+ rest = ["dep:rsjudge-rest"]
+ 
+diff --git a/crates/rsjudge-grpc/Cargo.toml b/crates/rsjudge-grpc/Cargo.toml
+index d3d3a30..1257005 100644
+--- a/crates/rsjudge-grpc/Cargo.toml
++++ b/crates/rsjudge-grpc/Cargo.toml
+@@ -15,14 +15,20 @@ ignored = ["prost", "prost-types"]
+ 
+ [dependencies]
+ anyhow = "1.0.104"
++bytes = "1.11.1"
+ futures = "0.3.34"
+ log.workspace = true
+ prost = "0.14.4"
+ prost-types = "0.14.4"
+-tokio = { workspace = true, features = ["net"] }
++rsjudge-judger = { path = "../rsjudge-judger", version = "0.1.0" }
++serde_json.workspace = true
++tar = "0.4.44"
++tempfile.workspace = true
++tokio = { workspace = true, features = ["net", "fs", "macros", "process", "rt-multi-thread", "sync", "time"] }
+ tokio-stream = "0.1.19"
+ tonic = "0.14.6"
+ tonic-prost = "0.14.6"
++zstd = "0.13"
+ 
+ # Optional dependencies
+ rsjudge-traits.workspace = true
+@@ -40,3 +46,6 @@ tonic-prost-build = "0.14.6"
+ 
+ [features]
+ serde = ["dep:serde"]
++
++[dev-dependencies]
++toml.workspace = true
+diff --git a/crates/rsjudge-grpc/proto/judge/v1/judge.proto b/crates/rsjudge-grpc/proto/judge/v1/judge.proto
+index e846cd4..f2b17f1 100644
+--- a/crates/rsjudge-grpc/proto/judge/v1/judge.proto
++++ b/crates/rsjudge-grpc/proto/judge/v1/judge.proto
+@@ -67,6 +67,8 @@ message SelfTestSummary {
+   optional int32 execution_time = 4;
+   // Memory usage of the program, in kiB. Unset if MLE and killed by judger.
+   optional int32 memory_usage = 5;
++  // Explicit verdict distinguishes output/memory limits from a successful exit.
++  JudgeResult result = 6;
+ }
+ 
+ // The request containing the user's code and judge info.
+@@ -112,6 +114,10 @@ message CaseInfo {
+   JudgeResult result = 3;
+   // The score of the case.
+   int32 score = 4;
++  // Wall/CPU time used by the program, in milliseconds.
++  optional int32 time_ms = 5;
++  // Peak resident memory of the program, in KiB.
++  optional int32 memory_kib = 6;
+ }
+ 
+ // Message indicating the judge result of all cases.
+@@ -120,6 +126,10 @@ message CasesSummary {
+   JudgeResult result = 1;
+   // The score of the program.
+   int32 score = 2;
++  // Maximum time across cases, in milliseconds.
++  optional int32 max_time_ms = 3;
++  // Maximum memory across cases, in KiB.
++  optional int32 max_memory_kib = 4;
+ }
+ 
+ // The judge result.
+diff --git a/crates/rsjudge-grpc/src/lib.rs b/crates/rsjudge-grpc/src/lib.rs
+index be2dcb6..5fd05d5 100644
+--- a/crates/rsjudge-grpc/src/lib.rs
++++ b/crates/rsjudge-grpc/src/lib.rs
+@@ -3,14 +3,15 @@
+ #![cfg_attr(not(test), warn(clippy::print_stdout, clippy::print_stderr))]
+ 
+ use std::net::SocketAddr;
++use std::sync::Arc;
+ 
+ use tonic::transport::{Error, Server};
+ 
+ use crate::proto::judge_service_server::JudgeServiceServer;
+-use crate::server::JudgeServerImpl;
++pub use crate::server::JudgeServerImpl;
+ 
+ pub mod config;
+-mod proto;
++pub mod proto;
+ mod server;
+ 
+ /// Serve the gRPC judge server on the given address.
+@@ -19,10 +20,20 @@ mod server;
+ ///
+ /// This will error when the server fails to start or when the address is
+ /// invalid.
+-pub async fn serve(addr: SocketAddr) -> Result<(), Error> {
++pub async fn serve(addr: SocketAddr, judge: JudgeServerImpl) -> Result<(), Error> {
+     Server::builder()
+-        .add_service(JudgeServiceServer::new(JudgeServerImpl))
++        .add_service(JudgeServiceServer::new(judge))
+         .serve(addr)
+         .await?;
+     Ok(())
+ }
++
++/// Convenience overload mirroring upstream behaviour with an empty executor
++/// set and no cases endpoint.
++///
++/// # Errors
++///
++/// See [`serve`].
++pub fn default_impl() -> JudgeServerImpl {
++    JudgeServerImpl::new(Arc::default(), None)
++}
+diff --git a/crates/rsjudge-grpc/src/server.rs b/crates/rsjudge-grpc/src/server.rs
+index b3d4ece..b72d554 100644
+--- a/crates/rsjudge-grpc/src/server.rs
++++ b/crates/rsjudge-grpc/src/server.rs
+@@ -1,14 +1,552 @@
+ // SPDX-License-Identifier: Apache-2.0
+ 
++//! Implementation of the judge gRPC services.
++//!
++//! The `Submit` flow follows the standard SASTOJ architecture:
++//!
++//! 1. Backend sends `Submit(language, code, problem_id, cases_id)`.
++//! 2. Engine compiles the source, streaming a `CompileInfo` event back.
++//! 3. Engine pulls the case archive from the backend's `CasesService`
++//!    (`FetchCases(problem_id)` with a `cases_id` metadata entry): a
++//!    zstd-compressed tarball containing `config.json` (a [`CasesConfig`])
++//!    plus the referenced input/answer files.
++//! 4. Each case runs under the configured resource limits; results stream
++//!    back as `CaseInfo`, followed by a final `CasesSummary`.
++
++use std::collections::HashMap;
++use std::path::{Path, PathBuf};
++use std::sync::Arc;
++use std::time::Duration;
++
+ use log::debug;
++use rsjudge_judger::comparer::{CompareResult, Comparer as _};
++use rsjudge_judger::judger::pipeline;
++use rsjudge_judger::judger::request::cases::{CasesConfig, TaskType};
++use rsjudge_traits::judger::JudgeResult;
++use rsjudge_traits::language::config::LanguageDef;
++use rsjudge_traits::language::option::{ConfigValue, LanguageOption};
++use tokio::sync::mpsc;
+ use tokio_stream::wrappers::ReceiverStream;
+ use tonic::{Request, Response, Status, async_trait};
+ 
++use crate::proto::cases_service_client::CasesServiceClient;
+ use crate::proto::judge_service_server::JudgeService;
+-use crate::proto::{SelfTestRequest, SelfTestResponse, SubmitRequest, SubmitResponse};
++use crate::proto::{
++    CaseInfo, CasesSummary, CompileInfo as ProtoCompileInfo, FetchCasesRequest,
++    JudgeResult as ProtoJudgeResult, SelfTestRequest, SelfTestResponse, SelfTestSummary,
++    SubmitRequest, SubmitResponse,
++};
++
++const CASES_ID_METADATA_KEY: &str = "cases_id";
++const SELF_TEST_TIME_LIMIT: Duration = Duration::from_secs(5);
++const SELF_TEST_MEMORY_BYTES: u64 = 512 * 1024 * 1024;
++const STREAM_BUFFER: usize = 16;
++
++/// Shared configuration of the judge server.
++#[derive(Clone)]
++pub struct JudgeServerImpl {
++    executors: Arc<HashMap<String, LanguageDef>>,
++    cases_endpoint: Option<Arc<str>>,
++}
++
++impl JudgeServerImpl {
++    /// Create the judge service implementation.
++    #[must_use]
++    pub fn new(
++        executors: Arc<HashMap<String, LanguageDef>>,
++        cases_endpoint: Option<Arc<str>>,
++    ) -> Self {
++        Self {
++            executors,
++            cases_endpoint,
++        }
++    }
++}
++
++fn proto_result(result: &JudgeResult) -> ProtoJudgeResult {
++    match result {
++        JudgeResult::Accepted => ProtoJudgeResult::Accepted,
++        JudgeResult::CompileError => ProtoJudgeResult::CompileError,
++        JudgeResult::WrongAnswer => ProtoJudgeResult::WrongAnswer,
++        JudgeResult::PresentationError => ProtoJudgeResult::PresentationError,
++        JudgeResult::RuntimeError => ProtoJudgeResult::RuntimeError,
++        JudgeResult::TimeLimitExceeded => ProtoJudgeResult::TimeLimitExceeded,
++        JudgeResult::MemoryLimitExceeded => ProtoJudgeResult::MemoryLimitExceeded,
++        JudgeResult::OutputLimitExceeded => ProtoJudgeResult::OutputLimitExceeded,
++    }
++}
++
++fn language_option_from(
++    name: &str,
++    configs: &HashMap<String, crate::proto::ConfigType>,
++) -> LanguageOption {
++    let config = configs
++        .iter()
++        .filter_map(|(key, value)| {
++            let parsed = match &value.config_type {
++                Some(crate::proto::config_type::ConfigType::Boolean(_)) => ConfigValue::Bool(true),
++                Some(crate::proto::config_type::ConfigType::Enum(value)) => {
++                    ConfigValue::Enum(value.clone())
++                }
++                None => return None,
++            };
++            Some((key.clone(), parsed))
++        })
++        .collect();
++    LanguageOption {
++        name: name.to_owned(),
++        config,
++    }
++}
++
++struct FetchedCases {
++    dir: tempfile::TempDir,
++    config: CasesConfig,
++}
++
++/// Download and unpack the case archive for `(problem_id, cases_id)`.
++async fn fetch_cases(
++    endpoint: &str,
++    problem_id: i32,
++    cases_id: i32,
++) -> Result<FetchedCases, Status> {
++    let mut client = CasesServiceClient::connect(endpoint.to_owned())
++        .await
++        .map_err(|e| Status::unavailable(format!("cannot reach cases service: {e}")))?;
++
++    let mut request = Request::new(FetchCasesRequest { problem_id });
++    request
++        .metadata_mut()
++        .insert(
++            CASES_ID_METADATA_KEY,
++            tonic::metadata::AsciiMetadataValue::try_from(cases_id.to_string())
++                .map_err(|_| Status::internal("cannot encode cases_id metadata"))?,
++        );
++
++    let mut stream = client
++        .fetch_cases(request)
++        .await
++        .map_err(|e| Status::unavailable(format!("fetch_cases failed: {e}")))?
++        .into_inner();
++
++    let mut blob: Vec<u8> = Vec::new();
++    while let Some(chunk) = stream
++        .message()
++        .await
++        .map_err(|e| Status::unavailable(format!("cases stream failed: {e}")))?
++    {
++        if blob.len().saturating_add(chunk.chunk.len()) > pipeline::OUTPUT_LIMIT_BYTES {
++            return Err(Status::resource_exhausted("case archive too large"));
++        }
++        blob.extend_from_slice(&chunk.chunk);
++    }
++
++    unpack_archive(&blob).await
++}
++
++/// Unpack a zstd-compressed (or plain) tar archive, parse `config.json`,
++/// and return the extracted cases directory + parsed config.
++pub(crate) async fn unpack_archive(blob: &[u8]) -> Result<FetchedCases, Status> {
++    let is_zstd = blob.starts_with(&[0x28, 0xB5, 0x2F, 0xFD]);
++    let decoded: std::borrow::Cow<'_, [u8]> = if is_zstd {
++        zstd::stream::decode_all(blob)
++            .map_err(|e| Status::invalid_argument(format!("case archive is not valid zstd: {e}")))?
++            .into()
++    } else {
++        std::borrow::Cow::Borrowed(blob)
++    };
++
++    let dir = tempfile::tempdir()
++        .map_err(|e| Status::internal(format!("cannot create cases dir: {e}")))?;
++    {
++        let mut archive = tar::Archive::new(&decoded[..]);
++        for entry in archive.entries().map_err(|e| Status::invalid_argument(format!("cannot read tar entries: {e}")))? {
++            let mut entry = entry.map_err(|e| Status::invalid_argument(format!("bad tar entry: {e}")))?;
++            // Prevent Zip Slip: reject entries with absolute paths or '..'
++            let path = entry.path().map_err(|_| Status::invalid_argument("invalid tar entry path"))?;
++            if path.is_absolute() || path.components().any(|c| c == std::path::Component::ParentDir) {
++                return Err(Status::invalid_argument("tar entry with unsafe path rejected"));
++            }
++            entry.unpack_in(dir.path()).map_err(|e| Status::invalid_argument(format!("cannot unpack tar entry: {e}")))?;
++        }
++    }
++
++    let raw = tokio::fs::read(dir.path().join("config.json"))
++        .await
++        .map_err(|_| Status::invalid_argument("case archive misses config.json"))?;
++    let config: CasesConfig = serde_json::from_slice(&raw)
++        .map_err(|e| Status::invalid_argument(format!("invalid config.json: {e}")))?;
++
++    Ok(FetchedCases { dir, config })
++}
++
++pub(crate) struct PreparedCase {
++    id: i32,
++    input_path: PathBuf,
++    answer_path: PathBuf,
++    score: u32,
++}
++
++/// Group cases into scoring units: one group for `simple`, one per subtask.
++/// The second element is the group's bonus score (0 for simple tasks, where
++/// individual case scores apply directly).
++fn flatten_groups(config: &CasesConfig) -> Vec<(Vec<PreparedCase>, u32)> {
++    fn even_split(total: u32, n: usize) -> Vec<u32> {
++        if n == 0 {
++            return Vec::new();
++        }
++        let base = total / n as u32;
++        let rem = total % n as u32;
++        (0..n)
++            .map(|i| base + u32::from(i < rem as usize))
++            .collect()
++    }
++
++    match &config.task {
++        TaskType::Simple { cases } => {
++            let scores = even_split(config.score.get(), cases.len());
++            vec![(
++                cases
++                    .iter()
++                    .zip(scores)
++                    .enumerate()
++                    .map(|(i, (case, default_score))| PreparedCase {
++                        id: i as i32 + 1,
++                        input_path: case.input.clone(),
++                        answer_path: case.answer.clone(),
++                        score: case.score.map_or(default_score, std::num::NonZeroU32::get),
++                    })
++                    .collect(),
++                0,
++            )]
++        }
++        TaskType::Subtask { subtasks } => {
++            let scores = even_split(config.score.get(), subtasks.len());
++            subtasks
++                .iter()
++                .zip(scores)
++                .enumerate()
++                .map(|(si, (subtask, default_score))| {
++                    (
++                        subtask
++                            .cases
++                            .iter()
++                            .enumerate()
++                            .map(|(ci, case)| PreparedCase {
++                                id: (si * 100 + ci + 1) as i32,
++                                input_path: case.input.clone(),
++                                answer_path: case.answer.clone(),
++                                score: case.score.map_or(0, std::num::NonZeroU32::get),
++                            })
++                            .collect(),
++                        subtask
++                            .score
++                            .map_or(default_score, std::num::NonZeroU32::get),
++                    )
++                })
++                .collect()
++        }
++    }
++}
++
++/// Run one case and compare its output against the expected answer.
++#[allow(clippy::too_many_arguments)]
++async fn run_and_compare(
++    prepared_source: &pipeline::PreparedSource,
++    def: &LanguageDef,
++    case: &PreparedCase,
++    cases_root: &Path,
++    time_limit: Duration,
++    memory_bytes: Option<u64>,
++    comparer: &rsjudge_judger::comparer::DefaultComparer,
++) -> Result<CaseInfo, Status> {
++    let input = tokio::fs::read(cases_root.join(&case.input_path))
++        .await
++        .map_err(|e| Status::invalid_argument(format!("cannot read case input: {e}")))?;
++
++    let outcome = pipeline::run_once(prepared_source, def, &input, time_limit, memory_bytes)
++        .await
++        .map_err(|e| Status::internal(format!("run failed: {e}")))?;
++
++    let mut verdict = pipeline::verdict_of(&outcome, memory_bytes);
++    if verdict == JudgeResult::Accepted {
++        let answer = tokio::fs::File::open(cases_root.join(&case.answer_path))
++            .await
++            .map_err(|e| Status::invalid_argument(format!("cannot read answer file: {e}")))?;
++        verdict = match comparer.compare(&outcome.stdout[..], answer).await {
++            Ok(CompareResult::Accepted) => JudgeResult::Accepted,
++            Ok(CompareResult::PresentationError) => JudgeResult::PresentationError,
++            Ok(CompareResult::WrongAnswer) | Err(_) => JudgeResult::WrongAnswer,
++        };
++    }
++
++    let passed = verdict == JudgeResult::Accepted;
++    Ok(CaseInfo {
++        case_id: case.id,
++        exit_status: outcome.exit_code,
++        result: proto_result(&verdict) as i32,
++        score: if passed { case.score as i32 } else { 0 },
++        time_ms: Some(i32::try_from(outcome.cpu_time.as_millis()).unwrap_or(i32::MAX)),
++        memory_kib: Some(u32::try_from(outcome.ram_kb).unwrap_or(u32::MAX) as i32),
++    })
++}
++
++async fn run_submit(
++    state: &JudgeServerImpl,
++    tx: &mpsc::Sender<Result<SubmitResponse, Status>>,
++    request: SubmitRequest,
++) -> Result<(), Status> {
++    use crate::proto::submit_response::SubmitResponseType;
++
++    let Some(language) = request.language else {
++        return Err(Status::invalid_argument("missing language"));
++    };
++
++    let def = state
++        .executors
++        .get(&language.name)
++        .ok_or_else(|| Status::invalid_argument(format!("unsupported language: {}", language.name)))?
++        .clone();
+ 
+-#[derive(Debug, Default)]
+-pub struct JudgeServerImpl;
++    let lang_opt = language_option_from(&language.name, &language.configs);
++
++    // ---- Compile -------------------------------------------------------
++    tx.send(Ok(SubmitResponse {
++        submit_response_type: Some(SubmitResponseType::CompileStart(())),
++    }))
++    .await
++    .ok();
++
++    let prepared =
++        pipeline::prepare_source(&language.name, &def, request.code.as_bytes(), Some(&lang_opt))
++            .await
++            .map_err(|e| Status::internal(format!("{e}")))?;
++
++    let compile_info = pipeline::compile(&prepared, &def)
++        .await
++        .map_err(|e| Status::internal(format!("{e}")))?;
++
++    let compiled_ok = compile_info.success();
++    tx.send(Ok(SubmitResponse {
++        submit_response_type: Some(SubmitResponseType::CompileInfo(ProtoCompileInfo {
++            exit_status: compile_info.exit_status,
++            stdout: compile_info.stdout,
++            stderr: compile_info.stderr,
++        })),
++    }))
++    .await
++    .ok();
++
++    if !compiled_ok {
++        return send_summary(tx, JudgeResult::CompileError, 0, Some(0), Some(0)).await;
++    }
++
++    // ---- Fetch cases ---------------------------------------------------
++    let endpoint = state.cases_endpoint.as_deref().ok_or_else(|| {
++        Status::failed_precondition("no cases endpoint configured (--cases-endpoint)")
++    })?;
++    let fetched = fetch_cases(endpoint, request.problem_id, request.cases_id).await?;
++
++    let limits = &fetched.config.resource_limits;
++    let time_limit = Duration::from_millis(u64::from(limits.time));
++    let mem_bytes_full = u64::from(limits.memory) * 1024 * 1024;
++    let memory_bytes = if def.disable_rlimit_as() {
++        None
++    } else {
++        Some(mem_bytes_full)
++    };
++    let comparer = rsjudge_judger::comparer::DefaultComparer::common();
++
++    // ---- Run every case -------------------------------------------------
++    let mut awarded: u32 = 0;
++    let mut first_failure: Option<JudgeResult> = None;
++    let mut max_time_ms: i32 = 0;
++    let mut max_memory_kib: i32 = 0;
++
++    for (group, group_score) in flatten_groups(&fetched.config) {
++        let mut group_passed = true;
++
++        for case in &group {
++            let info = run_and_compare(
++                &prepared,
++                &def,
++                case,
++                fetched.dir.path(),
++                time_limit,
++                memory_bytes,
++                &comparer,
++            )
++            .await?;
++
++            let verdict = result_from_proto(info.result);
++            max_time_ms = max_time_ms.max(info.time_ms.unwrap_or(0));
++            max_memory_kib = max_memory_kib.max(info.memory_kib.unwrap_or(0));
++
++            if verdict == JudgeResult::Accepted {
++                if group_score == 0 {
++                    awarded += info.score.max(0) as u32;
++                }
++            } else {
++                group_passed = false;
++                first_failure = Some(worse_of(first_failure.unwrap_or(verdict), verdict));
++            }
++
++            tx.send(Ok(SubmitResponse {
++                submit_response_type: Some(SubmitResponseType::CaseInfo(info)),
++            }))
++            .await
++            .ok();
++        }
++
++        // Subtask groups are all-or-nothing on top of any partial case score.
++        if group_passed && group_score > 0 {
++            awarded += group_score;
++        }
++    }
++
++    // Overall verdict follows the first failing case (classic OJ behaviour).
++    let overall = first_failure.unwrap_or(JudgeResult::Accepted);
++    if overall == JudgeResult::Accepted {
++        awarded = fetched.config.score.get();
++    }
++
++    send_summary(tx, overall, awarded, Some(max_time_ms), Some(max_memory_kib)).await
++}
++
++async fn send_summary(
++    tx: &mpsc::Sender<Result<SubmitResponse, Status>>,
++    result: JudgeResult,
++    score: u32,
++    max_time_ms: Option<i32>,
++    max_memory_kib: Option<i32>,
++) -> Result<(), Status> {
++    debug!("summary: {result:?} score={score}");
++    tx.send(Ok(SubmitResponse {
++        submit_response_type: Some(crate::proto::submit_response::SubmitResponseType::CasesSummary(
++            CasesSummary {
++                result: proto_result(&result) as i32,
++                score: score as i32,
++                max_time_ms,
++                max_memory_kib,
++            },
++        )),
++    }))
++    .await
++    .ok();
++    Ok(())
++}
++
++/// Pick the more severe verdict (TLE > MLE > OLE > RTE > WA > PE).
++/// This ensures the final overall status reflects the most meaningful failure.
++fn worse_of(a: JudgeResult, b: JudgeResult) -> JudgeResult {
++    fn severity(r: JudgeResult) -> u8 {
++        match r {
++            JudgeResult::TimeLimitExceeded => 6,
++            JudgeResult::MemoryLimitExceeded => 5,
++            JudgeResult::OutputLimitExceeded => 4,
++            JudgeResult::RuntimeError => 3,
++            JudgeResult::WrongAnswer => 2,
++            JudgeResult::PresentationError => 1,
++            _ => 0,
++        }
++    }
++    if severity(a) >= severity(b) { a } else { b }
++}
++
++async fn run_self_test(
++    state: &JudgeServerImpl,
++    tx: &mpsc::Sender<Result<SelfTestResponse, Status>>,
++    request: SelfTestRequest,
++) -> Result<(), Status> {
++    use crate::proto::self_test_response::SelfTestResponseType;
++
++    let Some(language) = request.language else {
++        return Err(Status::invalid_argument("missing language"));
++    };
++    let def = state
++        .executors
++        .get(&language.name)
++        .ok_or_else(|| Status::invalid_argument(format!("unsupported language: {}", language.name)))?
++        .clone();
++    let lang_opt = language_option_from(&language.name, &language.configs);
++
++    tx.send(Ok(SelfTestResponse {
++        self_test_response_type: Some(SelfTestResponseType::CompileStart(())),
++    }))
++    .await
++    .ok();
++
++    let prepared =
++        pipeline::prepare_source(&language.name, &def, request.code.as_bytes(), Some(&lang_opt))
++            .await
++            .map_err(|e| Status::internal(format!("{e}")))?;
++    let compile_info = pipeline::compile(&prepared, &def)
++        .await
++        .map_err(|e| Status::internal(format!("{e}")))?;
++
++    let compiled_ok = compile_info.success();
++    tx.send(Ok(SelfTestResponse {
++        self_test_response_type: Some(SelfTestResponseType::CompileInfo(ProtoCompileInfo {
++            exit_status: compile_info.exit_status,
++            stdout: compile_info.stdout,
++            stderr: compile_info.stderr,
++        })),
++    }))
++    .await
++    .ok();
++
++    if !compiled_ok {
++        return Ok(());
++    }
++
++    let outcome = pipeline::run_once(
++        &prepared,
++        &def,
++        request.stdin.as_bytes(),
++        SELF_TEST_TIME_LIMIT,
++        Some(SELF_TEST_MEMORY_BYTES),
++    )
++    .await
++    .map_err(|e| Status::internal(format!("{e}")))?;
++    let verdict = pipeline::verdict_of(&outcome, Some(SELF_TEST_MEMORY_BYTES));
++
++    let timed_out = verdict == JudgeResult::TimeLimitExceeded;
++    tx.send(Ok(SelfTestResponse {
++        self_test_response_type: Some(SelfTestResponseType::Summary(SelfTestSummary {
++            exit_status: outcome.exit_code,
++            result: proto_result(&verdict) as i32,
++            stdout: pipeline::lossy(&outcome.stdout),
++            stderr: pipeline::lossy(&outcome.stderr),
++            execution_time: (!timed_out)
++                .then(|| i32::try_from(outcome.cpu_time.as_millis()).unwrap_or(i32::MAX)),
++            memory_usage: (!timed_out)
++                .then(|| u32::try_from(outcome.ram_kb).unwrap_or(u32::MAX) as i32),
++        })),
++    }))
++    .await
++    .ok();
++    Ok(())
++}
++
++async fn submit_task(
++    state: JudgeServerImpl,
++    tx: mpsc::Sender<Result<SubmitResponse, Status>>,
++    request: SubmitRequest,
++) {
++    if let Err(err) = run_submit(&state, &tx, request).await {
++        let _ = tx.send(Err(err)).await;
++    }
++}
++
++async fn self_test_task(
++    state: JudgeServerImpl,
++    tx: mpsc::Sender<Result<SelfTestResponse, Status>>,
++    request: SelfTestRequest,
++) {
++    if let Err(err) = run_self_test(&state, &tx, request).await {
++        let _ = tx.send(Err(err)).await;
++    }
++}
+ 
+ #[async_trait]
+ impl JudgeService for JudgeServerImpl {
+@@ -18,8 +556,10 @@ impl JudgeService for JudgeServerImpl {
+         &self,
+         request: Request<SelfTestRequest>,
+     ) -> Result<Response<Self::SelfTestStream>, Status> {
+-        debug!("Received SelfTestRequest: {:?}", request.into_inner());
+-        Err(Status::unimplemented("Not implemented yet"))
++        debug!("Received SelfTestRequest");
++        let (tx, rx) = mpsc::channel(STREAM_BUFFER);
++        tokio::spawn(self_test_task(self.clone(), tx, request.into_inner()));
++        Ok(Response::new(ReceiverStream::new(rx)))
+     }
+ 
+     type SubmitStream = ReceiverStream<Result<SubmitResponse, Status>>;
+@@ -28,7 +568,23 @@ impl JudgeService for JudgeServerImpl {
+         &self,
+         request: Request<SubmitRequest>,
+     ) -> Result<Response<Self::SubmitStream>, Status> {
+-        debug!("Received SubmitRequest: {:?}", request.into_inner());
+-        Err(Status::unimplemented("Not implemented yet"))
++        debug!("Received SubmitRequest");
++        let (tx, rx) = mpsc::channel(STREAM_BUFFER);
++        tokio::spawn(submit_task(self.clone(), tx, request.into_inner()));
++        Ok(Response::new(ReceiverStream::new(rx)))
++    }
++}
++
++fn result_from_proto(value: i32) -> JudgeResult {
++    match ProtoJudgeResult::try_from(value) {
++        Ok(ProtoJudgeResult::Accepted) => JudgeResult::Accepted,
++        Ok(ProtoJudgeResult::CompileError) => JudgeResult::CompileError,
++        Ok(ProtoJudgeResult::WrongAnswer) => JudgeResult::WrongAnswer,
++        Ok(ProtoJudgeResult::PresentationError) => JudgeResult::PresentationError,
++        Ok(ProtoJudgeResult::RuntimeError) => JudgeResult::RuntimeError,
++        Ok(ProtoJudgeResult::TimeLimitExceeded) => JudgeResult::TimeLimitExceeded,
++        Ok(ProtoJudgeResult::MemoryLimitExceeded) => JudgeResult::MemoryLimitExceeded,
++        Ok(ProtoJudgeResult::OutputLimitExceeded) => JudgeResult::OutputLimitExceeded,
++        _ => JudgeResult::RuntimeError,
+     }
+ }
+diff --git a/crates/rsjudge-grpc/tests/e2e_submit.rs b/crates/rsjudge-grpc/tests/e2e_submit.rs
+new file mode 100644
+index 0000000..461ce57
+--- /dev/null
++++ b/crates/rsjudge-grpc/tests/e2e_submit.rs
+@@ -0,0 +1,362 @@
++// SPDX-License-Identifier: Apache-2.0
++
++//! End-to-end test: a mock backend `CasesService` serves a zstd tarball;
++//! `JudgeServerImpl::submit` compiles and judges real C++ submissions.
++
++use std::collections::HashMap;
++use std::net::SocketAddr;
++use std::num::NonZeroU32;
++use std::sync::Arc;
++
++use bytes::Bytes;
++use rsjudge_grpc::JudgeServerImpl;
++use rsjudge_judger::judger::request::cases::{CasesConfig, Case as TestCase, ResourceLimits, TaskType};
++use tokio::io::AsyncWriteExt as _;
++use tokio::sync::mpsc;
++use tokio_stream::wrappers::ReceiverStream;
++use tonic::transport::{Channel, Server};
++use tonic::{Request, Response, Status, async_trait};
++
++use rsjudge_grpc::proto::cases_service_client::CasesServiceClient;
++use rsjudge_grpc::proto::cases_service_server::{CasesService, CasesServiceServer};
++use rsjudge_grpc::proto::{
++    FetchCasesRequest, FetchCasesResponse, JudgeResult, Language, SelfTestRequest,
++    SubmitRequest, SubmitResponse, judge_service_client::JudgeServiceClient,
++};
++
++const CPP_DEF: &str = r#"
++exec_type = "binary"
++compile = "g++ -O2 -std=c++17 -o {out_file} {src_file}"
++"#;
++
++fn cpp_executors() -> HashMap<String, rsjudge_traits::language::config::LanguageDef> {
++    HashMap::from([("C++".to_owned(), toml::from_str(CPP_DEF).unwrap())])
++}
++
++fn build_archive(cases: &[(String, String)], time_ms: u32, mem_mb: u32) -> Vec<u8> {
++    let config = CasesConfig {
++        score: NonZeroU32::new(100).unwrap(),
++        judge: rsjudge_judger::judger::request::cases::JudgeType::Classic,
++        resource_limits: ResourceLimits {
++            time: time_ms,
++            memory: mem_mb,
++        },
++        task: TaskType::Simple {
++            cases: cases
++                .iter()
++                .enumerate()
++                .map(|(i, _)| TestCase {
++                    input: std::path::PathBuf::from(format!("{}.in", i + 1)),
++                    answer: std::path::PathBuf::from(format!("{}.ans", i + 1)),
++                    score: None,
++                })
++                .collect(),
++        },
++    };
++
++    let mut tarball = Vec::new();
++    {
++        let mut builder = tar::Builder::new(&mut tarball);
++        let json = serde_json::to_vec(&config).unwrap();
++        let mut header = tar::Header::new_gnu();
++        header.set_size(json.len() as u64);
++        header.set_mode(0o644);
++        header.set_cksum();
++        builder.append_data(&mut header, "config.json", &json[..]).unwrap();
++
++        for (i, (input, answer)) in cases.iter().enumerate() {
++            for (name, content) in [(format!("{}.in", i + 1), input), (format!("{}.ans", i + 1), answer)] {
++                let mut header = tar::Header::new_gnu();
++                header.set_size(content.len() as u64);
++                header.set_mode(0o644);
++                header.set_cksum();
++                builder
++                    .append_data(&mut header, name, content.as_bytes())
++                    .unwrap();
++            }
++        }
++        builder.finish().unwrap();
++    }
++
++    zstd::stream::encode_all(&tarball[..], 3).unwrap()
++}
++
++struct MockCases {
++    archives: Arc<HashMap<i32, Vec<u8>>>,
++}
++
++#[async_trait]
++impl CasesService for MockCases {
++    type FetchCasesStream = ReceiverStream<Result<FetchCasesResponse, Status>>;
++
++    async fn fetch_cases(
++        &self,
++        request: Request<FetchCasesRequest>,
++    ) -> Result<Response<Self::FetchCasesStream>, Status> {
++        let problem_id = request.into_inner().problem_id;
++        let archive = self
++            .archives
++            .get(&problem_id)
++            .cloned()
++            .ok_or_else(|| Status::not_found("unknown problem"))?;
++
++        let (tx, rx) = mpsc::channel(4);
++        tokio::spawn(async move {
++            for chunk in archive.chunks(64 * 1024) {
++                if tx
++                    .send(Ok(FetchCasesResponse {
++                        chunk: Bytes::copy_from_slice(chunk),
++                    }))
++                    .await
++                    .is_err()
++                {
++                    break;
++                }
++            }
++        });
++        Ok(Response::new(ReceiverStream::new(rx)))
++    }
++}
++
++async fn spawn_mock(archives: HashMap<i32, Vec<u8>>) -> SocketAddr {
++    let addr = SocketAddr::from(([127, 0, 0, 1], 0));
++    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
++    let bound = listener.local_addr().unwrap();
++    tokio::spawn(async move {
++        Server::builder()
++            .add_service(CasesServiceServer::new(MockCases {
++                archives: Arc::new(archives),
++            }))
++            .serve_with_incoming(tokio_stream::wrappers::TcpListenerStream::new(listener))
++            .await
++            .unwrap();
++    });
++    bound
++}
++
++async fn spawn_judge(cases_endpoint: String) -> SocketAddr {
++    let addr = SocketAddr::from(([127, 0, 0, 1], 0));
++    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
++    let bound = listener.local_addr().unwrap();
++    let judge = JudgeServerImpl::new(Arc::new(cpp_executors()), Some(Arc::from(cases_endpoint.as_str())));
++    tokio::spawn(async move {
++        Server::builder()
++            .add_service(rsjudge_grpc::proto::judge_service_server::JudgeServiceServer::new(judge))
++            .serve_with_incoming(tokio_stream::wrappers::TcpListenerStream::new(listener))
++            .await
++            .unwrap();
++    });
++    bound
++}
++
++const AB_SOURCE: &str =
++    "#include <cstdio>\nint main(){long long a,b;if(scanf(\"%lld %lld\",&a,&b)!=2)return 1;printf(\"%lld\\n\",a+b);}";
++
++async fn collect(client: &mut JudgeServiceClient<Channel>, req: SubmitRequest) -> Vec<SubmitResponse> {
++    let mut stream = client.submit(Request::new(req)).await.unwrap().into_inner();
++    let mut events = Vec::new();
++    while let Some(event) = stream.message().await.unwrap() {
++        events.push(event);
++    }
++    events
++}
++
++#[tokio::test]
++async fn submit_accepted_full_flow() {
++    let archives = HashMap::from([(
++        1_i32,
++        build_archive(
++            &[("3 4\n".into(), "7\n".into()), ("10 -2\n".into(), "8\n".into())],
++            5_000,
++            512,
++        ),
++    )]);
++    let cases_addr = spawn_mock(archives).await;
++    let judge_addr = spawn_judge(format!("http://{cases_addr}")).await;
++
++    let mut client = JudgeServiceClient::connect(format!("http://{judge_addr}"))
++        .await
++        .unwrap();
++
++    let events = collect(
++        &mut client,
++        SubmitRequest {
++            language: Some(Language {
++                name: "C++".into(),
++                configs: Default::default(),
++            }),
++            code: AB_SOURCE.into(),
++            problem_id: 1,
++            cases_id: 42,
++        },
++    )
++    .await;
++
++    // compile_start, compile_info, 2x case_info, summary
++    assert_eq!(events.len(), 5, "unexpected event count");
++
++    let summary = match events.last().unwrap().submit_response_type.clone().unwrap() {
++        rsjudge_grpc::proto::submit_response::SubmitResponseType::CasesSummary(s) => s,
++        other => panic!("expected summary, got {other:?}"),
++    };
++    assert_eq!(summary.result, JudgeResult::Accepted as i32);
++    assert_eq!(summary.score, 100);
++
++    let case_scores: Vec<(i32, i32)> = events
++        .iter()
++        .filter_map(|e| match &e.submit_response_type {
++            Some(rsjudge_grpc::proto::submit_response::SubmitResponseType::CaseInfo(info)) => {
++                Some((info.case_id, info.result))
++            }
++            _ => None,
++        })
++        .collect();
++    assert_eq!(case_scores, vec![(1, JudgeResult::Accepted as i32), (2, JudgeResult::Accepted as i32)]);
++}
++
++#[tokio::test]
++async fn submit_wrong_answer_fails_second_case() {
++    let archives = HashMap::from([(
++        1_i32,
++        build_archive(
++            &[("3 4\n".into(), "7\n".into()), ("10 -2\n".into(), "999\n".into())],
++            5_000,
++            512,
++        ),
++    )]);
++    let cases_addr = spawn_mock(archives).await;
++    let judge_addr = spawn_judge(format!("http://{cases_addr}")).await;
++
++    let mut client = JudgeServiceClient::connect(format!("http://{judge_addr}"))
++        .await
++        .unwrap();
++
++    let events = collect(
++        &mut client,
++        SubmitRequest {
++            language: Some(Language {
++                name: "C++".into(),
++                configs: Default::default(),
++            }),
++            code: AB_SOURCE.into(),
++            problem_id: 1,
++            cases_id: 42,
++        },
++    )
++    .await;
++
++    let summary = match events.last().unwrap().submit_response_type.clone().unwrap() {
++        rsjudge_grpc::proto::submit_response::SubmitResponseType::CasesSummary(s) => s,
++        other => panic!("expected summary, got {other:?}"),
++    };
++    assert_eq!(summary.result, JudgeResult::WrongAnswer as i32);
++    // Partial credit: case 1 passed, case 2 failed.
++    assert_eq!(summary.score, 50);
++
++    let first_case = events.iter().find_map(|e| match &e.submit_response_type {
++        Some(rsjudge_grpc::proto::submit_response::SubmitResponseType::CaseInfo(info)) => Some(info),
++        _ => None,
++    }).unwrap();
++    assert_eq!(first_case.result, JudgeResult::Accepted as i32);
++}
++
++#[tokio::test]
++async fn submit_compile_error_short_circuits() {
++    let archives = HashMap::from([(1_i32, build_archive(&[("1\n".into(), "1\n".into())], 1_000, 256))]);
++    let cases_addr = spawn_mock(archives).await;
++    let judge_addr = spawn_judge(format!("http://{cases_addr}")).await;
++
++    let mut client = JudgeServiceClient::connect(format!("http://{judge_addr}"))
++        .await
++        .unwrap();
++
++    let events = collect(
++        &mut client,
++        SubmitRequest {
++            language: Some(Language {
++                name: "C++".into(),
++                configs: Default::default(),
++            }),
++            code: "int main(){ this does not compile }".into(),
++            problem_id: 1,
++            cases_id: 42,
++        },
++    )
++    .await;
++
++    assert_eq!(events.len(), 3); // compile_start, compile_info(fail), summary
++    let summary = match events.last().unwrap().submit_response_type.clone().unwrap() {
++        rsjudge_grpc::proto::submit_response::SubmitResponseType::CasesSummary(s) => s,
++        other => panic!("expected summary, got {other:?}"),
++    };
++    assert_eq!(summary.result, JudgeResult::CompileError as i32);
++}
++
++#[tokio::test]
++async fn tle_is_reported_per_case() {
++    let archives = HashMap::from([(
++        1_i32,
++        build_archive(&[("1\n".into(), "1\n".into())], 400, 256),
++    )]);
++    let cases_addr = spawn_mock(archives).await;
++    let judge_addr = spawn_judge(format!("http://{cases_addr}")).await;
++
++    let mut client = JudgeServiceClient::connect(format!("http://{judge_addr}"))
++        .await
++        .unwrap();
++
++    let events = collect(
++        &mut client,
++        SubmitRequest {
++            language: Some(Language {
++                name: "C++".into(),
++                configs: Default::default(),
++            }),
++            code: "int main(){volatile int x=1; while(x){}}".into(),
++            problem_id: 1,
++            cases_id: 42,
++        },
++    )
++    .await;
++
++    let summary = match events.last().unwrap().submit_response_type.clone().unwrap() {
++        rsjudge_grpc::proto::submit_response::SubmitResponseType::CasesSummary(s) => s,
++        other => panic!("expected summary, got {other:?}"),
++    };
++    assert_eq!(summary.result, JudgeResult::TimeLimitExceeded as i32);
++}
++
++#[tokio::test]
++async fn self_test_runs_program() {
++    let cases_addr = spawn_mock(HashMap::new()).await;
++    let judge_addr = spawn_judge(format!("http://{cases_addr}")).await;
++
++    let mut client = JudgeServiceClient::connect(format!("http://{judge_addr}"))
++        .await
++        .unwrap();
++
++    let mut stream = client
++        .self_test(Request::new(SelfTestRequest {
++            language: Some(Language {
++                name: "C++".into(),
++                configs: Default::default(),
++            }),
++            code: AB_SOURCE.into(),
++            stdin: "20 22\n".into(),
++        }))
++        .await
++        .unwrap()
++        .into_inner();
++
++    let mut summary = None;
++    while let Some(event) = stream.message().await.unwrap() {
++        if let Some(rsjudge_grpc::proto::self_test_response::SelfTestResponseType::Summary(s)) =
++            event.self_test_response_type
++        {
++            summary = Some(s);
++        }
++    }
++    let summary = summary.expect("no summary received");
++    assert_eq!(summary.exit_status, 0);
++    assert_eq!(summary.stdout.trim_end(), "42");
++}
+diff --git a/crates/rsjudge-judger/Cargo.toml b/crates/rsjudge-judger/Cargo.toml
+index a74bc7e..87e934f 100644
+--- a/crates/rsjudge-judger/Cargo.toml
++++ b/crates/rsjudge-judger/Cargo.toml
+@@ -12,12 +12,18 @@ rust-version.workspace = true
+ [dependencies]
+ bytes = "1.12.1"
+ futures = "0.3.34"
++indexmap = "2"
++log.workspace = true
++rsjudge-runner = { path = "../rsjudge-runner", version = "0.1.0" }
+ rsjudge-traits.workspace = true
+ rsjudge-utils.workspace = true
+ serde.workspace = true
+-tokio = { workspace = true, features = ["io-util", "fs", "macros"] }
++shlex = "1.3.0"
++tempfile.workspace = true
++tokio = { workspace = true, features = ["fs", "io-util", "macros", "process", "rt", "sync", "time"] }
+ 
+ [dev-dependencies]
+ serde_json = "1.0.151"
+ tempfile = "3.27.0"
+ tokio = { workspace = true, features = ["rt-multi-thread", "full"] }
++toml.workspace = true
+diff --git a/crates/rsjudge-judger/src/judger/mod.rs b/crates/rsjudge-judger/src/judger/mod.rs
+index e3fec44..69ea3c2 100644
+--- a/crates/rsjudge-judger/src/judger/mod.rs
++++ b/crates/rsjudge-judger/src/judger/mod.rs
+@@ -1,3 +1,5 @@
+ // SPDX-License-Identifier: Apache-2.0
+ 
++pub mod pipeline;
++
+ pub mod request;
+diff --git a/crates/rsjudge-judger/src/judger/pipeline.rs b/crates/rsjudge-judger/src/judger/pipeline.rs
+new file mode 100644
+index 0000000..80dd7c3
+--- /dev/null
++++ b/crates/rsjudge-judger/src/judger/pipeline.rs
+@@ -0,0 +1,683 @@
++// SPDX-License-Identifier: Apache-2.0
++
++//! The judging pipeline: prepare source, compile, run with resource limits,
++//! and classify results. Built on top of [`rsjudge_runner`].
++
++use std::collections::HashMap;
++use std::fmt;
++use std::num::NonZeroU64;
++use std::path::{Path, PathBuf};
++use std::process::{ExitStatus, Stdio};
++use std::time::{Duration, Instant};
++
++use indexmap::{IndexMap, IndexSet};
++use rsjudge_runner::utils::resources::rusage::WaitForResourceUsage as _;
++use rsjudge_runner::utils::resources::{ChildWithDeadline, WithResourceLimit as _};
++use rsjudge_runner::Error as RunnerError;
++use rsjudge_traits::judger::JudgeResult;
++use rsjudge_traits::language::config::{ConfigDef, ExecType, LanguageDef};
++use rsjudge_traits::language::info::{ConfigInfo, LanguageInfo};
++use rsjudge_traits::language::option::{ConfigValue, LanguageOption};
++use rsjudge_traits::resource::ResourceLimit;
++use tempfile::TempDir;
++use tokio::fs;
++use tokio::io::{AsyncReadExt as _, AsyncWriteExt as _};
++
++/// Hard cap of captured program output per stream.
++pub const OUTPUT_LIMIT_BYTES: usize = 1024 * 1024;
++
++const COMPILE_WALL_SECS: u64 = 120;
++const COMPILE_MEM_BYTES: u64 = 2 * 1024 * 1024 * 1024;
++const COMPILE_FSIZE_BYTES: u64 = 256 * 1024 * 1024;
++
++/// Error of the judging pipeline.
++#[derive(Debug)]
++pub struct PipelineError(pub String);
++
++impl fmt::Display for PipelineError {
++    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
++        f.write_str(&self.0)
++    }
++}
++
++impl std::error::Error for PipelineError {}
++
++/// Result type of the judging pipeline.
++pub type Result<T, E = PipelineError> = std::result::Result<T, E>;
++
++/// A source prepared inside its own working directory.
++#[derive(Debug)]
++pub struct PreparedSource {
++    /// Working directory holding all files of this submission.
++    /// Kept alive until dropped; deleting it cleans everything up.
++    pub workdir: TempDir,
++    /// Absolute path of the source file on disk.
++    pub src_path: PathBuf,
++    /// Absolute path of the compiled artifact (`binary`/`byte_code`).
++    pub out_path: PathBuf,
++    /// Command template rendered into an absolute argv for execution.
++    /// `None` for `binary` languages (the artifact is executed directly).
++    pub execute_argv: Option<Vec<String>>,
++}
++
++/// Outcome of one program execution.
++#[derive(Debug, Clone)]
++pub struct RunOutcome {
++    /// Process exit code (`-1` when killed by a signal).
++    pub exit_code: i32,
++    /// Terminating signal number, if any.
++    pub signal: Option<i32>,
++    /// Captured stdout (truncated at [`OUTPUT_LIMIT_BYTES`]).
++    pub stdout: Vec<u8>,
++    /// Captured stderr (truncated at [`OUTPUT_LIMIT_BYTES`]).
++    pub stderr: Vec<u8>,
++    /// CPU time reported by `wait4(2)`.
++    pub cpu_time: Duration,
++    /// Peak resident set size in KiB.
++    pub ram_kb: u64,
++    /// Killed because the wall/CPU time limit was reached.
++    pub timed_out: bool,
++    /// Output streams were cut off by the capture cap.
++    pub output_truncated: bool,
++    /// Wall-clock time the process was allowed to live.
++    pub elapsed: Duration,
++}
++
++/// Classify an outcome against the configured limits into a
++/// [`JudgeResult`] (comparison is done separately by the caller).
++///
++/// `memory_bytes` is the effective address-space/RSS budget in bytes, or
++/// `None` when the language opted out of address-space limiting.
++#[must_use]
++pub fn verdict_of(outcome: &RunOutcome, memory_bytes: Option<u64>) -> JudgeResult {
++    if outcome.timed_out {
++        return JudgeResult::TimeLimitExceeded;
++    }
++    if let Some(mem) = memory_bytes {
++        if outcome.ram_kb.saturating_mul(1024) > mem {
++            return JudgeResult::MemoryLimitExceeded;
++        }
++    }
++    if outcome.output_truncated {
++        return JudgeResult::OutputLimitExceeded;
++    }
++    if outcome.signal.is_some() || outcome.exit_code != 0 {
++        let stderr = lossy(&outcome.stderr);
++        if stderr.contains("MemoryError") || stderr.contains("std::bad_alloc") || stderr.contains("memory allocation of") {
++            return JudgeResult::MemoryLimitExceeded;
++        }
++        return JudgeResult::RuntimeError;
++    }
++    JudgeResult::Accepted
++}
++
++/// Build the list of supported-language descriptors for registration/UI.
++#[must_use]
++pub fn accept_languages(
++    executors: &HashMap<String, LanguageDef>,
++) -> IndexMap<String, LanguageInfo> {
++    executors
++        .iter()
++        .map(|(name, def)| {
++            let config = def
++                .options()
++                .iter()
++                .map(|(key, val)| {
++                    (
++                        key.clone(),
++                        match val {
++                            ConfigDef::Bool { .. } => ConfigInfo::Bool,
++                            ConfigDef::Enum { variants, .. } => {
++                                ConfigInfo::Enum(variants.keys().cloned().collect())
++                            }
++                        },
++                    )
++                })
++                .collect();
++            (
++                name.clone(),
++                LanguageInfo {
++                    name: name.clone(),
++                    config,
++                },
++            )
++        })
++        .collect()
++}
++
++fn lang_extension(name: &str) -> &'static str {
++    match name {
++        "C" => "c",
++        "C++" => "cc",
++        "Rust" => "rs",
++        "Java" => "java",
++        "C#" => "cs",
++        "Go" => "go",
++        "Dart" => "dart",
++        "Kotlin" => "kt",
++        "Swift" => "swift",
++        "Zig" => "zig",
++        "JavaScript" => "js",
++        "TypeScript" => "ts",
++        "Python" => "py",
++        "Ruby" => "rb",
++        _ => "txt",
++    }
++}
++
++/// Resolve the `{...flags}` value from language defaults overridden by the
++/// submission's chosen options.
++#[must_use]
++pub fn resolve_flags(def: &LanguageDef, opts: Option<&LanguageOption>) -> String {
++    let mut flags: IndexSet<String> = IndexSet::new();
++    for (key, val) in def.options() {
++        let chosen = opts.and_then(|o| o.config.get(key));
++        match (val, chosen) {
++            (ConfigDef::Bool { default, enable, .. }, None) if *default => {
++                flags.insert((*enable).to_owned());
++            }
++            (ConfigDef::Bool { enable, .. }, Some(ConfigValue::Bool(true))) => {
++                flags.insert((*enable).to_owned());
++            }
++            (ConfigDef::Enum { default, variants, .. }, None) => {
++                if let Some(v) = variants.get(default.as_str()) {
++                    flags.insert(v.clone());
++                }
++            }
++            (ConfigDef::Enum { variants, .. }, Some(ConfigValue::Enum(v))) => match variants.get(v)
++            {
++                Some(val) => {
++                    flags.insert(val.clone());
++                }
++                None => log::warn!("unknown variant '{v}' for option '{key}' ignored"),
++            },
++            _ => {}
++        }
++    }
++    flags.into_iter().collect::<Vec<_>>().join(" ")
++}
++
++/// Render a command template: `{...flags}` plus `{src_file}`, `{out_file}`,
++/// `{tmp_dir}` placeholders.
++#[must_use]
++pub fn render_template(
++    template: &str,
++    flags: &str,
++    src_file: &Path,
++    out_file: &Path,
++    tmp_dir: &Path,
++) -> String {
++    template
++        .replace("{...flags}", flags)
++        .replace("{src_file}", &src_file.to_string_lossy())
++        .replace("{out_file}", &out_file.to_string_lossy())
++        .replace("{tmp_dir}", &tmp_dir.to_string_lossy())
++}
++
++fn clean_env(cmd: &mut tokio::process::Command) -> &mut tokio::process::Command {
++    cmd.env_clear()
++        .env("PATH", "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin")
++        .env("HOME", "/tmp")
++        .env("TMPDIR", "/tmp")
++        .env("LANG", "C.UTF-8")
++        .env("PYTHONDONTWRITEBYTECODE", "1")
++}
++
++// Only the submission directory is writable; testcase archives and service
++// credentials are never mounted. Missing/blocked bwrap fails closed.
++fn sandbox_command(workdir: &Path) -> tokio::process::Command {
++    let mut cmd = tokio::process::Command::new("/usr/bin/bwrap");
++    cmd.args(["--unshare-all", "--die-with-parent", "--new-session", "--cap-drop", "ALL",
++        "--ro-bind", "/usr", "/usr", "--dev", "/dev", "--proc", "/proc",
++        "--tmpfs", "/tmp", "--bind"])
++        .arg(workdir).arg(workdir).arg("--chdir").arg(workdir);
++    for path in ["/bin", "/lib", "/lib64", "/etc/alternatives", "/etc/ld.so.cache"] {
++        cmd.args(["--ro-bind-try", path, path]);
++    }
++    cmd.arg("--clearenv");
++    for (key, value) in [("PATH", "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"),
++        ("HOME", "/tmp"), ("TMPDIR", "/tmp"), ("LANG", "C.UTF-8"), ("PYTHONDONTWRITEBYTECODE", "1")] {
++        cmd.args(["--setenv", key, value]);
++    }
++    cmd.kill_on_drop(true);
++    cmd
++}
++
++fn is_time_limit_exceeded(err: &RunnerError) -> bool {
++    #[cfg(debug_assertions)]
++    {
++        matches!(err, RunnerError::TimeLimitExceeded(..))
++    }
++    #[cfg(not(debug_assertions))]
++    {
++        matches!(err, RunnerError::TimeLimitExceeded())
++    }
++}
++
++/// Read a pipe to completion, keeping at most `cap` bytes and flagging
++/// truncation.
++async fn drain_capped<R: tokio::io::AsyncRead + Unpin>(
++    mut reader: R,
++    cap: usize,
++) -> (Vec<u8>, bool) {
++    let mut buf = Vec::new();
++    let mut truncated = false;
++    let mut chunk = [0u8; 16 * 1024];
++    loop {
++        match reader.read(&mut chunk).await {
++            Ok(0) => break,
++            Ok(n) => {
++                let remaining = cap.saturating_sub(buf.len());
++                if remaining == 0 {
++                    truncated = true;
++                    // Continue draining to unblock the child, discard data.
++                    continue;
++                }
++                let take = n.min(remaining);
++                buf.extend_from_slice(&chunk[..take]);
++                if take < n {
++                    truncated = true;
++                }
++            }
++            Err(_) => break,
++        }
++    }
++    (buf, truncated)
++}
++
++async fn wait_with_captures(
++    mut child: ChildWithDeadline,
++    started_at: Instant,
++) -> std::result::Result<RunOutcome, RunnerError> {
++    let stdout_pipe = child.child_mut().stdout.take();
++    let stderr_pipe = child.child_mut().stderr.take();
++
++    let out_task = tokio::spawn(async move {
++        match stdout_pipe {
++            Some(pipe) => drain_capped(pipe, OUTPUT_LIMIT_BYTES).await,
++            None => (Vec::new(), false),
++        }
++    });
++    let err_task = tokio::spawn(async move {
++        match stderr_pipe {
++            Some(pipe) => drain_capped(pipe, OUTPUT_LIMIT_BYTES).await,
++            None => (Vec::new(), false),
++        }
++    });
++
++    let waited = child.wait_for_resource_usage().await;
++    let elapsed = started_at.elapsed();
++
++    let (out_res, err_res) = tokio::join!(out_task, err_task);
++    let (stdout, out_trunc) = out_res.unwrap_or((Vec::new(), false));
++    let (stderr, err_trunc) = err_res.unwrap_or((Vec::new(), false));
++
++    // On TLE the child never got reaped normally: fall back to wall time and
++    // an unknown RSS.
++    let (status, usage, timed_out) = match waited {
++        Ok((status, usage)) => (Some(status), Some(usage), false),
++        Err(err) if is_time_limit_exceeded(&err) => (None, None, true),
++        Err(err) => return Err(err),
++    };
++
++    let (exit_code, signal) = match &status {
++        Some(status) => (
++            status.code().unwrap_or(-1),
++            signal_of(status),
++        ),
++        None => (-1, Some(9)),
++    };
++    let cpu_time = usage.map_or(elapsed, |u| u.cpu_time());
++    let ram_kb = usage.map_or(0, |u| u.ram_usage());
++
++    Ok(RunOutcome {
++        exit_code,
++        signal,
++        stdout,
++        stderr,
++        cpu_time,
++        ram_kb,
++        timed_out,
++        output_truncated: out_trunc || err_trunc,
++        elapsed,
++    })
++}
++
++fn signal_of(status: &ExitStatus) -> Option<i32> {
++    use std::os::unix::process::ExitStatusExt as _;
++    status.signal()
++}
++
++/// Prepare the working directory and source file of one submission.
++///
++/// # Errors
++///
++/// Fails when the working directory cannot be created/written, the language
++/// has no usable command configuration, or templates render to nothing.
++pub async fn prepare_source(
++    lang_name: &str,
++    def: &LanguageDef,
++    code: &[u8],
++    opts: Option<&LanguageOption>,
++) -> Result<PreparedSource> {
++    let workdir = tempfile::Builder::new()
++        .prefix("rsjudge-job-")
++        .tempdir()
++        .map_err(|e| PipelineError(format!("cannot create work dir: {e}")))?;
++    let tmp = workdir.path().to_path_buf();
++
++    let src_name = def
++        .src_rename()
++        .map_or_else(|| format!("main.{}", lang_extension(lang_name)), str::to_owned);
++    let ext_suffix = def.out_extension().map_or_else(String::new, |e| format!(".{e}"));
++    let out_name = format!("main{ext_suffix}");
++
++    let src_path = tmp.join(&src_name);
++    let out_path = tmp.join(&out_name);
++
++    fs::write(&src_path, code)
++        .await
++        .map_err(|e| PipelineError(format!("cannot write source: {e}")))?;
++
++    let flags = resolve_flags(def, opts);
++    let vars = |tpl: &str| render_template(tpl, &flags, &src_path, &out_path, &tmp);
++
++    let execute_argv = match def.exec_type() {
++        ExecType::Binary { .. } => None,
++        ExecType::ByteCode { execute, .. } => Some(split_command(&vars(execute))?),
++        ExecType::SourceCode { execute, .. } => Some(split_command(&vars(execute))?),
++    };
++
++    Ok(PreparedSource {
++        workdir,
++        src_path,
++        out_path,
++        execute_argv,
++    })
++}
++
++fn split_command(rendered: &str) -> Result<Vec<String>> {
++    shlex::split(rendered)
++        .filter(|argv| !argv.is_empty())
++        .ok_or_else(|| PipelineError(format!("cannot parse execute command: {rendered:?}")))
++}
++
++/// Compile (or syntax-check) the prepared source.
++///
++/// Runs the language's `compile`/`check` command via `/bin/sh -c` under
++/// fixed sandboxing limits. Interpreted languages without a `check` command
++/// succeed trivially.
++///
++/// # Errors
++///
++/// Fails on IO problems; compilation errors are reported in the returned
++/// info instead.
++pub async fn compile(prepared: &PreparedSource, def: &LanguageDef) -> Result<CompileInfo> {
++    let cmd_tpl = match def.exec_type() {
++        ExecType::Binary { compile } | ExecType::ByteCode { compile, .. } => Some(compile),
++        ExecType::SourceCode { check, .. } => check.as_ref(),
++    };
++    let Some(cmd_tpl) = cmd_tpl else {
++        return Ok(CompileInfo::default());
++    };
++
++    let rendered = render_template(cmd_tpl, &resolve_flags(def, None), &prepared.src_path, &prepared.out_path, prepared.workdir.path());
++
++    let mut cmd = sandbox_command(prepared.workdir.path());
++    cmd.arg("/bin/sh").arg("-c").arg(&rendered).current_dir(prepared.workdir.path());
++    cmd.stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped());
++    clean_env(&mut cmd);
++
++    let limit = ResourceLimit::new(
++        Some(Duration::from_secs(COMPILE_WALL_SECS)),
++        Some(Duration::from_secs(COMPILE_WALL_SECS)),
++        NonZeroU64::new(COMPILE_MEM_BYTES),
++        NonZeroU64::new(COMPILE_FSIZE_BYTES),
++    );
++
++    let started_at = Instant::now();
++    let child = cmd
++        .spawn_with_resource_limit(limit)
++        .map_err(|e| PipelineError(format!("cannot spawn compiler: {e}")))?;
++    let outcome = wait_with_captures(child, started_at)
++        .await
++        .map_err(|e| PipelineError(format!("{e}")))?;
++
++    Ok(CompileInfo {
++        exit_status: outcome.exit_code,
++        stdout: lossy(&outcome.stdout),
++        stderr: lossy(&outcome.stderr),
++    })
++}
++
++/// Lossy-convert bytes to a UTF-8 string.
++#[must_use]
++pub fn lossy(bytes: &[u8]) -> String {
++    String::from_utf8_lossy(bytes).into_owned()
++}
++
++/// Information about a compilation/check step.
++#[derive(Debug, Default, Clone)]
++pub struct CompileInfo {
++    /// Exit status of the compiler; `0` indicates success.
++    pub exit_status: i32,
++    /// Captured compiler stdout.
++    pub stdout: String,
++    /// Captured compiler stderr.
++    pub stderr: String,
++}
++
++impl CompileInfo {
++    /// Whether the compilation succeeded.
++    #[must_use]
++    pub fn success(&self) -> bool {
++        self.exit_status == 0
++    }
++}
++
++/// Execute the prepared program once with the given input and limits.
++///
++/// # Errors
++///
++/// Fails when spawning/waiting breaks outside of user-code behaviour.
++pub async fn run_once(
++    prepared: &PreparedSource,
++    def: &LanguageDef,
++    input: &[u8],
++    time_limit: Duration,
++    memory_bytes: Option<u64>,
++) -> Result<RunOutcome> {
++    let argv: Vec<String> = match &prepared.execute_argv {
++        Some(argv) => argv.clone(),
++        None => vec![prepared.out_path.to_string_lossy().into_owned()],
++    };
++
++    let mut cmd = sandbox_command(prepared.workdir.path());
++    cmd.args(&argv).current_dir(prepared.workdir.path());
++    cmd.stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped());
++    clean_env(&mut cmd);
++
++    let fsize = NonZeroU64::new(OUTPUT_LIMIT_BYTES as u64);
++    // `RLIMIT_CPU` has second granularity inside the runner; a sub-second
++    // value would truncate to 0 and kill the process immediately.
++    let cpu_secs = time_limit.as_secs().max(1);
++    let (cpu, mem) = if def.disable_rlimit_as() {
++        (Some(Duration::from_secs(cpu_secs)), None)
++    } else {
++        (
++            Some(Duration::from_secs(cpu_secs)),
++            memory_bytes.and_then(NonZeroU64::new),
++        )
++    };
++    let limit = ResourceLimit::new(cpu, Some(time_limit), mem, fsize);
++
++    let started_at = Instant::now();
++    let mut child = cmd
++        .spawn_with_resource_limit(limit)
++        .map_err(|e| PipelineError(format!("cannot spawn program: {e}")))?;
++
++    // Feed stdin; ignore EPIPE when the program exits early.
++    let input = input.to_vec();
++    let stdin_task = child.child_mut().stdin.take().map(|mut stdin| tokio::spawn(async move {
++        let _ = stdin.write_all(&input).await;
++    }));
++
++    let mut outcome = wait_with_captures(child, started_at)
++        .await
++        .map_err(|e| PipelineError(format!("{e}")))?;
++    outcome.timed_out |= outcome.cpu_time >= time_limit;
++    if let Some(task) = stdin_task { task.abort(); }
++    Ok(outcome)
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    fn cpp_def() -> LanguageDef {
++        toml::from_str(
++            r#"
++exec_type = "binary"
++compile = "g++ {...flags} -o {out_file} {src_file}"
++
++[options.O2]
++type = "bool"
++target = "flags"
++default = true
++enable = "-O2"
++
++[options.version]
++type = "enum"
++target = "flags"
++default = "C++17"
++
++[options.version.variants]
++"C++17" = "-std=c++17"
++"C++20" = "-std=c++20"
++"#,
++        )
++        .unwrap()
++    }
++
++    #[test]
++    fn render_template_expands_flags_and_paths() {
++        let tpl = "g++ {...flags} -o {out_file} {src_file}";
++        let out = render_template(tpl, "-O2 -std=c++17", Path::new("/j/main.cc"), Path::new("/j/main"), Path::new("/j"));
++        assert_eq!(out, "g++ -O2 -std=c++17 -o /j/main /j/main.cc");
++    }
++
++    #[tokio::test]
++    async fn compile_and_run_cpp_ab() {
++        let def = cpp_def();
++        let prepared = prepare_source(
++            "C++",
++            &def,
++            b"#include <cstdio>\nint main(){int a,b;if(scanf(\"%d %d\",&a,&b)!=2)return 1;printf(\"%d\\n\",a+b);}",
++            None,
++        )
++        .await
++        .unwrap();
++
++        let info = compile(&prepared, &def).await.unwrap();
++        assert!(info.success(), "compile failed: {}", info.stderr);
++
++        let outcome = run_once(
++            &prepared,
++            &def,
++            b"3 4\n",
++            Duration::from_secs(5),
++            Some(512 * 1024 * 1024),
++        )
++        .await
++        .unwrap();
++
++        assert!(matches!(verdict_of(&outcome, Some(512 * 1024 * 1024)), JudgeResult::Accepted));
++        assert_eq!(outcome.stdout, b"7\n");
++    }
++
++    #[tokio::test]
++    async fn tle_is_detected() {
++        let def = cpp_def();
++        let prepared = prepare_source("C++", &def, b"int main(){volatile int x=1; while(x){}}", None)
++            .await
++            .unwrap();
++        let info = compile(&prepared, &def).await.unwrap();
++        assert!(info.success(), "{}", info.stderr);
++
++        let outcome = run_once(&prepared, &def, b"", Duration::from_millis(500), None)
++            .await
++            .unwrap();
++        assert!(outcome.timed_out);
++        assert!(matches!(verdict_of(&outcome, None), JudgeResult::TimeLimitExceeded));
++    }
++
++    #[tokio::test]
++    async fn python_source_code_runs() {
++        let def: LanguageDef = toml::from_str(
++            r#"
++exec_type = "source_code"
++check = "python3 -m py_compile {src_file}"
++execute = "python3 {src_file}"
++"#,
++        )
++        .unwrap();
++        let prepared = prepare_source(
++            "Python",
++            &def,
++            b"import sys\nsys.stdout.write(sys.stdin.read().strip()[::-1])\n",
++            None,
++        )
++        .await
++        .unwrap();
++        let info = compile(&prepared, &def).await.unwrap();
++        assert!(info.success(), "{}", info.stderr);
++
++        let outcome = run_once(&prepared, &def, b"abcdef", Duration::from_secs(5), None)
++            .await
++            .unwrap();
++        assert_eq!(outcome.stdout, b"fedcba");
++    }
++    #[tokio::test]
++    async fn namespace_hides_host_files_and_network() {
++        let def: LanguageDef = toml::from_str(r#"exec_type = "source_code"
++execute = "python3 {src_file}""#).unwrap();
++        let prepared = prepare_source("Python", &def, br#"
++import os, socket
++assert not os.path.exists('/etc/shadow')
++assert not os.path.exists('/home')
++assert not os.environ.get('SUPABASE_SERVICE_ROLE_KEY')
++s = socket.socket()
++try:
++    s.connect(('203.0.113.1', 81))
++    raise AssertionError('network available')
++except OSError:
++    pass
++print('isolated')
++"#, None).await.unwrap();
++        let outcome = run_once(&prepared, &def, b"", Duration::from_secs(5), None).await.unwrap();
++        assert_eq!(outcome.exit_code, 0, "{}", lossy(&outcome.stderr));
++        assert_eq!(outcome.stdout, b"isolated\n");
++    }
++
++    #[tokio::test]
++    async fn large_input_and_output_do_not_deadlock() {
++        let def: LanguageDef = toml::from_str(r#"exec_type = "source_code"
++execute = "python3 {src_file}""#).unwrap();
++        let prepared = prepare_source("Python", &def, b"import sys\nsys.stdout.write('x' * 262144)\nsys.stdout.flush()\nprint(len(sys.stdin.read()))", None).await.unwrap();
++        let input = vec![b'a'; 262144];
++        let outcome = run_once(&prepared, &def, &input, Duration::from_secs(5), None).await.unwrap();
++        assert!(!outcome.timed_out);
++        assert!(outcome.stdout.ends_with(b"262144\n"));
++    }
++
++    #[tokio::test]
++    async fn stdout_capture_is_capped() {
++        let def: LanguageDef = toml::from_str(r#"exec_type = "source_code"
++execute = "python3 {src_file}""#).unwrap();
++        let prepared = prepare_source("Python", &def, b"print('x' * (2 * 1024 * 1024))", None).await.unwrap();
++        let outcome = run_once(&prepared, &def, b"", Duration::from_secs(5), None).await.unwrap();
++        assert_eq!(outcome.stdout.len(), OUTPUT_LIMIT_BYTES);
++        assert!(matches!(verdict_of(&outcome, None), JudgeResult::OutputLimitExceeded));
++    }
++
++}
+diff --git a/crates/rsjudge-judger/src/judger/request/cases.rs b/crates/rsjudge-judger/src/judger/request/cases.rs
+index 82e2b5a..cbea93b 100644
+--- a/crates/rsjudge-judger/src/judger/request/cases.rs
++++ b/crates/rsjudge-judger/src/judger/request/cases.rs
+@@ -8,10 +8,14 @@ use serde::{Deserialize, Serialize};
+ #[derive(Debug, Deserialize, Serialize)]
+ #[serde(rename_all = "camelCase")]
+ pub struct CasesConfig {
+-    score: NonZeroU32,
+-    judge: JudgeType,
+-    resource_limits: ResourceLimits,
+-    task: TaskType,
++    /// Total score of the problem.
++    pub score: NonZeroU32,
++    /// The judge type (classic / special / interactive).
++    pub judge: JudgeType,
++    /// Time (milliseconds) and memory (MiB) limits applied to every case.
++    pub resource_limits: ResourceLimits,
++    /// The task layout (simple list of cases or grouped subtasks).
++    pub task: TaskType,
+ }
+ 
+ #[derive(Debug, Deserialize, Serialize)]
+@@ -25,33 +29,52 @@ pub enum JudgeType {
+ 
+ #[derive(Debug, Deserialize, Serialize)]
+ pub struct ResourceLimits {
+-    time: u32,
+-    memory: u32,
++    /// Time limit in **milliseconds** for each case.
++    pub time: u32,
++    /// Memory limit in **MiB** for each case.
++    pub memory: u32,
+ }
+ 
+ #[derive(Debug, Deserialize, Serialize)]
+ #[serde(rename_all = "kebab-case")]
+ #[serde(tag = "taskType")]
+ pub enum TaskType {
+-    Simple { cases: Vec<Case> },
+-    Subtask { subtasks: Vec<Subtask> },
++    /// A flat list of test cases.
++    Simple {
++        /// The test cases.
++        cases: Vec<Case>,
++    },
++    /// Cases grouped into subtasks; a subtask scores only when all of its
++    /// cases are accepted.
++    Subtask {
++        /// The subtasks.
++        subtasks: Vec<Subtask>,
++    },
+ }
+ 
++/// A single test case.
+ #[derive(Debug, Deserialize, Serialize)]
+ pub struct Case {
+-    input: PathBuf,
+-    answer: PathBuf,
++    /// Path (relative to the archive root) of the input file.
++    pub input: PathBuf,
++    /// Path (relative to the archive root) of the answer file.
++    pub answer: PathBuf,
+ 
++    /// Score awarded for this case; defaults to an even split of the total.
+     #[serde(skip_serializing_if = "Option::is_none")]
+-    score: Option<NonZeroU32>,
++    pub score: Option<NonZeroU32>,
+ }
+ 
++/// A group of cases scored all-or-nothing.
+ #[derive(Debug, Deserialize, Serialize)]
+ pub struct Subtask {
+-    cases: Vec<Case>,
++    /// The cases belonging to this subtask.
++    pub cases: Vec<Case>,
+ 
++    /// Score awarded when every case in the group is accepted; defaults to
++    /// an even split of the total.
+     #[serde(skip_serializing_if = "Option::is_none")]
+-    score: Option<NonZeroU32>,
++    pub score: Option<NonZeroU32>,
+ }
+ 
+ #[cfg(test)]
+diff --git a/crates/rsjudge-judger/src/judger/request/mod.rs b/crates/rsjudge-judger/src/judger/request/mod.rs
+index 3d5f62e..1be0201 100644
+--- a/crates/rsjudge-judger/src/judger/request/mod.rs
++++ b/crates/rsjudge-judger/src/judger/request/mod.rs
+@@ -5,9 +5,9 @@ use bytes::Bytes;
+ use crate::judger::request::cases::CasesConfig;
+ use crate::judger::request::source::Source;
+ 
+-mod source;
++pub mod cases;
+ 
+-mod cases;
++pub mod source;
+ 
+ pub struct JudgeRequest {
+     source: Source,
+@@ -28,7 +28,10 @@ impl JudgeRequest {
+     }
+ }
+ 
++/// The kind of judging to perform.
+ pub enum JudgeType {
++    /// Run once against a single input without comparing.
+     SelfTest { input: Bytes },
++    /// Full submission against the fetched cases archive.
+     Submit { cases: CasesConfig },
+ }
+diff --git a/crates/rsjudge-rest/Cargo.toml b/crates/rsjudge-rest/Cargo.toml
+index 821c033..8a37487 100644
+--- a/crates/rsjudge-rest/Cargo.toml
++++ b/crates/rsjudge-rest/Cargo.toml
+@@ -11,6 +11,9 @@ rust-version.workspace = true
+ 
+ [dependencies]
+ axum = "0.8.9"
++log.workspace = true
++rsjudge-judger = { path = "../rsjudge-judger", version = "0.1.0" }
+ rsjudge-traits.workspace = true
+ serde.workspace = true
+-tokio = { workspace = true, features = ["net"] }
++serde_json.workspace = true
++tokio = { workspace = true, features = ["net", "rt"] }
+diff --git a/crates/rsjudge-rest/src/lib.rs b/crates/rsjudge-rest/src/lib.rs
+index a5d383a..444203d 100644
+--- a/crates/rsjudge-rest/src/lib.rs
++++ b/crates/rsjudge-rest/src/lib.rs
+@@ -2,21 +2,197 @@
+ 
+ pub mod config;
+ 
++use std::collections::HashMap;
+ use std::io;
+ use std::net::SocketAddr;
++use std::sync::Arc;
++use std::time::Duration;
+ 
+ use axum::Router;
+-use axum::routing::get;
++use axum::extract::State;
++use axum::routing::{get, post};
++use rsjudge_judger::judger::pipeline;
++use rsjudge_traits::language::config::{ConfigDef, LanguageDef};
++use serde::{Deserialize, Serialize};
+ use tokio::net::TcpListener;
+ 
++/// Shared REST state.
++pub type SharedExecutors = Arc<HashMap<String, LanguageDef>>;
++
++/// Request body of `POST /selftest`.
++#[derive(Debug, Deserialize)]
++pub struct SelfTestBody {
++    /// Configured language name (e.g. `C++`, `Python`).
++    pub language: String,
++    /// The source code.
++    pub code: String,
++    /// Optional stdin fed to the program (defaults to empty).
++    #[serde(default)]
++    pub stdin: String,
++    /// Wall/CPU time limit in milliseconds (default 5000).
++    pub time_limit_ms: Option<u64>,
++    /// Memory limit in MiB (default 512).
++    pub memory_limit_mb: Option<u64>,
++    /// Compiler options as `option -> value` overrides
++    /// (`true`/variant name). Defaults apply otherwise.
++    #[serde(default)]
++    pub options: HashMap<String, serde_json::Value>,
++}
++
++/// Response body of `POST /selftest`.
++#[derive(Debug, Serialize)]
++pub struct SelfTestResult {
++    /// Exit status of the compiler/check step; `0` on success.
++    pub compile_exit_status: i32,
++    /// Captured compiler stderr (empty on success).
++    pub compile_stderr: String,
++    /// Whether compilation succeeded and the program ran.
++    pub executed: bool,
++    /// Exit status of the program (when [`SelfTestResult::executed`]).
++    pub exit_status: Option<i32>,
++    /// Program stdout (when executed).
++    pub stdout: Option<String>,
++    /// Program stderr (when executed).
++    pub stderr: Option<String>,
++    /// CPU time in milliseconds (when executed and not TLE).
++    pub execution_time_ms: Option<u32>,
++    /// Peak RSS in KiB (when executed and not TLE).
++    pub memory_usage_kib: Option<u32>,
++    /// `ACCEPTED`-style verdict of the run itself (no answer comparison).
++    pub verdict: Option<&'static str>,
++}
++
++fn option_overrides(
++    def: &LanguageDef,
++    raw: &HashMap<String, serde_json::Value>,
++) -> rsjudge_traits::language::option::LanguageOption {
++    use rsjudge_traits::language::option::ConfigValue;
++    let config = def
++        .options()
++        .keys()
++        .filter_map(|key| {
++            let value = raw.get(key)?;
++            let parsed = match value {
++                serde_json::Value::Bool(b) => ConfigValue::Bool(*b),
++                serde_json::Value::String(s) => ConfigValue::Enum(s.clone()),
++                _ => return None,
++            };
++            Some((key.clone(), parsed))
++        })
++        .collect();
++    rsjudge_traits::language::option::LanguageOption {
++        name: String::new(),
++        config,
++    }
++}
++
++async fn languages(State(state): State<SharedExecutors>) -> axum::Json<serde_json::Value> {
++
++    let langs: Vec<serde_json::Value> = state
++        .iter()
++        .map(|(name, def)| {
++            let configs = def
++                .options()
++                .iter()
++                .map(|(key, val)| match val {
++                    ConfigDef::Bool { default, .. } => serde_json::json!({
++                        "name": key,
++                        "type": "bool",
++                        "default": default,
++                    }),
++                    ConfigDef::Enum { default, variants, .. } => serde_json::json!({
++                        "name": key,
++                        "type": "enum",
++                        "default": default,
++                        "variants": variants.keys().collect::<Vec<_>>(),
++                    }),
++                })
++                .collect::<Vec<_>>();
++            serde_json::json!({ "name": name, "configs": configs })
++        })
++        .collect();
++    axum::Json(serde_json::json!({ "languages": langs }))
++}
++
++async fn selftest(
++    State(state): State<SharedExecutors>,
++    axum::Json(body): axum::Json<SelfTestBody>,
++) -> Result<axum::Json<SelfTestResult>, (axum::http::StatusCode, String)> {
++    let Some(def) = state.get(&body.language) else {
++        return Err((
++            axum::http::StatusCode::BAD_REQUEST,
++            format!("unsupported language: {}", body.language),
++        ));
++    };
++
++    let opts = option_overrides(def, &body.options);
++    let prepared = pipeline::prepare_source(&body.language, def, body.code.as_bytes(), Some(&opts))
++        .await
++        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
++    let compile_info = pipeline::compile(&prepared, def)
++        .await
++        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
++
++    if !compile_info.success() {
++        return Ok(axum::Json(SelfTestResult {
++            compile_exit_status: compile_info.exit_status,
++            compile_stderr: compile_info.stderr,
++            executed: false,
++            exit_status: None,
++            stdout: None,
++            stderr: None,
++            execution_time_ms: None,
++            memory_usage_kib: None,
++            verdict: None,
++        }));
++    }
++
++    let time_limit =
++        Duration::from_millis(body.time_limit_ms.unwrap_or(SELF_TEST_TIME_LIMIT_MS));
++    let mem_bytes = u64::from(body.memory_limit_mb.unwrap_or(SELF_TEST_MEMORY_MB)) * 1024 * 1024;
++
++    let outcome = pipeline::run_once(&prepared, def, body.stdin.as_bytes(), time_limit, Some(mem_bytes))
++        .await
++        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
++    let verdict = pipeline::verdict_of(&outcome, Some(mem_bytes));
++    let verdict_name = match verdict {
++        rsjudge_traits::judger::JudgeResult::Accepted => "ACCEPTED",
++        rsjudge_traits::judger::JudgeResult::TimeLimitExceeded => "TIME_LIMIT_EXCEEDED",
++        rsjudge_traits::judger::JudgeResult::MemoryLimitExceeded => "MEMORY_LIMIT_EXCEEDED",
++        rsjudge_traits::judger::JudgeResult::OutputLimitExceeded => "OUTPUT_LIMIT_EXCEEDED",
++        _ => "RUNTIME_ERROR",
++    };
++    let timed_out = verdict == rsjudge_traits::judger::JudgeResult::TimeLimitExceeded;
++
++    Ok(axum::Json(SelfTestResult {
++        compile_exit_status: compile_info.exit_status,
++        compile_stderr: compile_info.stderr,
++        executed: true,
++        exit_status: Some(outcome.exit_code),
++        stdout: Some(pipeline::lossy(&outcome.stdout)),
++        stderr: Some(pipeline::lossy(&outcome.stderr)),
++        execution_time_ms: (!timed_out)
++            .then(|| u32::try_from(outcome.cpu_time.as_millis()).unwrap_or(u32::MAX)),
++        memory_usage_kib: (!timed_out).then_some(outcome.ram_kb as u32),
++        verdict: Some(verdict_name),
++    }))
++}
++
++const SELF_TEST_TIME_LIMIT_MS: u64 = 5_000;
++const SELF_TEST_MEMORY_MB: u64 = 512;
++
+ /// Serve the REST API at the given address.
+ ///
+ /// # Errors
+ ///
+ /// This will error when the server fails to start or when the address is
+ /// invalid.
+-pub async fn serve(addr: SocketAddr) -> io::Result<()> {
+-    let app = Router::new().route("/", get(|| async { "Hello, World!" }));
++pub async fn serve(addr: SocketAddr, executors: SharedExecutors) -> io::Result<()> {
++    let app = Router::new()
++        .route("/", get(|| async { "rsjudge engine" }))
++        .route("/languages", get(languages))
++        .route("/selftest", post(selftest))
++        .with_state(executors);
+     let listener = TcpListener::bind(addr).await?;
+     axum::serve(listener, app).await?;
+     Ok(())
+diff --git a/crates/rsjudge-traits/src/judger.rs b/crates/rsjudge-traits/src/judger.rs
+index 14aaa15..3f16a11 100644
+--- a/crates/rsjudge-traits/src/judger.rs
++++ b/crates/rsjudge-traits/src/judger.rs
+@@ -42,12 +42,12 @@ pub trait Judger {
+     ) -> impl Future<Output = Result<(Output, JudgeResult), Self::Error>> + Send;
+ }
+ 
+-#[derive(Debug)]
+ /// The result of a judge.
+ ///
+ /// This enum represents the result of a judge.
+ ///
+ /// The meaning of each variant are as follows.
++#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+ pub enum JudgeResult {
+     /// The code is accepted.
+     Accepted,
+diff --git a/crates/rsjudge-traits/src/language/config.rs b/crates/rsjudge-traits/src/language/config.rs
+index 426d35e..8766c45 100644
+--- a/crates/rsjudge-traits/src/language/config.rs
++++ b/crates/rsjudge-traits/src/language/config.rs
+@@ -14,6 +14,60 @@ pub struct LanguageDef {
+     #[serde(default)]
+     options: IndexMap<String, ConfigDef>,
+     version: Option<String>,
++    /// Rename the source file to this name before compiling/executing
++    /// (required by compilers that derive entry points from filenames,
++    /// e.g. Java's `Main.java`).
++    #[serde(default)]
++    src_rename: Option<String>,
++    /// File extension for the compiled artifact of `byte_code` languages
++    /// (e.g. `jar`, `exe`). The output file becomes `{out_file}.{extension}`.
++    #[serde(default)]
++    out_extension: Option<String>,
++    /// Skip setting `RLIMIT_AS` for executed programs.
++    ///
++    /// Required for runtimes that reserve large virtual address space up front
++    /// (e.g. the JVM), which would otherwise fail immediately under a strict
++    /// address-space limit even though real RSS stays below the limit.
++    #[serde(default)]
++    disable_rlimit_as: Option<bool>,
++}
++
++impl LanguageDef {
++    /// Get the execution type of the language.
++    #[must_use]
++    pub fn exec_type(&self) -> &ExecType {
++        &self.exec_type
++    }
++
++    /// Get the customizable options of the language.
++    #[must_use]
++    pub fn options(&self) -> &IndexMap<String, ConfigDef> {
++        &self.options
++    }
++
++    /// Get the version command string, if any.
++    #[must_use]
++    pub fn version(&self) -> Option<&str> {
++        self.version.as_deref()
++    }
++
++    /// Get the source rename target, if any.
++    #[must_use]
++    pub fn src_rename(&self) -> Option<&str> {
++        self.src_rename.as_deref()
++    }
++
++    /// Get the output artifact extension, if any.
++    #[must_use]
++    pub fn out_extension(&self) -> Option<&str> {
++        self.out_extension.as_deref()
++    }
++
++    /// Whether `RLIMIT_AS` should be skipped for executed programs.
++    #[must_use]
++    pub fn disable_rlimit_as(&self) -> bool {
++        self.disable_rlimit_as.unwrap_or(false)
++    }
+ }
+ 
+ /// Execution type of the language.
+@@ -101,6 +155,9 @@ mod tests {
+                 }
+             },
+             version: Some("$(gcc --version)".into()),
++            src_rename: None,
++            out_extension: None,
++            disable_rlimit_as: None,
+         };
+ 
+         let languages = HashMap::from([("C".to_string(), c_def)]);
+diff --git a/src/cli.rs b/src/cli.rs
+index 484cbfc..a77731d 100644
+--- a/src/cli.rs
++++ b/src/cli.rs
+@@ -10,4 +10,15 @@ pub struct Args {
+     #[arg(short, long, default_value = "./config", value_name = "DIR")]
+     /// Specify the configuration directory
+     pub config_dir: PathBuf,
++
++    /// gRPC endpoint of the backend `CasesService` used to download case
++    /// archives (e.g. `http://backend:9000`). Overrides
++    /// `RSJUDGE_CASES_ENDPOINT`.
++    #[arg(long, value_name = "URL")]
++    pub cases_endpoint: Option<String>,
++
++    /// gRPC endpoint of the backend `RegisterService` to announce this
++    /// instance at startup. Overrides `RSJUDGE_REGISTER_ENDPOINT`.
++    #[arg(long, value_name = "URL")]
++    pub register_endpoint: Option<String>,
+ }
+diff --git a/src/lib.rs b/src/lib.rs
+index b4b458d..eabd1ed 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -1,12 +1,15 @@
+ // SPDX-License-Identifier: Apache-2.0
+ 
+-#![cfg_attr(not(test), warn(clippy::print_stdout, clippy::print_stderr))]
+-#![doc(html_logo_url = "https://cdn.jsdelivr.net/gh/NJUPT-SAST/rsjudge@main/assets/rsjudge.svg")]
+-
+ //！ An online judge sandbox server in Rust,
+ //！ inspired by [go-judge](https://github.com/criyle/go-judge), for SASTOJ.
+ 
+-use log::{debug, warn};
++use std::collections::HashMap;
++use std::sync::Arc;
++
++use anyhow::Context;
++use log::{debug, info, warn};
++use rsjudge_grpc::JudgeServerImpl;
++use rsjudge_traits::language::config::LanguageDef;
+ use sysinfo::System;
+ 
+ pub use crate::cli::Args;
+@@ -24,13 +27,23 @@ mod config;
+ pub async fn async_main(args: Args) -> anyhow::Result<()> {
+     debug!("{args:?}");
+ 
+-    let config = Config::load_from_dir(&args.config_dir).await?;
+-
+-    debug!("Loaded {} executors", config.executors.len());
+-    debug!(
+-        "Seccomp default action: {:?}",
+-        config.seccomp.default_action
+-    );
++    let executor_config_path = args.config_dir.join("executors.toml");
++    let executors_raw = tokio::fs::read(&executor_config_path)
++        .await
++        .with_context(|| {
++            format!(
++                "Cannot load executor config at {}",
++                executor_config_path.display()
++            )
++        })?;
++    let executors: HashMap<String, LanguageDef> =
++        toml::from_slice(&executors_raw).with_context(|| {
++            format!(
++                "Failed to parse executor config at {}",
++                executor_config_path.display()
++            )
++        })?;
++    info!("Loaded {} language executor(s)", executors.len());
+ 
+     match (System::name(), System::os_version()) {
+         (Some(distro_name), Some(distro_version)) => {
+@@ -44,5 +57,157 @@ pub async fn async_main(args: Args) -> anyhow::Result<()> {
+         }
+     }
+ 
++    // Services configuration (optional file; sensible defaults otherwise).
++    let services_path = args.config_dir.join("services.toml");
++    let services: Option<config::Services> = match tokio::fs::read(&services_path).await {
++        Ok(raw) => Some(toml::from_slice(&raw).with_context(|| {
++            format!(
++                "Failed to parse services config at {}",
++                services_path.display()
++            )
++        })?),
++        Err(_) => {
++            info!("No services.toml found; using default listen addresses.");
++            None
++        }
++    };
++    let default_services = || config::Services {
++        grpc: Some(rsjudge_grpc::config::GrpcConfig {
++            listen: vec![std::net::SocketAddr::from(([0, 0, 0, 0], 50051))],
++        }),
++        #[cfg(feature = "rest")]
++        rest: Some(rsjudge_rest::config::RestConfig {
++            listen: vec![std::net::SocketAddr::from(([0, 0, 0, 0], 8080))],
++        }),
++        #[cfg(feature = "amqp")]
++        amqp: Some(rsjudge_amqp::config::AmqpConfig { uri: String::new() }),
++    };
++    let services = services.unwrap_or_else(default_services);
++
++    let cases_endpoint = args
++        .cases_endpoint
++        .or_else(|| std::env::var("RSJUDGE_CASES_ENDPOINT").ok());
++    if cases_endpoint.is_none() {
++        warn!(
++            "No cases endpoint configured; Submit requests will fail with \
++             failed_precondition. Set --cases-endpoint or RSJUDGE_CASES_ENDPOINT."
++        );
++    }
++
++    let shared_executors = Arc::new(executors);
++
++    let mut tasks = tokio::task::JoinSet::new();
++
++    let grpc_addrs = services.grpc.into_iter().flat_map(|config| config.listen);
++    #[cfg(feature = "grpc")]
++    for addr in grpc_addrs {
++        let judge = JudgeServerImpl::new(
++            Arc::clone(&shared_executors),
++            cases_endpoint.clone().map(Arc::<str>::from),
++        );
++        info!("gRPC judge service listening on {addr}");
++        tasks.spawn(async move {
++            rsjudge_grpc::serve(addr, judge)
++                .await
++                .map_err(anyhow::Error::new)
++        });
++    }
++
++    let rest_addrs = services.rest.into_iter().flat_map(|config| config.listen);
++    #[cfg(feature = "rest")]
++    for addr in rest_addrs {
++        let state = Arc::clone(&shared_executors);
++        info!("REST API listening on {addr}");
++        tasks.spawn(async move {
++            rsjudge_rest::serve(addr, state)
++                .await
++                .map_err(anyhow::Error::new)
++        });
++    }
++
++    // Best-effort registration with the backend.
++    let register_endpoint = args
++        .register_endpoint
++        .or_else(|| std::env::var("RSJUDGE_REGISTER_ENDPOINT").ok());
++    if let Some(endpoint) = register_endpoint {
++        let langs = rsjudge_judger::judger::pipeline::accept_languages(&shared_executors);
++        tasks.spawn(async move {
++            match register_backend(&endpoint, langs).await {
++                Ok(id) => info!("Registered with backend as instance #{id}"),
++                Err(err) => warn!("Backend registration failed: {err:#}"),
++            }
++            Ok::<(), anyhow::Error>(())
++        });
++    }
++
++    while let Some(result) = tasks.join_next().await {
++        match result {
++            Ok(Ok(())) => {}
++            Ok(Err(err)) => return Err(err.context("service failed")),
++            Err(err) => return Err(anyhow::Error::new(err).context("service task panicked")),
++        }
++    }
++
+     Ok(())
+ }
++
++#[cfg(feature = "grpc")]
++async fn register_backend(
++    endpoint: &str,
++    languages: indexmap::IndexMap<String, rsjudge_traits::language::info::LanguageInfo>,
++) -> anyhow::Result<i32> {
++    use crate::proto_shim::register_service_client::RegisterServiceClient;
++    use crate::proto_shim::{ConfigTypeDecl, EnumDecl, LanguageDecl, RegisterRequest};
++    use tonic::Request;
++
++    let mut client = RegisterServiceClient::connect(endpoint.to_owned()).await?;
++
++    let decls = languages
++        .into_iter()
++        .map(|(_name, info)| LanguageDecl {
++            name: info.name,
++            configs: info
++                .config
++                .into_iter()
++                .map(|(key, cfg)| {
++                    (
++                        key,
++                        ConfigTypeDecl {
++                            config_type: Some(match cfg {
++                                rsjudge_traits::language::info::ConfigInfo::Bool => {
++                                    crate::proto_shim::config_type_decl::ConfigType::Boolean(())
++                                }
++                                rsjudge_traits::language::info::ConfigInfo::Enum(variants) => {
++                                    crate::proto_shim::config_type_decl::ConfigType::Enum(
++                                        EnumDecl {
++                                            variants: variants.into_iter().collect(),
++                                        },
++                                    )
++                                }
++                            }),
++                            description: String::new(),
++                        },
++                    )
++                })
++                .collect(),
++        })
++        .collect();
++
++    let response = client
++        .register(Request::new(RegisterRequest {
++            languages: decls,
++            port: 0,
++            system_info: String::new(),
++        }))
++        .await?
++        .into_inner();
++    Ok(response.id)
++}
++
++#[cfg(feature = "grpc")]
++mod proto_shim {
++    pub use rsjudge_grpc::proto::{
++        ConfigTypeDecl, EnumDecl, LanguageDecl, RegisterRequest, config_type_decl,
++        register_service_client,
++    };
++}

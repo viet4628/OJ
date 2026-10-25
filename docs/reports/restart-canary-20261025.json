@@ -1,0 +1,53 @@
+{
+  "at": "2026-10-24T21:14:59.562Z",
+  "users": 2,
+  "completed": 4,
+  "failures": 0,
+  "elapsedSeconds": 4.409,
+  "p95QueueMs": 1452,
+  "p95FinishMs": 2244,
+  "throughputPerSecond": 0.9072352007257882,
+  "healthFailures": 0,
+  "cleanupFailed": false,
+  "stopped": false,
+  "before": "online-judge-worker-1 37.71MiB / 1GiB 0.03% 12\nonline-judge-engine-1 9.117MiB / 2GiB 0.01% 4",
+  "after": "online-judge-worker-1 40.8MiB / 1GiB 0.22% 12\nonline-judge-engine-1 21.36MiB / 2GiB 0.00% 5",
+  "results": [
+    {
+      "user": 0,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 1613,
+      "queueMs": 480
+    },
+    {
+      "user": 1,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 2244,
+      "queueMs": 1452
+    },
+    {
+      "user": 0,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 1618,
+      "queueMs": 629
+    },
+    {
+      "user": 1,
+      "ok": true,
+      "status": "ACCEPTED",
+      "finishMs": 1581,
+      "queueMs": 716
+    }
+  ],
+  "health": [
+    {
+      "at": "2026-10-24T21:14:53.275Z",
+      "ok": true,
+      "queued": 0,
+      "processing": 0
+    }
+  ]
+}

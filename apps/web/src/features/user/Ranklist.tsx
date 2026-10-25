@@ -1,11 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import MorphIcon from '../../components/MorphIcon';
-import {
-  Search as SearchData,
-  Trophy as TrophyData,
-  Loader2 as Loader2Data,
-} from 'lucide';
+import { Loader2 as Loader2Data } from 'lucide';
 import { getRanklist, type RankUser } from '../../lib/api';
 
 export default function Ranklist() {
@@ -15,28 +11,24 @@ export default function Ranklist() {
   const [search, setSearch] = useState('');
   const [users, setUsers] = useState<RankUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [error, setError] = useState('');
 
+  useEffect(() => { setPage(0); }, [search, rankType]);
   useEffect(() => {
-    (async () => {
-      try {
-        setUsers(await getRanklist());
-      } catch (err) {
-        console.error('Failed to load ranklist:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    })();
-  }, []);
+    const controller = new AbortController();
+    setIsLoading(true);
+    setError('');
+    const timer = window.setTimeout(() => {
+      getRanklist({ page, type: rankType, search }, controller.signal).then(rows => {
+        if (!controller.signal.aborted) setUsers(rows);
+      }).catch(() => { if (!controller.signal.aborted) setError('Không tải được bảng xếp hạng.'); })
+        .finally(() => { if (!controller.signal.aborted) setIsLoading(false); });
+    }, 250);
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, [page, search, rankType]);
 
-  const sortedACM = [...users].sort((a, b) => b.accepted_number - a.accepted_number);
-  const sortedOI = [...users].sort((a, b) => b.total_score - a.total_score);
-
-  const currentData = rankType === 'ACM' ? sortedACM : sortedOI;
-
-  const filteredRank = currentData.filter(
-    (u) =>
-      (u.username || '').toLowerCase().includes(search.toLowerCase())
-  ).map((u, idx) => ({ ...u, rank: idx + 1 }));
+  const filteredRank = users.map((user, index) => ({ ...user, rank: page * 50 + index + 1 }));
 
   return (
     <div className="space-y-4">
@@ -44,7 +36,7 @@ export default function Ranklist() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[var(--bg-secondary)] p-4 rounded-md border border-[var(--border)]">
         <div>
           <h1 className="text-sm font-semibold text-[var(--text-primary)] flex items-center gap-2">
-            <MorphIcon icon={TrophyData} size={16} className="text-[var(--accent-text)]" /> Bảng Xếp Hạng Cao Thủ (Ranklist)
+             Bảng Xếp Hạng Cao Thủ (Ranklist)
           </h1>
           <p className="text-[var(--text-secondary)] text-xs mt-0.5">Xếp hạng lập trình viên xuất sắc nhất theo thể thức ACM &amp; OI Subtask</p>
         </div>
@@ -76,7 +68,7 @@ export default function Ranklist() {
 
           {/* Search box */}
           <div className="relative">
-            <MorphIcon icon={SearchData} size={14} className="text-[var(--text-muted)] absolute left-2.5 top-1/2 -translate-y-1/2" />
+
             <input
               type="text"
               placeholder="Tìm tài khoản..."
@@ -88,6 +80,7 @@ export default function Ranklist() {
         </div>
       </div>
 
+      {error && <p role="alert">{error}</p>}
       {/* Leaderboard Table */}
       <div className="bg-[var(--bg-secondary)] rounded-md overflow-hidden border border-[var(--border)]">
         {isLoading ? (
@@ -135,6 +128,11 @@ export default function Ranklist() {
           </div>
         )}
       </div>
+      <nav aria-label="Phân trang xếp hạng" className="flex justify-end items-center gap-3 text-xs">
+        <button disabled={isLoading || page === 0} onClick={() => setPage(value => value - 1)} className="disabled:opacity-40">Trang trước</button>
+        <span>Trang {page + 1}</span>
+        <button disabled={isLoading || users.length < 50} onClick={() => setPage(value => value + 1)} className="disabled:opacity-40">Trang sau</button>
+      </nav>
     </div>
   );
 }

@@ -1,15 +1,5 @@
 import React from 'react';
-import {
-  ChevronDown,
-  ChevronUp,
-  Plus,
-  X,
-  RefreshCw,
-  TerminalSquare,
-  CheckCircle2,
-  XCircle,
-  Check,
-} from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, X, RefreshCw } from 'lucide-react';
 import MorphIcon from '../../../components/MorphIcon';
 import { ChevronDown as ChevronDownData, ChevronUp as ChevronUpData } from 'lucide';
 import { normOutput } from '../../../constants/languages';
@@ -205,7 +195,7 @@ export default function ProblemTestPanel({
 
             {!isRunning && runOutput === null && !submissionError && !submissionResult && (
               <div className="h-full flex flex-col items-center justify-center text-[var(--text-muted)] gap-1 select-none py-4">
-                <TerminalSquare className="w-5 h-5 opacity-40" />
+
                 <span className="text-[11px]">Bấm “Chạy thử” để kiểm tra kết quả tại đây</span>
               </div>
             )}
@@ -238,13 +228,7 @@ export default function ProblemTestPanel({
               <div ref={resultRef} className="space-y-2">
                 <div className="flex items-center justify-between p-2 rounded-md border border-[var(--border)] bg-[var(--bg-secondary)]">
                   <div className="flex items-center gap-1.5 text-xs font-semibold">
-                    {submissionResult.status === 'ACCEPTED' ? (
-                      <CheckCircle2 className="w-4 h-4 text-[var(--accent)]" />
-                    ) : submissionResult.status === 'PENDING' || submissionResult.status === 'JUDGING' ? (
-                      <RefreshCw className="w-4 h-4 animate-spin text-blue-500" />
-                    ) : (
-                      <XCircle className="w-4 h-4 text-red-500" />
-                    )}
+                    {(submissionResult.status === 'PENDING' || submissionResult.status === 'JUDGING') && <RefreshCw className="w-4 h-4 animate-spin text-blue-500" />}
                     <span className="text-[var(--text-primary)]">
                       {submissionResult.status === 'PENDING' || submissionResult.status === 'JUDGING'
                         ? 'Đang chấm bài...'

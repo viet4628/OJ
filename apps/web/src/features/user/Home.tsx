@@ -1,38 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import MorphIcon from '../../components/MorphIcon';
+import ProblemDifficulty, { difficultyLabels as DIFF_LABEL } from '../../components/ProblemDifficulty';
+import { renderInline } from '../../components/Markdown';
+import { CheckCircle2, Circle } from 'lucide-react';
+import { ChevronRight as ChevronRightData, Eye as EyeData, Lock as LockData, Play as PlayData, Loader2 as Loader2Data, ArrowRight as ArrowRightData, X as XData } from 'lucide';
 import {
-  Trophy as TrophyData,
-  Megaphone as MegaphoneData,
-  BarChart2 as BarChart2Data,
-  BookOpen as BookOpenData,
-  Users as UsersData,
-  FileCode2 as FileCode2Data,
-  CheckCircle2 as CheckCircle2Data,
-  Circle as CircleData,
-  ChevronRight as ChevronRightData,
-  Eye as EyeData,
-  Calendar as CalendarData,
-  Lock as LockData,
-  Play as PlayData,
-  Loader2 as Loader2Data,
-  Sparkles as SparklesData,
-  Tag as TagData,
-  Clock as ClockData,
-  ArrowRight as ArrowRightData,
-  X as XData,
-} from 'lucide';
-import {
-  getAnnouncements, getContests, getProblems, getStats, getRanklist, getMyAcceptedProblemIds,
-  type Announcement, type Contest, type Problem, type RankUser,
+  getAnnouncements, getContests, getProblems, getProblemBySlug, getStats, getRanklist, getMyAcceptedProblemIds,
+  type Announcement, type Contest, type ProblemSummary, type RankUser,
 } from '../../lib/api';
-
-const DIFF_STYLE: Record<string, string> = {
-  Easy: 'bg-[var(--bg-tertiary)] text-[var(--accent-text)] border-[var(--border)]',
-  Medium: 'bg-[var(--bg-tertiary)] text-[#9A6700] dark:text-[#D29922] border-[var(--border)]',
-  Hard: 'bg-[var(--bg-tertiary)] text-[#CF222E] dark:text-[#F85149] border-[var(--border)]',
-};
-const DIFF_LABEL: Record<string, string> = { Easy: 'Dễ', Medium: 'Trung Bình', Hard: 'Khó' };
 
 const CONTEST_STATUS_META: Record<Contest['status'], { label: string; className: string; dot: string }> = {
   UNDERWAY: {
@@ -70,13 +46,18 @@ function cleanMarkdownSnippet(text: string): string {
 function getProblemSummary(text: string): string {
   if (!text) return '';
   const mainPart = text.split(/\n\s*#{1,6}\s+|\n\s*(?:\*\*|__)?Dữ liệu|\n\s*(?:\*\*|__)?Input|\n\s*(?:\*\*|__)?Giới hạn/i)[0] || text;
-  return cleanMarkdownSnippet(mainPart);
+  return mainPart
+    .replace(/^\s*#{1,6}\s+/gm, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/\\n(?![a-zA-Z])|\s*\n\s*/g, ' ')
+    .trim();
 }
 
 export default function Home() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [contests, setContests] = useState<Contest[]>([]);
-  const [problems, setProblems] = useState<Problem[]>([]);
+  const [problems, setProblems] = useState<ProblemSummary[]>([]);
+  const [dailyDescription, setDailyDescription] = useState('');
   const [rankUsers, setRankUsers] = useState<RankUser[]>([]);
   const [acceptedIds, setAcceptedIds] = useState<string[]>([]);
   const [stats, setStats] = useState({ problems: 0, submissions: 0, profiles: 0 });
@@ -101,7 +82,7 @@ export default function Home() {
           getContests(),
           getProblems(),
           getStats(),
-          getRanklist(),
+          getRanklist({ pageSize: 5 }),
           getMyAcceptedProblemIds(),
         ]);
         setAnnouncements(anns.slice(0, 4));
@@ -134,6 +115,15 @@ export default function Home() {
     return problems.find((p) => !acceptedIds.includes(p.id)) || problems[0];
   }, [problems, acceptedIds]);
 
+  useEffect(() => {
+    let active = true;
+    setDailyDescription('');
+    if (dailyProblem) getProblemBySlug(dailyProblem.slug).then(row => {
+      if (active) setDailyDescription(row?.description || '');
+    });
+    return () => { active = false; };
+  }, [dailyProblem?.id]);
+
   const displayedProblems = useMemo(() => {
     const filtered = diffFilter === 'ALL'
       ? problems
@@ -146,28 +136,24 @@ export default function Home() {
 
   const STAT_CARDS = [
     {
-      icon: FileCode2Data,
       label: 'Kho Bài Tập',
       value: stats.problems,
       sub: 'Đa dạng thuật toán',
     },
     {
-      icon: UsersData,
       label: 'Lập Trình Viên',
       value: stats.profiles,
       sub: 'Thành viên tham gia',
     },
     {
-      icon: BookOpenData,
       label: 'Lượt Nộp Code',
       value: stats.submissions,
-      sub: 'Chấm tự động sandbox',
+      sub: 'Bài nộp đã ghi nhận',
     },
     {
-      icon: TrophyData,
       label: 'Kỳ Thi Trực Tuyến',
       value: contests.length,
-      sub: 'Chuẩn format ACM / OI',
+      sub: 'ACM và OI',
     },
   ];
 
@@ -180,9 +166,7 @@ export default function Home() {
             key={stat.label}
             className="bg-[var(--bg-secondary)] rounded-md p-3.5 border border-[var(--border)] flex items-center gap-3 transition-colors"
           >
-            <div className="w-8 h-8 rounded-md bg-[var(--bg-tertiary)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] shrink-0">
-              <MorphIcon icon={stat.icon} size={16} />
-            </div>
+
             <div className="min-w-0">
               {isLoading ? (
                 <div className="w-14 h-5 rounded bg-[var(--bg-tertiary)] animate-pulse" />
@@ -200,14 +184,14 @@ export default function Home() {
 
       {/* 2. MAIN CONTENT GRID: 8 Cols (Problems & News) + 4 Cols (Sidebar widgets) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
+
         {/* LEFT COLUMN (8 cols): Problems Table & Announcements */}
         <div className="lg:col-span-8 space-y-6">
           {/* Featured Problems Table with quick filter tabs */}
           <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] overflow-hidden">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-tertiary)]/50">
               <div className="flex items-center gap-2">
-                <MorphIcon icon={FileCode2Data} size={14} className="text-[var(--accent-text)]" />
+
                 <h2 className="text-xs font-semibold text-[var(--text-primary)]">
                   Luyện Tập — Bài Tập Nổi Bật
                 </h2>
@@ -247,14 +231,14 @@ export default function Home() {
               </div>
             ) : (
               <div className="w-full overflow-x-auto">
-                <table className="w-full text-xs">
+                <table className="w-full min-w-[520px] text-xs">
                   <thead className="bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-b border-[var(--border)] font-medium text-[11px]">
                     <tr>
-                      <th className="text-center px-3 py-2 w-10 text-[10px] text-[var(--text-muted)]" title="Trạng thái đã giải">
-                        ✓
+                      <th className="text-center px-3 py-2 w-10 text-[10px] text-[var(--text-muted)]" aria-label="Trạng thái" title="Trạng thái">
+                        <CheckCircle2 size={14} className="mx-auto" aria-hidden="true" />
                       </th>
                       <th className="text-left px-3 py-2">Bài Tập</th>
-                      <th className="text-left px-3 py-2 w-24">Độ Khó</th>
+                      <th className="text-left px-3 py-2 w-28 whitespace-nowrap">Độ Khó</th>
                       <th className="text-left px-3 py-2 w-36 hidden sm:table-cell">Giới Hạn</th>
                       <th className="text-right px-3 py-2 w-28 whitespace-nowrap">Hành Động</th>
                     </tr>
@@ -265,11 +249,9 @@ export default function Home() {
                       return (
                         <tr key={p.id} className="hover:bg-[var(--bg-primary)] transition-colors group">
                           <td className="px-3 py-2 text-center">
-                            {isAc ? (
-                              <MorphIcon icon={CheckCircle2Data} size={14} className="text-[var(--accent-text)] mx-auto" />
-                            ) : (
-                              <MorphIcon icon={CircleData} size={12} className="text-[var(--text-muted)] opacity-40 mx-auto" />
-                            )}
+                            <span role="img" aria-label={isAc ? 'Đã giải' : 'Chưa làm'} title={isAc ? 'Đã giải' : 'Chưa làm'} className="inline-flex align-middle">
+                              {isAc ? <CheckCircle2 size={16} className="text-[var(--accent-text)]" aria-hidden="true" /> : <Circle size={16} className="text-[var(--text-muted)] opacity-40" aria-hidden="true" />}
+                            </span>
                           </td>
                           <td className="px-3 py-2">
                             <div className="flex items-center gap-2 flex-wrap">
@@ -283,7 +265,7 @@ export default function Home() {
                                 <Link
                                   key={t}
                                   to={`/problems?tag=${encodeURIComponent(t)}`}
-                                  className="px-1.5 py-0.2 rounded text-[10px] font-mono border border-[var(--border)] bg-[var(--bg-tertiary)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                                  className="whitespace-nowrap px-1.5 py-0.5 rounded text-[10px] font-mono border border-[var(--border)] bg-[var(--bg-tertiary)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                                 >
                                   {t}
                                 </Link>
@@ -291,13 +273,11 @@ export default function Home() {
                             </div>
                           </td>
                           <td className="px-3 py-2">
-                            <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono border ${DIFF_STYLE[p.difficulty]}`}>
-                              {DIFF_LABEL[p.difficulty]}
-                            </span>
+                            <ProblemDifficulty difficulty={p.difficulty} />
                           </td>
                           <td className="px-3 py-2 text-[var(--text-secondary)] font-mono text-[11px] hidden sm:table-cell">
                             <span className="inline-flex items-center gap-1">
-                              <MorphIcon icon={ClockData} size={11} className="text-[var(--text-muted)]" />
+
                               {p.time_limit_ms}ms · {p.memory_limit_mb}MB
                             </span>
                           </td>
@@ -322,7 +302,7 @@ export default function Home() {
           <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] overflow-hidden">
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-tertiary)]/50">
               <h2 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
-                <MorphIcon icon={MegaphoneData} size={14} className="text-[var(--accent-text)]" /> Tin Tức &amp; Thông Báo
+                 Tin Tức &amp; Thông Báo
               </h2>
               <span className="text-[10px] text-[var(--text-muted)] font-mono">Cập nhật hệ thống</span>
             </div>
@@ -372,37 +352,33 @@ export default function Home() {
 
         {/* RIGHT COLUMN (4 cols): Daily Challenge, Contests, Leaderboard, Topics */}
         <div className="lg:col-span-4 space-y-4">
-          
+
           {/* 1. Daily Challenge Pick */}
           {dailyProblem && (
-            <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] p-4 space-y-3">
+            <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] p-4 space-y-4">
               <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono border border-[var(--border)] bg-[var(--bg-tertiary)] text-[var(--text-secondary)]">
-                  <MorphIcon icon={SparklesData} size={12} className="text-[var(--accent-text)]" /> Thử Thách Hôm Nay
-                </span>
-                <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono border ${DIFF_STYLE[dailyProblem.difficulty]}`}>
-                  {DIFF_LABEL[dailyProblem.difficulty]}
-                </span>
+                <h2 className="text-xs font-medium text-[var(--text-secondary)]">Thử thách hôm nay</h2>
+                <ProblemDifficulty difficulty={dailyProblem.difficulty} />
               </div>
 
               <div>
-                <h3 className="font-semibold text-xs text-[var(--text-primary)] leading-snug">
+                <h3 className="font-semibold text-sm text-[var(--text-primary)] leading-6">
                   <Link
                     to={`/problems/${dailyProblem.slug}`}
-                    className="hover:text-[#0969DA] dark:hover:text-[#58A6FF] transition-colors"
+                    className="hover:text-[var(--accent-text)] transition-colors"
                   >
                     {dailyProblem.title}
                   </Link>
                 </h3>
-                <p className="text-[11px] text-[var(--text-secondary)] line-clamp-2 mt-1 leading-relaxed">
-                  {getProblemSummary(dailyProblem.description)}
+                <p className="text-sm text-[var(--text-secondary)] line-clamp-3 mt-2 leading-relaxed break-words">
+                  {renderInline(getProblemSummary(dailyDescription))}
                 </p>
               </div>
 
-              <div className="flex items-center justify-between pt-1 gap-2">
+              <div className="flex items-center justify-between border-t border-[var(--border)] pt-3 gap-3">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {(dailyProblem.tags || []).slice(0, 2).map((t) => (
-                    <span key={t} className="px-1.5 py-0.2 rounded bg-[var(--bg-tertiary)] border border-[var(--border)] font-mono text-[10px] text-[var(--text-muted)]">
+                    <span key={t} className="whitespace-nowrap px-2 py-0.5 rounded bg-[var(--bg-tertiary)] text-[11px] text-[var(--text-secondary)]">
                       {t}
                     </span>
                   ))}
@@ -421,7 +397,7 @@ export default function Home() {
           <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] overflow-hidden">
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-tertiary)]/50">
               <h2 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
-                <MorphIcon icon={TrophyData} size={14} className="text-[var(--accent-text)]" /> Cuộc Thi
+                 Cuộc Thi
               </h2>
               <Link to="/contests" className="text-xs text-[var(--accent-text)] hover:underline font-medium">
                 Tất cả →
@@ -444,16 +420,13 @@ export default function Home() {
                       to={`/contests/${c.id}`}
                       className="group flex items-center gap-2.5 p-2.5 rounded-md bg-[var(--bg-primary)] border border-[var(--border)] transition-colors hover:bg-[var(--bg-tertiary)]"
                     >
-                      <div className="w-7 h-7 shrink-0 rounded-md bg-[var(--bg-tertiary)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)]">
-                        <MorphIcon icon={TrophyData} size={14} />
-                      </div>
                       <div className="flex-1 min-w-0">
                         <p className="truncate text-xs font-medium text-[var(--text-primary)] group-hover:text-[#0969DA] dark:group-hover:text-[#58A6FF] transition-colors flex items-center gap-1.5">
                           {c.title}
                           {!c.is_public && <MorphIcon icon={LockData} size={10} className="text-[var(--text-muted)] shrink-0" />}
                         </p>
                         <p className="mt-0.5 font-mono text-[10px] text-[var(--text-muted)] flex items-center gap-1">
-                          <MorphIcon icon={CalendarData} size={10} /> {formatTime(c.start_time)}
+                          {formatTime(c.start_time)}
                         </p>
                       </div>
                       <span className={`shrink-0 inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full border text-[9px] font-mono ${meta.className}`}>
@@ -479,7 +452,7 @@ export default function Home() {
           <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] overflow-hidden">
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-tertiary)]/50">
               <h2 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
-                <MorphIcon icon={BarChart2Data} size={14} className="text-[var(--accent-text)]" /> Bảng Xếp Hạng
+                 Bảng Xếp Hạng
               </h2>
               <Link to="/ranklist" className="text-xs text-[var(--accent-text)] hover:underline font-medium">
                 Xem tất cả →
@@ -516,7 +489,7 @@ export default function Home() {
             <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] p-3.5 space-y-2 text-xs">
               <div className="flex items-center justify-between pb-1.5 border-b border-[var(--border)]">
                 <h3 className="font-semibold text-xs text-[var(--text-primary)] flex items-center gap-1.5">
-                  <MorphIcon icon={TagData} size={12} className="text-[var(--accent-text)]" /> Chủ Đề Trọng Tâm
+                   Chủ Đề Trọng Tâm
                 </h3>
                 <Link to="/problems" className="text-[11px] text-[var(--accent-text)] hover:underline font-medium">
                   Kho bài tập →
@@ -529,7 +502,6 @@ export default function Home() {
                     to={`/problems?tag=${encodeURIComponent(tag)}`}
                     className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-[11px] font-mono transition-colors"
                   >
-                    <MorphIcon icon={TagData} size={10} className="text-[var(--text-muted)]" />
                     {tag}
                   </Link>
                 ))}

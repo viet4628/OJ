@@ -1,24 +1,25 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/Header';
-import SearchModal from './components/SearchModal';
-import AuthModal from './components/AuthModal';
-import Home from './features/user/Home';
+const SearchModal = lazy(() => import('./components/SearchModal'));
+const AuthModal = lazy(() => import('./components/AuthModal'));
+const Home = lazy(() => import('./features/user/Home'));
 import Landing from './features/user/Landing';
-import Problems from './features/user/Problems';
-import ProblemDetail from './features/user/ProblemDetail';
-import Submissions from './features/user/Submissions';
-import Ranklist from './features/user/Ranklist';
-import About from './features/user/About';
-import Contests from './features/user/Contests';
-import ContestDetail from './features/user/ContestDetail';
-import ContestProblem from './features/user/ContestProblem';
-import ResetPassword from './features/user/ResetPassword';
-import UserHome from './features/user/UserHome';
-import Settings from './features/user/Settings';
-import Classes from './features/user/Classes';
-import ClassDetail from './features/user/ClassDetail';
-import TeacherPortal from './features/teacher/TeacherPortal';
+const Problems = lazy(() => import('./features/user/Problems'));
+const Learning = lazy(() => import('./features/user/Learning'));
+const ProblemDetail = lazy(() => import('./features/user/ProblemDetail'));
+const Submissions = lazy(() => import('./features/user/Submissions'));
+const Ranklist = lazy(() => import('./features/user/Ranklist'));
+const About = lazy(() => import('./features/user/About'));
+const Contests = lazy(() => import('./features/user/Contests'));
+const ContestDetail = lazy(() => import('./features/user/ContestDetail'));
+const ContestProblem = lazy(() => import('./features/user/ContestProblem'));
+const ResetPassword = lazy(() => import('./features/user/ResetPassword'));
+const UserHome = lazy(() => import('./features/user/UserHome'));
+const Settings = lazy(() => import('./features/user/Settings'));
+const Classes = lazy(() => import('./features/user/Classes'));
+const ClassDetail = lazy(() => import('./features/user/ClassDetail'));
+const TeacherPortal = lazy(() => import('./features/teacher/TeacherPortal'));
 const AdminGate = lazy(() => import('./features/admin/AdminGate'));
 import { supabase, getMySubmissionCount, type AppUser } from './lib/api';
 
@@ -27,6 +28,7 @@ export default function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [user, setUser] = useState<AppUser | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [accountNotice, setAccountNotice] = useState<string | null>(null);
   const location = useLocation();
   const isFullScreen =
     Boolean(location.pathname.match(/^\/problems\/[^/]+$/)) ||
@@ -59,9 +61,18 @@ export default function App() {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('full_name, role')
+      .select('*')
       .eq('id', authUser.id)
       .single();
+
+    if (profile?.is_suspended) {
+      setAccountNotice('Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.');
+      setUser(null);
+      setIsAuthLoading(false);
+      await supabase.auth.signOut({ scope: 'local' });
+      return;
+    }
+    setAccountNotice(null);
 
     const rating = await getMySubmissionCount();
     setUser({
@@ -97,6 +108,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--bg-primary)] text-[var(--text-primary)] antialiased font-sans">
+      {accountNotice && <p role="alert" className="border-b border-[var(--border)] p-3 text-sm text-[var(--danger)]">{accountNotice}</p>}
       {/* Show global Header ONLY on standard pages. ProblemDetail has its own dedicated single top bar */}
       {!isFullScreen && !isAdminArea && (
         <Header
@@ -108,6 +120,7 @@ export default function App() {
         />
       )}
 
+      <Suspense fallback={<main className="flex-1 p-6 text-sm text-[var(--text-secondary)]" role="status">Đang tải...</main>}>
       {/* Landing page cho khách chưa đăng nhập — full width */}
       {isLanding && (
         <main className="flex-1">
@@ -144,7 +157,8 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/problems" element={<Problems />} />
-                <Route path="/submissions" element={<Submissions />} />
+                <Route path="/learn" element={<Learning />} />
+                <Route path="/submissions" element={<Submissions user={user} />} />
                 <Route path="/ranklist" element={<Ranklist />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contests" element={<Contests />} />
@@ -179,6 +193,7 @@ export default function App() {
       {isAuthOpen && (
         <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} onLoginSuccess={handleLoginSuccess} />
       )}
+      </Suspense>
     </div>
   );
 }

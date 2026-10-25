@@ -7,7 +7,7 @@
 
 ## ⚡ Project Intelligence & Verified Commands
 
-CodeJudge VN is an automated distributed Online Judge platform inspired by SASTOJ and QingdaoU OJ (`references/OnlineJudgeFE`).
+CodeJudge VN is an automated distributed Online Judge platform. Start with `README.md` and `docs/README.md` for the current architecture, setup, and operations.
 
 ### Architecture & Components
 

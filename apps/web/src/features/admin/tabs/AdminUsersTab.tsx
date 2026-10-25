@@ -1,16 +1,10 @@
 import { useEffect, useState } from 'react';
 import MorphIcon from '../../../components/MorphIcon';
-import {
-  UserRound as UserRoundData,
-  CheckCircle2 as CheckCircle2Data,
-  Lock as LockData,
-  GraduationCap as GraduationCapData,
-  KeyRound as KeyRoundData,
-  X as XData,
-  Save as SaveData,
-} from 'lucide';
+import { GraduationCap as GraduationCapData, KeyRound as KeyRoundData, X as XData, Save as SaveData } from 'lucide';
 import {
   getProfiles,
+  setAccountSuspension,
+  getAdminAuditLog,
   updateProfileRole,
   getUserPermissions,
   setUserPermissions,
@@ -31,6 +25,21 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
   const [error, setError] = useState<string | null>(null);
   const [busyUserId, setBusyUserId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [audit, setAudit] = useState<Awaited<ReturnType<typeof getAdminAuditLog>> | null>(null);
+  const [auditPage, setAuditPage] = useState(0);
+  const [auditBusy, setAuditBusy] = useState(false);
+  const [auditMore, setAuditMore] = useState(false);
+  const loadAudit = async (page = 0) => {
+    setAuditBusy(true);
+    setError(null);
+    try {
+      const rows = await getAdminAuditLog(page);
+      setAudit(previous => page === 0 ? rows : [...(previous || []), ...rows]);
+      setAuditPage(page);
+      setAuditMore(rows.length === 50);
+    } catch (err: any) { setError(err.message || 'Không tải được nhật ký'); }
+    finally { setAuditBusy(false); }
+  };
 
   // RBAC Permission Modal State
   const [permUser, setPermUser] = useState<Profile | null>(null);
@@ -84,6 +93,20 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
     }
   };
 
+  const handleSuspension = async (target: Profile) => {
+    const reason = window.prompt(`Lý do ${target.is_suspended ? 'mở khóa' : 'khóa'} tài khoản "${target.full_name || target.email}" (1–500 ký tự):`);
+    if (reason === null) return;
+    if (!reason.trim() || reason.trim().length > 500) { setError('Lý do cần có từ 1 đến 500 ký tự.'); return; }
+    setBusyUserId(target.id);
+    setError(null);
+    try {
+      const result = await setAccountSuspension(target.id, !target.is_suspended, reason.trim());
+      setProfiles(rows => rows.map(row => row.id === target.id ? { ...row, is_suspended: !target.is_suspended } : row));
+      setNotice(target.is_suspended ? 'Đã mở khóa tài khoản.' : `Đã khóa tài khoản, thu hồi ${result.revoked_sessions || 0} phiên đăng nhập.`);
+    } catch (err: any) { setError(err.message || 'Không cập nhật được trạng thái tài khoản'); }
+    finally { setBusyUserId(null); }
+  };
+
   const openPermModal = async (u: Profile) => {
     setPermUser(u);
     setPermLoading(true);
@@ -127,10 +150,10 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
       <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]">
         <div>
           <h3 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
-            <MorphIcon icon={UserRoundData} size={14} className="text-[var(--accent-text)]" /> Quản Lý Người Dùng
+             Quản Lý Người Dùng
           </h3>
           <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
-            Đổi vai trò Học Sinh ⇄ Giáo Viên, hoặc mở Phân Quyền để cấp quyền chi tiết (RBAC).
+            Đổi vai trò Học Sinh ⇄ Giáo Viên, hoặc mở Phân Quyền để cấp quyền chi tiết.
           </p>
         </div>
         <span className="text-[11px] text-[var(--text-muted)] font-mono">{profiles.length} người dùng</span>
@@ -138,7 +161,7 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
 
       {notice && (
         <div className="flex items-start gap-2 p-2.5 rounded-md bg-[var(--accent)]/10 border border-[var(--accent)]/30 text-xs text-[var(--accent-text)] font-medium">
-          <MorphIcon icon={CheckCircle2Data} size={14} className="shrink-0" /> {notice}
+           {notice}
         </div>
       )}
       {error && (
@@ -190,15 +213,15 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
                     >
                       {p.role === 'admin' ? (
                         <>
-                          <MorphIcon icon={LockData} size={10} /> ADMIN
+                           ADMIN
                         </>
                       ) : p.role === 'teacher' ? (
                         <>
-                          <MorphIcon icon={GraduationCapData} size={10} /> GIÁO VIÊN
+                           GIÁO VIÊN
                         </>
                       ) : (
                         <>
-                          <MorphIcon icon={UserRoundData} size={10} /> HỌC SINH
+                           HỌC SINH
                         </>
                       )}
                     </span>
@@ -212,6 +235,9 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
                         <span className="text-[10px] text-[var(--text-muted)] font-mono">Quản DB</span>
                       ) : (
                         <>
+                          <button onClick={() => handleSuspension(p)} disabled={busyUserId === p.id || p.id === myUserId} className="px-2 py-0.5 rounded border border-[var(--border)] text-xs disabled:opacity-50">
+                            {p.is_suspended ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
+                          </button>
                           <button
                             onClick={() => openPermModal(p)}
                             className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] transition-colors cursor-pointer"
@@ -242,6 +268,19 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
       )}
 
       {/* permission modal */}
+      <section className="space-y-3 border-t border-[var(--border)] pt-3">
+        <button disabled={auditBusy} onClick={() => loadAudit()} className="border border-[var(--border)] rounded px-3 py-1.5 text-xs disabled:opacity-50">Xem nhật ký quản trị</button>
+        {audit && <div className="overflow-x-auto"><table className="w-full text-xs"><thead><tr><th>Thời gian</th><th>Thao tác</th><th>Người thực hiện</th><th>Đối tượng</th><th>Lý do / kết quả trước</th></tr></thead><tbody>
+          {audit.map(row => <tr key={row.id} className="border-t border-[var(--border)]">
+            <td className="p-2 whitespace-nowrap">{new Date(row.created_at).toLocaleString('vi-VN')}</td>
+            <td className="p-2">{({ 'account.suspend': 'Khóa tài khoản', 'account.restore': 'Mở khóa', 'submission.rejudge': 'Chấm lại', 'profile.role': 'Đổi vai trò', 'permissions.change': 'Đổi quyền' } as Record<string, string>)[row.action] || 'Thao tác quản trị'}</td>
+            <td className="p-2 font-mono" title={row.actor_id || ''}>{row.actor_id?.slice(0, 8) || 'Hệ thống'}</td>
+            <td className="p-2 font-mono" title={row.target_id || ''}>{row.target_id?.slice(0, 8)}</td>
+            <td className="p-2">{String(row.payload.reason || row.payload.previous_status || '')}</td>
+          </tr>)}
+        </tbody></table>{audit.length === 0 && <p className="py-3 text-xs">Chưa có nhật ký.</p>}</div>}
+        {auditMore && <button disabled={auditBusy} onClick={() => loadAudit(auditPage + 1)} className="border border-[var(--border)] rounded px-3 py-1.5 text-xs">Tải thêm nhật ký</button>}
+      </section>
       {permUser && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in"
@@ -256,7 +295,7 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
             <div className="flex items-center justify-between border-b border-[var(--border)] pb-2.5">
               <div>
                 <h3 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
-                  <MorphIcon icon={KeyRoundData} size={14} className="text-[var(--accent-text)]" /> Phân Quyền
+                   Phân Quyền
                 </h3>
                 <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">{permUser.full_name || permUser.email}</p>
               </div>

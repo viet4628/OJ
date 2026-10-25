@@ -1,20 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import MorphIcon from '../../components/MorphIcon';
-import {
-  Code2 as Code2Data,
-  Trophy as TrophyData,
-  ArrowRight as ArrowRightData,
-  CheckCircle2 as CheckCircle2Data,
-  Zap as ZapData,
-  ShieldCheck as ShieldCheckData,
-  Terminal as TerminalData,
-  Users as UsersData,
-  Sparkles as SparklesData,
-  Calendar as CalendarData,
-  ChevronRight as ChevronRightData,
-  X as XData,
-} from 'lucide';
+import { ArrowRight as ArrowRightData, Calendar as CalendarData, ChevronRight as ChevronRightData, X as XData } from 'lucide';
 import { getAnnouncements, getContests, type Announcement, type Contest } from '../../lib/api';
 
 interface LandingProps {
@@ -29,27 +16,22 @@ const CONTEST_STATUS_META: Record<Contest['status'], { label: string; className:
 
 const FEATURES = [
   {
-    icon: ZapData,
     title: 'Chấm bài tức thì & chính xác',
-    desc: 'Judge worker biên dịch và thực thi thuật toán trong mili-giây, streaming kết quả từng testcase: AC, WA, TLE, MLE.',
+    desc: 'Nộp bài và theo dõi kết quả chấm cùng thời gian, bộ nhớ sử dụng.',
   },
   {
-    icon: TerminalData,
     title: 'Đa ngôn ngữ lập trình',
-    desc: 'Hỗ trợ C++, Python, Rust và Java với trình soạn thảo Monaco Editor đồng bộ phím tắt và highlight cú pháp.',
+    desc: 'Viết và chạy thử mã C++, Python hoặc Rust trực tiếp trên trình duyệt.',
   },
   {
-    icon: ShieldCheckData,
     title: 'Sandbox cách ly bảo mật',
-    desc: 'Mỗi bài nộp chạy trong sandbox rsjudge (cgroups v2 + rlimits) hoặc bubblewrap, ngăn chặn hoàn toàn can thiệp hệ thống.',
+    desc: 'Mỗi bài được chạy với giới hạn thời gian và bộ nhớ theo đề bài.',
   },
   {
-    icon: UsersData,
     title: 'Không gian Giáo viên & Lớp học',
     desc: 'Giáo viên quản lý đề bài, testcase chấm ẩn, mở lớp học và kiểm tra tiến độ học sinh trên cùng một nền tảng thống nhất.',
   },
   {
-    icon: TrophyData,
     title: 'Tổ chức kỳ thi trực tuyến',
     desc: 'Hệ thống tự động mở/đóng kỳ thi theo lịch, bảo mật mã nguồn và xếp hạng công khai minh bạch.',
   },
@@ -82,6 +64,8 @@ export default function Landing({ onOpenAuth }: LandingProps) {
         const [cons, anns] = await Promise.all([getContests(), getAnnouncements()]);
         setContests(cons);
         setAnnouncements(anns);
+      } catch {
+        setContests([]); setAnnouncements([]);
       } finally {
         setLoading(false);
       }
@@ -99,17 +83,17 @@ export default function Landing({ onOpenAuth }: LandingProps) {
     <div className="w-full bg-[var(--bg-primary)] min-h-screen">
       <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
+
           {/* CỘT TRÁI (9 cols): HERO + FEATURES */}
           <div className="lg:col-span-8 xl:col-span-9 space-y-6">
-            
+
             {/* HERO BOX: GitHub style container */}
             <section className="rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] p-6 sm:p-8">
               <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-center">
                 {/* Left Text */}
                 <div className="xl:col-span-7 space-y-4">
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border)] text-xs font-mono">
-                    <MorphIcon icon={SparklesData} size={14} className="text-[var(--accent-text)]" /> Nền tảng chấm bài tự động &amp; luyện tập thuật toán
+                     Nền tảng chấm bài tự động &amp; luyện tập thuật toán
                   </div>
 
                   <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-[var(--text-primary)] leading-tight">
@@ -142,7 +126,7 @@ export default function Landing({ onOpenAuth }: LandingProps) {
                     {/* Header bar */}
                     <div className="h-8 bg-[#161b22] border-b border-[#30363d] flex items-center justify-between px-3">
                       <div className="flex items-center gap-2 text-xs font-mono text-[#7d8590]">
-                        <MorphIcon icon={TerminalData} size={14} className="text-[#58a6ff]" />
+
                         <span>solution.cpp</span>
                       </div>
                       <span className="text-[10px] font-mono text-[#3fb950] bg-[#3fb950]/10 px-1.5 py-0.2 rounded border border-[#3fb950]/30">
@@ -167,10 +151,10 @@ export default function Landing({ onOpenAuth }: LandingProps) {
                     {/* Result Bar */}
                     <div className="bg-[#161b22] border-t border-[#30363d] p-2.5 flex items-center justify-between text-xs font-mono">
                       <span className="inline-flex items-center gap-1.5 text-[#3fb950] font-semibold text-[11px]">
-                        <MorphIcon icon={CheckCircle2Data} size={14} /> ACCEPTED (AC)
+                         ACCEPTED (AC)
                       </span>
                       <div className="flex items-center gap-2.5 text-[10px] text-[#7d8590]">
-                        <span>12 ms</span>
+                        <span>Kết quả minh họa</span>
                         <span>·</span>
                         <span>1.2 MB</span>
                         <span>·</span>
@@ -188,15 +172,13 @@ export default function Landing({ onOpenAuth }: LandingProps) {
                 <span className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider">
                   Tính năng cốt lõi
                 </span>
-                <span className="text-[11px] text-[var(--text-muted)] font-mono">Architecture & Sandbox</span>
+                <span className="text-[11px] text-[var(--text-muted)] font-mono">Luyện tập và giảng dạy</span>
               </div>
 
               <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
                 {FEATURES.map((f) => (
                   <div key={f.title} className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] p-4 space-y-2 hover:border-[var(--text-muted)] transition-colors">
-                    <div className="w-7 h-7 rounded-md border border-[var(--border)] bg-[var(--bg-tertiary)] flex items-center justify-center text-[var(--accent-text)]">
-                      <MorphIcon icon={f.icon} size={16} />
-                    </div>
+
                     <h3 className="text-xs font-semibold text-[var(--text-primary)]">{f.title}</h3>
                     <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">{f.desc}</p>
                   </div>
@@ -207,7 +189,7 @@ export default function Landing({ onOpenAuth }: LandingProps) {
 
           {/* CỘT PHẢI (3 cols): CUỘC THI & TIN TỨC */}
           <div className="lg:col-span-4 xl:col-span-3 space-y-4">
-            
+
             {/* Widget 1: Cuộc thi */}
             <div className="rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] p-3.5 space-y-3">
               <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]">

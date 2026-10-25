@@ -1,0 +1,53 @@
+name: Verify pilot
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            apps/web/package-lock.json
+            apps/judge-worker/package-lock.json
+            e2e/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ github.token }}
+      - name: Install native prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler libseccomp-dev bubblewrap time zstd g++
+          # Required by bubblewrap in GitHub's disposable Ubuntu runner.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - run: scripts/setup-engine.sh
+      - run: npm --prefix apps/web ci
+      - run: npm --prefix apps/judge-worker ci
+      - run: npm --prefix e2e ci
+      - run: npm run build
+      - run: npm --prefix apps/judge-worker test
+      - run: npm --prefix apps/judge-worker run smoke
+      - run: scripts/test-db.sh
+      - run: npm run test:ops
+      - run: cargo test --workspace --locked
+        working-directory: engine/rsjudge
+      - run: cargo build --locked --bin rsjudge
+        working-directory: engine/rsjudge
+      - run: node apps/judge-worker/scripts/smoke-pilot.mjs
+      - run: npx --prefix e2e playwright install --with-deps chromium
+      - run: npm --prefix e2e test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-failures
+          path: |
+            e2e/test-results/
+            e2e/playwright-report/

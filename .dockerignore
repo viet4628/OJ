@@ -1,0 +1,12 @@
+.git
+**/.git
+.env
+.env.*
+**/.env
+**/.env.*
+**/node_modules
+**/dist
+engine/rsjudge/build
+engine/rsjudge/target
+.agents
+e2e

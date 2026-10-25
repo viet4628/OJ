@@ -1,19 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import {
-  FileText,
-  Trophy,
-  History,
-  Loader2,
-} from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import MorphIcon from '../../../components/MorphIcon';
-import { Copy as CopyData, Check as CheckData, FileText as FileTextData, Trophy as TrophyData, History as HistoryData } from 'lucide';
+import { Copy as CopyData, Check as CheckData } from 'lucide';
 import { type SidebarTab } from '../../../components/Sidebar';
 import Markdown from '../../../components/Markdown';
 import { type Problem } from '../../../lib/api';
 
 interface ProblemLeftPaneProps {
   problem: Problem | null;
+  contestId?: string;
   slug?: string;
   isProblemLoading: boolean;
   activeLeftTab: SidebarTab;
@@ -31,6 +27,7 @@ interface ProblemLeftPaneProps {
 
 export default function ProblemLeftPane({
   problem,
+  contestId,
   slug,
   isProblemLoading,
   activeLeftTab,
@@ -92,10 +89,11 @@ export default function ProblemLeftPane({
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
             }`}
           >
-            <MorphIcon icon={FileTextData} size={14} className="text-[var(--text-muted)]" />
             <span>Đề bài</span>
           </button>
-          <button
+          {contestId ? (
+            <Link to={`/contests/${contestId}?tab=rank`} className="px-2.5 py-1 rounded-md text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)]">Xếp hạng</Link>
+          ) : <button
             onClick={() => onTabChange('ranking')}
             className={`px-2.5 py-1 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
               activeLeftTab === 'ranking'
@@ -103,9 +101,8 @@ export default function ProblemLeftPane({
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
             }`}
           >
-            <MorphIcon icon={TrophyData} size={14} className="text-[var(--text-muted)]" />
             <span>Xếp hạng</span>
-          </button>
+          </button>}
           <button
             onClick={() => onTabChange('history')}
             className={`px-2.5 py-1 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
@@ -114,7 +111,6 @@ export default function ProblemLeftPane({
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
             }`}
           >
-            <MorphIcon icon={HistoryData} size={14} className="text-[var(--text-muted)]" />
             <span>Lịch sử nộp</span>
             {historySubs.length > 0 && (
               <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono border border-[var(--border)] bg-[var(--bg-tertiary)] text-[var(--text-muted)]">
@@ -130,6 +126,7 @@ export default function ProblemLeftPane({
             onClick={() => onDescFontSizeChange((f) => Math.max(10, f - 1))}
             className="hover:text-[var(--text-primary)] px-1 transition-colors cursor-pointer"
             title="Thu nhỏ cỡ chữ"
+            aria-label="Thu nhỏ cỡ chữ"
           >
             A-
           </button>
@@ -140,6 +137,7 @@ export default function ProblemLeftPane({
             onClick={() => onDescFontSizeChange((f) => Math.min(24, f + 1))}
             className="hover:text-[var(--text-primary)] px-1 transition-colors cursor-pointer"
             title="Phóng to cỡ chữ"
+            aria-label="Phóng to cỡ chữ"
           >
             A+
           </button>
@@ -147,7 +145,7 @@ export default function ProblemLeftPane({
       </div>
 
       {/* Body Content */}
-      <div className="flex-1 overflow-y-auto p-5 text-xs text-[var(--text-primary)]" style={{ fontSize: `${descFontSize}px` }}>
+      <div className="flex-1 overflow-y-auto p-6 text-sm text-[var(--text-primary)] leading-relaxed" style={{ fontSize: `${descFontSize}px` }}>
         {isProblemLoading ? (
           <div className="flex items-center justify-center gap-2 py-16 text-[var(--text-secondary)] font-medium">
             <Loader2 className="w-4 h-4 animate-spin text-[var(--accent-text)]" /> Đang tải đề bài...
@@ -165,9 +163,7 @@ export default function ProblemLeftPane({
             {activeLeftTab === 'description' && (
               <div className="space-y-5">
                 {/* Clean Problem Statement */}
-                <div className="leading-relaxed text-[var(--text-primary)] prose dark:prose-invert max-w-none">
-                  <Markdown content={problem.description} />
-                </div>
+                <Markdown content={problem.description} className="text-[var(--text-primary)] leading-relaxed space-y-3 break-words" />
 
                 {/* Input Format (only if not already written in description) */}
                 {problem.input_format && !descHasInput && (
@@ -175,9 +171,7 @@ export default function ProblemLeftPane({
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-primary)]">
                       Dữ liệu vào (Input Format)
                     </h3>
-                    <div className="bg-[var(--bg-secondary)] p-3 rounded-md border border-[var(--border)] font-mono text-xs text-[var(--text-primary)] whitespace-pre-wrap">
-                      {problem.input_format}
-                    </div>
+                    <Markdown content={problem.input_format} className="text-[var(--text-primary)] leading-relaxed space-y-3 break-words" />
                   </section>
                 )}
 
@@ -187,9 +181,7 @@ export default function ProblemLeftPane({
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-primary)]">
                       Dữ liệu ra (Output Format)
                     </h3>
-                    <div className="bg-[var(--bg-secondary)] p-3 rounded-md border border-[var(--border)] font-mono text-xs text-[var(--text-primary)] whitespace-pre-wrap">
-                      {problem.output_format}
-                    </div>
+                    <Markdown content={problem.output_format} className="text-[var(--text-primary)] leading-relaxed space-y-3 break-words" />
                   </section>
                 )}
 
@@ -261,7 +253,7 @@ export default function ProblemLeftPane({
                     <h3 className="font-semibold text-xs text-[var(--text-primary)]">Bảng Xếp Hạng</h3>
                     <p className="text-[11px] text-[var(--text-secondary)]">Thí sinh giải đúng bài này sớm nhất</p>
                   </div>
-                  <Trophy className="w-4 h-4 text-[var(--text-muted)]" />
+
                 </div>
 
                 <div className="border border-[var(--border)] rounded-md overflow-hidden bg-[var(--bg-secondary)]">
@@ -304,9 +296,9 @@ export default function ProblemLeftPane({
                 <div className="p-3 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] flex items-center justify-between">
                   <div>
                     <h3 className="font-semibold text-xs text-[var(--text-primary)]">Lịch Sử Nộp Bài</h3>
-                    <p className="text-[11px] text-[var(--text-secondary)]">Các lần chấm bài gần nhất trên hệ thống</p>
+                    <p className="text-[11px] text-[var(--text-secondary)]">{contestId ? 'Bài nộp của bạn cho bài này trong kỳ thi' : 'Các lần chấm bài gần nhất trên hệ thống'}</p>
                   </div>
-                  <History className="w-4 h-4 text-[var(--text-muted)]" />
+
                 </div>
 
                 <div className="border border-[var(--border)] rounded-md overflow-hidden bg-[var(--bg-secondary)]">

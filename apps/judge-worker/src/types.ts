@@ -23,6 +23,7 @@ export interface Submission {
   error_log?: string;
   details: TestcaseResult[];
   is_run?: boolean;
+  is_validation?: boolean;
   created_at: string;
 }
 

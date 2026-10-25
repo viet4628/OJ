@@ -1,18 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import MorphIcon from './MorphIcon';
-import {
-  Code2 as Code2Data,
-  Search as SearchData,
-  ChevronDown as ChevronDownData,
-  User as UserData,
-  LogOut as LogOutData,
-  Settings as SettingsData,
-  ShieldCheck as ShieldCheckData,
-  GraduationCap as GraduationCapData,
-  Sun as SunData,
-  Moon as MoonData,
-} from 'lucide';
+import { Code2 as Code2Data, Search as SearchData, ChevronDown as ChevronDownData, User as UserData, LogOut as LogOutData, Settings as SettingsData, ShieldCheck as ShieldCheckData, GraduationCap as GraduationCapData, Sun as SunData, Moon as MoonData } from 'lucide';
 import { useTheme } from '../lib/theme';
 
 interface HeaderProps {

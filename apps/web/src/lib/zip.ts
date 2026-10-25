@@ -123,52 +123,63 @@ const dec = new TextDecoder('utf-8');
  * Native in-browser ZIP extractor supporting STORE and DEFLATE without dependencies.
  */
 export async function parseZip(buffer: ArrayBuffer): Promise<{ name: string; text: string }[]> {
+  const limit = 1024 * 1024;
+  if (buffer.byteLength > 32 * limit) throw new Error('ZIP vượt giới hạn 32 MiB.');
   const bytes = new Uint8Array(buffer);
   const view = new DataView(buffer);
   const entries: { name: string; text: string }[] = [];
-
+  const invalid = () => new Error('File ZIP không hợp lệ hoặc bị hỏng.');
   let eocdOffset = -1;
-  for (let i = bytes.length - 22; i >= 0; i--) {
-    if (view.getUint32(i, true) === 0x06054b50) {
+  for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65557); i--) {
+    if (view.getUint32(i, true) === 0x06054b50 && i + 22 + view.getUint16(i + 20, true) === bytes.length) {
       eocdOffset = i;
       break;
     }
   }
-  if (eocdOffset === -1) throw new Error('File ZIP không hợp lệ hoặc bị hỏng.');
-
+  if (eocdOffset < 0) throw invalid();
   const totalEntries = view.getUint16(eocdOffset + 10, true);
+  if (totalEntries > 2200) throw new Error('ZIP vượt giới hạn số lượng file (2200).');
   let cdOffset = view.getUint32(eocdOffset + 16, true);
-
+  let totalSize = 0;
   for (let i = 0; i < totalEntries; i++) {
-    if (view.getUint32(cdOffset, true) !== 0x02014b50) break;
+    if (cdOffset + 46 > eocdOffset || view.getUint32(cdOffset, true) !== 0x02014b50) throw invalid();
     const method = view.getUint16(cdOffset + 10, true);
+    if ((view.getUint16(cdOffset + 8, true) & 1) || ![0, 8].includes(method)) throw invalid();
     const compSize = view.getUint32(cdOffset + 20, true);
+    const size = view.getUint32(cdOffset + 24, true);
+    if (size > limit) throw new Error('Testcase vượt giới hạn 1 MiB mỗi file.');
+    totalSize += size;
+    if (totalSize > 32 * limit) throw new Error('Dữ liệu giải nén vượt giới hạn 32 MiB.');
     const nameLen = view.getUint16(cdOffset + 28, true);
     const extraLen = view.getUint16(cdOffset + 30, true);
     const commentLen = view.getUint16(cdOffset + 32, true);
-    const localHeaderOffset = view.getUint32(cdOffset + 42, true);
-
-    const name = dec.decode(bytes.slice(cdOffset + 46, cdOffset + 46 + nameLen));
-    const localNameLen = view.getUint16(localHeaderOffset + 26, true);
-    const localExtraLen = view.getUint16(localHeaderOffset + 28, true);
-    const dataOffset = localHeaderOffset + 30 + localNameLen + localExtraLen;
+    const localOffset = view.getUint32(cdOffset + 42, true);
+    if (cdOffset + 46 + nameLen + extraLen + commentLen > eocdOffset || localOffset + 30 > cdOffset) throw invalid();
+    const name = dec.decode(bytes.subarray(cdOffset + 46, cdOffset + 46 + nameLen));
+    if (view.getUint32(localOffset, true) !== 0x04034b50) throw invalid();
+    const dataOffset = localOffset + 30 + view.getUint16(localOffset + 26, true) + view.getUint16(localOffset + 28, true);
+    if (dataOffset + compSize > cdOffset) throw invalid();
     const compData = bytes.slice(dataOffset, dataOffset + compSize);
-
-    let dataText = '';
-    if (method === 0) {
-      dataText = dec.decode(compData);
-    } else if (method === 8) {
-      const ds = new DecompressionStream('deflate-raw');
-      const writer = ds.writable.getWriter();
-      writer.write(compData);
-      writer.close();
-      const res = await new Response(ds.readable).arrayBuffer();
-      dataText = dec.decode(res);
+    let data = compData;
+    if (method === 8) {
+      const reader = new Blob([compData]).stream().pipeThrough(new DecompressionStream('deflate-raw')).getReader();
+      const chunks: Uint8Array[] = [];
+      let length = 0;
+      try {
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          length += value.length;
+          if (length > limit) throw new Error('Testcase vượt giới hạn 1 MiB mỗi file.');
+          chunks.push(value);
+        }
+      } finally { await reader.cancel(); }
+      data = new Uint8Array(length);
+      let offset = 0;
+      for (const chunk of chunks) { data.set(chunk, offset); offset += chunk.length; }
     }
-
-    if (!name.endsWith('/') && !name.startsWith('__MACOSX')) {
-      entries.push({ name, text: dataText });
-    }
+    if (data.length !== size || crc32(data) !== view.getUint32(cdOffset + 16, true)) throw invalid();
+    if (!name.endsWith('/') && !name.startsWith('__MACOSX')) entries.push({ name, text: dec.decode(data) });
     cdOffset += 46 + nameLen + extraLen + commentLen;
   }
   return entries;
@@ -188,6 +199,7 @@ export function pairTestcases(entries: { name: string; text: string }[]): Paired
   const map = new Map<string, string>();
   for (const e of entries) {
     const base = e.name.split('/').pop() || e.name;
+    if (map.has(base.toLowerCase())) throw new Error(`Trùng tên file testcase: ${base.slice(0, 100)}. Chưa nhập testcase nào.`);
     map.set(base.toLowerCase(), e.text);
   }
 
@@ -237,6 +249,12 @@ export function pairTestcases(entries: { name: string; text: string }[]): Paired
         handled.add(key);
         handled.add(match);
       }
+    }
+  }
+
+  for (const key of map.keys()) {
+    if (!handled.has(key) && (/\.(?:in|out|ans)$/.test(key) || /^(?:input|in|output|out)[-_]?\d+\.(?:txt|data)$/.test(key))) {
+      throw new Error(`Thiếu cặp input/output cho ${key.slice(0, 100)}. Chưa nhập testcase nào.`);
     }
   }
 

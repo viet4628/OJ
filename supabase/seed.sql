@@ -30,7 +30,7 @@ VALUES
      '1006. Dãy Con Liên Tiếp Tổng Lớn Nhất',
      E'Cho dãy gồm `n` số nguyên (có thể âm). Tìm dãy con liền kề (khác rỗng) có tổng lớn nhất và in ra tổng đó.\n\n**Ràng buộc**: 1 ≤ n ≤ 10^5, |aᵢ| ≤ 10^9.\n\n**Gợi ý**: thuật toán Kadane độ phức tạp O(n).',
      5000, 128, 'Easy', '{dp}', true,
-     E'[{"input": "5\\n-2 1 -3 4 -1 2 1 -5 4", "output": "6"}]')
+     E'[{"input": "9\\n-2 1 -3 4 -1 2 1 -5 4", "output": "6"}]')
 ON CONFLICT (slug) DO UPDATE
   SET title = EXCLUDED.title,
       description = EXCLUDED.description,

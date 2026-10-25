@@ -1,31 +1,29 @@
 import { useEffect, useState } from 'react';
 import MorphIcon from '../../../components/MorphIcon';
-import {
-  Trophy as TrophyData,
-  ListTree as ListTreeData,
-  Edit as EditData,
-  Trash2 as Trash2Data,
-  Save as SaveData,
-  X as XData,
-} from 'lucide';
+import ContestProblemsEditor from '../components/ContestProblemsEditor';
+import ContestRegistrationsDialog from '../components/ContestRegistrationsDialog';
+import { Edit as EditData, Trash2 as Trash2Data } from 'lucide';
 import {
   getContests,
   createContest,
   updateContest,
   deleteContest,
-  getAllProblems,
-  getContestProblemsAdmin,
-  setContestProblems,
   type Contest,
-  type Problem,
 } from '../../../lib/api';
 
 const inputCls =
-  'w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#0969da] focus:ring-1 focus:ring-[#0969da] transition-colors';
-const labelCls = 'text-xs font-semibold text-[var(--text-secondary)]';
+  'w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-colors';
+const emptyForm = { title: '', description: '', rule_type: 'ACM' as 'ACM' | 'OI', start_time: '', end_time: '', is_public: true, registration_required: false, freeze_at: '' };
+const secondary = 'inline-flex items-center justify-center px-3 py-2 border border-[var(--border)] rounded-md text-xs hover:bg-[var(--bg-tertiary)] disabled:opacity-50';
+const primary = `${secondary} bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white`;
 
-export default function AdminContestsTab() {
+export default function AdminContestsTab({ userId, isAdmin = false }: { userId: string; isAdmin?: boolean }) {
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [contests, setContests] = useState<Contest[]>([]);
+  const [registrationsContest, setRegistrationsContest] = useState<Contest | null>(null);
   const [contestForm, setContestForm] = useState({
     title: '',
     description: '',
@@ -33,26 +31,23 @@ export default function AdminContestsTab() {
     start_time: '',
     end_time: '',
     is_public: true,
+    registration_required: false,
+    freeze_at: '',
   });
   const [contestSaving, setContestSaving] = useState(false);
   const [contestNotice, setContestNotice] = useState<string | null>(null);
   const [contestError, setContestError] = useState<string | null>(null);
   const [contestEditingId, setContestEditingId] = useState<string | null>(null);
 
-  // Contest problems sub-modal state
-  const [cpContest, setCpContest] = useState<Contest | null>(null);
-  const [cpProblems, setCpProblems] = useState<Problem[]>([]);
-  const [cpSelected, setCpSelected] = useState<string[]>([]);
-  const [cpScores, setCpScores] = useState<Record<string, number>>({});
-  const [cpLoading, setCpLoading] = useState(false);
-  const [cpSaving, setCpSaving] = useState(false);
-  const [cpError, setCpError] = useState<string | null>(null);
+  const [problemSaving, setProblemSaving] = useState(false);
 
   const fetchContests = () => {
     let cancelled = false;
-    getContests().then((l) => {
-      if (!cancelled) setContests(l);
-    });
+    setLoading(true); setLoadError('');
+    getContests(isAdmin ? undefined : userId).then((l) => {
+      if (!cancelled) setContests(l.filter(c => isAdmin || c.created_by === userId));
+    }).catch(() => { if (!cancelled) setLoadError('Không tải được kỳ thi. Vui lòng thử lại.'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
     return () => {
       cancelled = true;
     };
@@ -60,23 +55,34 @@ export default function AdminContestsTab() {
 
   useEffect(() => {
     return fetchContests();
-  }, []);
+  }, [userId, isAdmin]);
 
   const saveContest = async (e: React.FormEvent) => {
     e.preventDefault();
-    setContestSaving(true);
+    if (contestSaving || problemSaving) return;
     setContestError(null);
+    if (!contestForm.title.trim()) { setContestError('Tên kỳ thi không được để trống.'); return; }
+    const start = new Date(contestForm.start_time).getTime();
+    const end = new Date(contestForm.end_time).getTime();
+    const freeze = contestForm.freeze_at ? new Date(contestForm.freeze_at).getTime() : null;
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start || (freeze !== null && (!Number.isFinite(freeze) || freeze < start || freeze >= end))) {
+      setContestError('Thời gian kết thúc phải sau bắt đầu; mốc đóng băng phải nằm trong kỳ thi.');
+      return;
+    }
+    setContestSaving(true);
 
     const payload = {
-      title: contestForm.title,
+      title: contestForm.title.trim(),
       description: contestForm.description,
       rule_type: contestForm.rule_type,
       start_time: new Date(contestForm.start_time).toISOString(),
       end_time: new Date(contestForm.end_time).toISOString(),
       is_public: contestForm.is_public,
+      registration_required: contestForm.registration_required,
+      freeze_at: contestForm.freeze_at ? new Date(contestForm.freeze_at).toISOString() : null,
     };
 
-    let res;
+    let res: { ok: boolean; error?: string; id?: string };
     if (contestEditingId) {
       res = await updateContest(contestEditingId, payload);
     } else {
@@ -89,13 +95,16 @@ export default function AdminContestsTab() {
       return;
     }
     setContestNotice(contestEditingId ? 'Đã cập nhật kỳ thi' : 'Đã tạo kỳ thi mới');
-    setContestEditingId(null);
-    setContestForm({ title: '', description: '', rule_type: 'ACM', start_time: '', end_time: '', is_public: true });
+    if (!contestEditingId && res.id) setContestEditingId(res.id);
     fetchContests();
-    setTimeout(() => setContestNotice(null), 3000);
+
   };
 
   const startEditContest = (c: Contest) => {
+    if (!isAdmin && c.created_by !== userId) return;
+    setEditorOpen(true);
+    setContestError(null);
+    setContestNotice(null);
     setContestEditingId(c.id);
     const toLocalISO = (iso: string) => {
       const d = new Date(iso);
@@ -109,6 +118,8 @@ export default function AdminContestsTab() {
       start_time: toLocalISO(c.start_time),
       end_time: toLocalISO(c.end_time),
       is_public: c.is_public,
+      registration_required: c.registration_required || false,
+      freeze_at: c.freeze_at ? toLocalISO(c.freeze_at) : '',
     });
   };
 
@@ -116,315 +127,91 @@ export default function AdminContestsTab() {
     if (!window.confirm(`Xác nhận xóa kỳ thi "${title}"? Mọi bài nộp trong kỳ thi này sẽ bị xóa.`)) return;
     const res = await deleteContest(id);
     if (res.ok) setContests((prev) => prev.filter((c) => c.id !== id));
+    else setContestNotice(res.error || 'Không xóa được kỳ thi.');
   };
 
-  const openCpModal = async (c: Contest) => {
-    setCpContest(c);
-    setCpLoading(true);
-    setCpError(null);
-    try {
-      const [allP, assigned] = await Promise.all([
-        getAllProblems(),
-        getContestProblemsAdmin(c.id),
-      ]);
-      setCpProblems(allP);
-      setCpSelected(assigned.map((a) => a.problem_id));
-      const scoreMap: Record<string, number> = {};
-      assigned.forEach((a) => {
-        scoreMap[a.problem_id] = a.score ?? 100;
-      });
-      setCpScores(scoreMap);
-    } catch {
-      setCpError('Không thể tải danh sách bài tập của kỳ thi');
-    } finally {
-      setCpLoading(false);
-    }
-  };
-
-  const toggleCp = (probId: string) => {
-    setCpSelected((prev) =>
-      prev.includes(probId) ? prev.filter((id) => id !== probId) : [...prev, probId]
-    );
-  };
-
-  const saveCp = async () => {
-    if (!cpContest) return;
-    setCpSaving(true);
-    setCpError(null);
-    const problems = cpSelected.map((pid, idx) => ({
-      problem_id: pid,
-      display_order: idx + 1,
-      score: cpScores[pid] ?? 100,
-    }));
-    const res = await setContestProblems(cpContest.id, problems);
-    setCpSaving(false);
-    if (!res.ok) {
-      setCpError(res.error || 'Lỗi khi lưu bài thi');
-      return;
-    }
-    setContestNotice(`Đã cập nhật ${cpSelected.length} bài cho kỳ thi "${cpContest.title}"`);
-    setCpContest(null);
-  };
-
+  const filtered = contests.filter(c => c.title.toLocaleLowerCase().includes(search.toLocaleLowerCase()));
   return (
-    <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] p-4 space-y-4">
-      <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]">
-        <div>
-          <h3 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
-            <MorphIcon icon={TrophyData} size={14} className="text-[var(--accent-text)]" /> Quản Lý Kỳ Thi
-          </h3>
-          <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">{contests.length} kỳ thi trong hệ thống</p>
+    <div className="space-y-4 text-[var(--text-primary)]">
+      {editorOpen ? <>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">{contestEditingId ? 'Chỉnh sửa kỳ thi' : 'Tạo kỳ thi'}</h2>
+          <button type="button" disabled={contestSaving || problemSaving} onClick={() => setEditorOpen(false)} className={secondary}>Quay lại danh sách kỳ thi</button>
         </div>
-        {contestNotice && <span className="text-[11px] text-[var(--accent-text)] font-mono">{contestNotice}</span>}
-      </div>
-
-      <form onSubmit={saveContest} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3.5 rounded-md bg-[var(--bg-primary)] border border-[var(--border)]">
-        <div className="space-y-1">
-          <label className={labelCls}>Tên Kỳ Thi *</label>
-          <input
-            type="text"
-            required
-            value={contestForm.title}
-            onChange={(e) => setContestForm({ ...contestForm, title: e.target.value })}
-            placeholder="Weekly Sprint #1"
-            className={inputCls}
-          />
-        </div>
-        <div className="space-y-1">
-          <label className={labelCls}>Thể Thức</label>
-          <select
-            value={contestForm.rule_type}
-            onChange={(e) => setContestForm({ ...contestForm, rule_type: e.target.value as any })}
-            className={inputCls}
-          >
-            <option value="ACM">ACM</option>
-            <option value="OI">OI</option>
-          </select>
-        </div>
-        <div className="space-y-1">
-          <label className={labelCls}>Mô Tả</label>
-          <input
-            type="text"
-            value={contestForm.description}
-            onChange={(e) => setContestForm({ ...contestForm, description: e.target.value })}
-            className={inputCls}
-          />
-        </div>
-        <div className="space-y-1">
-          <label className={labelCls}>Bắt Đầu *</label>
-          <input
-            type="datetime-local"
-            required
-            value={contestForm.start_time}
-            onChange={(e) => setContestForm({ ...contestForm, start_time: e.target.value })}
-            className={inputCls}
-          />
-        </div>
-        <div className="space-y-1">
-          <label className={labelCls}>Kết Thúc *</label>
-          <input
-            type="datetime-local"
-            required
-            value={contestForm.end_time}
-            onChange={(e) => setContestForm({ ...contestForm, end_time: e.target.value })}
-            className={inputCls}
-          />
-        </div>
-        <div className="flex items-end gap-2">
-          <label className="flex items-center gap-2 text-xs font-medium text-[var(--text-secondary)] cursor-pointer pb-2">
-            <input
-              type="checkbox"
-              checked={contestForm.is_public}
-              onChange={(e) => setContestForm({ ...contestForm, is_public: e.target.checked })}
-              className="accent-[var(--accent)]"
-            />
-            Công khai
-          </label>
-          <button
-            type="submit"
-            disabled={contestSaving}
-            className="ml-auto px-3.5 py-1.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium text-xs border border-[rgba(27,31,36,0.15)] shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
-          >
-            {contestSaving ? 'Đang Lưu...' : contestEditingId ? 'Cập Nhật' : 'Thêm Kỳ Thi'}
-          </button>
-          {contestEditingId && (
-            <button
-              type="button"
-              onClick={() => {
-                setContestEditingId(null);
-                setContestForm({ title: '', description: '', rule_type: 'ACM', start_time: '', end_time: '', is_public: true });
-              }}
-              className="text-[11px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
-            >
-              Hủy
-            </button>
-          )}
-        </div>
-        {contestError && <div className="col-span-full p-2 rounded-md bg-red-500/10 border border-red-500/20 text-[var(--danger)] text-[11px] font-medium">{contestError}</div>}
-      </form>
-
-      <div className="overflow-x-auto border border-[var(--border)] rounded-md">
-        <table className="w-full text-left text-xs">
-          <thead className="bg-[var(--bg-primary)] text-[var(--text-secondary)] border-b border-[var(--border)] font-medium text-[11px]">
-            <tr>
-              <th className="px-3 py-2">Tên Kỳ Thi</th>
-              <th className="px-3 py-2">Thể Thức</th>
-              <th className="px-3 py-2">Thời Gian</th>
-              <th className="px-3 py-2 text-right">Thao Tác</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[var(--border)]">
-            {contests.map((c) => (
-              <tr key={c.id} className="hover:bg-[var(--bg-primary)] transition-colors">
-                <td className="px-3 py-2 font-medium text-[var(--text-primary)]">{c.title}</td>
-                <td className="px-3 py-2">
-                  <span className="px-1.5 py-0.2 rounded bg-[var(--accent)]/10 text-[var(--accent-text)] text-[10px] font-mono border border-[var(--accent)]/30">
-                    {c.rule_type}
-                  </span>
-                </td>
-                <td className="px-3 py-2 font-mono text-[11px] text-[var(--text-secondary)]">
-                  {new Date(c.start_time).toLocaleString('vi-VN')} — {new Date(c.end_time).toLocaleString('vi-VN')}
-                </td>
-                <td className="px-3 py-2 text-right space-x-1">
-                  <button
-                    onClick={() => openCpModal(c)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[var(--bg-primary)] text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] border border-[var(--border)] text-[11px] font-medium transition-colors cursor-pointer"
-                    title="Chọn bài tập cho kỳ thi"
-                  >
-                    <MorphIcon icon={ListTreeData} size={12} className="text-[var(--accent-text)]" /> Bài Thi
-                  </button>
-                  <button
-                    onClick={() => startEditContest(c)}
-                    className="p-1 rounded-md hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
-                    title="Chỉnh sửa kỳ thi"
-                  >
-                    <MorphIcon icon={EditData} size={13} />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteContest(c.id, c.title)}
-                    className="p-1 rounded-md text-[var(--danger)] hover:bg-red-500/10 transition-colors cursor-pointer"
-                    title="Xóa kỳ thi"
-                  >
-                    <MorphIcon icon={Trash2Data} size={13} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* contest problems modal */}
-      {cpContest && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in"
-          onClick={() => setCpContest(null)}
-        >
-          <div
-            className="w-full max-w-2xl bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] shadow-2xl p-4 space-y-3 max-h-[85vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-          >
-            <div className="flex items-center justify-between border-b border-[var(--border)] pb-2.5">
-              <div>
-                <h3 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
-                  <MorphIcon icon={ListTreeData} size={14} className="text-[var(--accent-text)]" /> Bài Thi: {cpContest.title}
-                </h3>
-                <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">Tích chọn các bài tập thuộc kỳ thi.</p>
+        {contestNotice && <p role="status" className="text-sm text-[var(--accent)]">{contestNotice}</p>}
+        <form onSubmit={saveContest} className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-md p-4 sm:p-5 space-y-5">
+          <fieldset disabled={contestSaving || problemSaving} className="space-y-4 disabled:opacity-60">
+            <legend className="font-semibold text-sm mb-3">Thông tin kỳ thi</legend>
+            <label className="block text-xs space-y-1">Tên kỳ thi
+              <input required maxLength={200} value={contestForm.title} onChange={e => setContestForm({ ...contestForm, title: e.target.value })} className={inputCls} />
+            </label>
+            <label className="block text-xs space-y-1">Mô tả
+              <textarea aria-label="Mô tả" rows={4} maxLength={20000} value={contestForm.description} onChange={e => setContestForm({ ...contestForm, description: e.target.value })} className={inputCls} />
+            </label>
+            <label className="block text-xs space-y-1 max-w-sm">Thể thức
+              <select aria-label="Thể thức" value={contestForm.rule_type} onChange={e => setContestForm({ ...contestForm, rule_type: e.target.value as 'ACM' | 'OI' })} className={inputCls}>
+                <option value="ACM">ACM — số bài giải và thời gian phạt</option>
+                <option value="OI">OI — tổng điểm cao nhất từng bài</option>
+              </select>
+            </label>
+            <div className="border-t border-[var(--border)] pt-4 space-y-3">
+              <h3 className="text-sm font-semibold">Lịch thi</h3>
+              <p className="text-xs text-[var(--text-secondary)]">Múi giờ: {Intl.DateTimeFormat().resolvedOptions().timeZone}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <label className="block text-xs space-y-1">Bắt đầu
+                  <input type="datetime-local" required value={contestForm.start_time} onChange={e => setContestForm({ ...contestForm, start_time: e.target.value })} className={inputCls} />
+                </label>
+                <label className="block text-xs space-y-1">Kết thúc
+                  <input type="datetime-local" required min={contestForm.start_time} value={contestForm.end_time} onChange={e => setContestForm({ ...contestForm, end_time: e.target.value })} className={inputCls} />
+                </label>
               </div>
-              <button
-                onClick={() => setCpContest(null)}
-                className="p-1 rounded-md hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] transition-colors cursor-pointer"
-              >
-                <MorphIcon icon={XData} size={16} />
-              </button>
+              <details open={contestForm.freeze_at ? true : undefined} className="text-xs">
+                <summary className="cursor-pointer text-[var(--text-secondary)]">Tùy chọn bảng xếp hạng</summary>
+                <label className="block mt-3 space-y-1 max-w-sm">Đóng băng bảng xếp hạng
+                  <input type="datetime-local" min={contestForm.start_time} max={contestForm.end_time} value={contestForm.freeze_at} onChange={e => setContestForm({ ...contestForm, freeze_at: e.target.value })} className={inputCls} />
+                </label>
+                <p className="mt-1 text-[var(--text-muted)]">Để trống nếu không đóng băng. Bảng xếp hạng mở lại khi kỳ thi kết thúc.</p>
+              </details>
             </div>
-
-            {cpError && <div className="p-2 rounded-md bg-red-500/10 border border-red-500/20 text-[var(--danger)] text-[11px] font-medium">{cpError}</div>}
-
-            <div className="flex items-center justify-between text-[11px] font-medium text-[var(--text-secondary)]">
-              <span>Đã chọn {cpSelected.length} bài</span>
-              <button
-                onClick={() => setCpSelected(cpProblems.map((p) => p.id))}
-                className="text-[var(--accent-text)] hover:underline cursor-pointer"
-              >
-                Chọn tất cả
-              </button>
+            <div className="border-t border-[var(--border)] pt-4 space-y-3 text-xs">
+              <h3 className="text-sm font-semibold">Quyền tham gia</h3>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={contestForm.is_public} onChange={e => setContestForm({ ...contestForm, is_public: e.target.checked })} className="accent-[var(--accent)]" />Công khai</label>
+              <p className="text-[var(--text-secondary)]">{contestForm.is_public ? 'Kỳ thi xuất hiện trong danh sách công khai.' : 'Chỉ người được mời và duyệt mới có thể tham gia.'}</p>
+              {contestForm.is_public && <label className="flex items-center gap-2"><input type="checkbox" checked={contestForm.registration_required} onChange={e => setContestForm({ ...contestForm, registration_required: e.target.checked })} className="accent-[var(--accent)]" />Yêu cầu duyệt đăng ký</label>}
             </div>
-
-            {cpLoading ? (
-              <div className="space-y-1.5">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="h-9 rounded-md bg-[var(--bg-primary)] animate-pulse" />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-1 max-h-[45vh] overflow-y-auto pr-1">
-                {cpProblems.length === 0 && <p className="text-xs text-[var(--text-muted)] text-center py-4">Chưa có bài tập nào.</p>}
-                {cpProblems.map((p) => {
-                  const checked = cpSelected.includes(p.id);
-                  return (
-                    <label
-                      key={p.id}
-                      className={`flex items-center gap-2.5 p-2 rounded-md border transition-colors cursor-pointer ${
-                        checked
-                          ? 'bg-[var(--accent)]/5 border-[var(--accent)]/30'
-                          : 'bg-[var(--bg-primary)] border-[var(--border)] hover:bg-[var(--bg-tertiary)]'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => toggleCp(p.id)}
-                        className="accent-[var(--accent)] shrink-0"
-                      />
-                      <span className="flex-1 min-w-0">
-                        <span className="text-xs font-medium text-[var(--text-primary)] block truncate">{p.title}</span>
-                        <span className="font-mono text-[10px] text-[var(--text-muted)]">
-                          /{p.slug} · {p.difficulty}
-                        </span>
-                      </span>
-                      {checked && (
-                        <span className="text-[10px] font-mono text-[var(--accent-text)] bg-[var(--accent)]/10 border border-[var(--accent)]/30 px-1.5 py-0.2 rounded">
-                          #{cpSelected.indexOf(p.id) + 1}
-                        </span>
-                      )}
-                      {checked && (
-                        <label className="flex items-center gap-1 text-[10px] text-[var(--text-secondary)] font-mono">
-                          Điểm:
-                          <input
-                            type="number"
-                            value={cpScores[p.id] ?? 100}
-                            onChange={(e) => setCpScores((prev) => ({ ...prev, [p.id]: Number(e.target.value) || 100 }))}
-                            className="w-14 rounded border border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-primary)] px-1 py-0.2 text-[10px]"
-                          />
-                        </label>
-                      )}
-                    </label>
-                  );
-                })}
-              </div>
-            )}
-
-            <div className="flex items-center justify-end gap-2 pt-2.5 border-t border-[var(--border)]">
-              <button
-                onClick={() => setCpContest(null)}
-                className="px-3 py-1.5 rounded-md bg-[var(--bg-primary)] text-[var(--text-primary)] font-medium text-xs hover:bg-[var(--bg-tertiary)] border border-[var(--border)] transition-colors cursor-pointer"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={saveCp}
-                disabled={cpSaving}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium text-xs border border-[rgba(27,31,36,0.15)] shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                <MorphIcon icon={SaveData} size={14} /> {cpSaving ? 'Đang Lưu...' : 'Lưu Bài Thi'}
-              </button>
-            </div>
-          </div>
+          </fieldset>
+          {contestError && <p role="alert" className="text-xs text-[var(--danger)]">{contestError}</p>}
+          <div className="pt-3 border-t border-[var(--border)]"><button disabled={contestSaving || problemSaving} className={primary}>{contestSaving ? 'Đang lưu...' : contestEditingId ? 'Cập Nhật' : 'Lưu kỳ thi'}</button></div>
+        </form>
+        {contestEditingId ? <ContestProblemsEditor key={contestEditingId} contestId={contestEditingId} rule={contestForm.rule_type} disabled={contestSaving} onBusyChange={setProblemSaving} /> : <p className="text-xs text-[var(--text-secondary)]">Lưu thông tin kỳ thi để thêm bài thi.</p>}
+      </> : <>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">Quản Lý Kỳ Thi</h2>
+          <button type="button" className={primary} onClick={() => { setContestEditingId(null); setContestForm(emptyForm); setContestError(null); setContestNotice(null); setEditorOpen(true); }}>Tạo kỳ thi</button>
         </div>
-      )}
+        {contestNotice && <p role="status" className="text-xs text-[var(--accent)]">{contestNotice}</p>}
+        <input type="search" aria-label="Tìm kỳ thi" placeholder="Tìm kỳ thi..." value={search} onChange={e => setSearch(e.target.value)} className={`${inputCls} max-w-sm`} />
+        {loadError && <div role="alert" className="text-xs text-[var(--danger)]">{loadError} <button type="button" onClick={() => fetchContests()} className="underline">Thử lại</button></div>}
+        {loading && <p role="status" className="text-xs text-[var(--text-secondary)]">Đang tải kỳ thi...</p>}
+        {!loading && !loadError && <div className="overflow-x-auto bg-[var(--bg-secondary)] border border-[var(--border)] rounded-md">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-[var(--bg-tertiary)]"><tr><th className="px-4 py-3">Kỳ thi</th><th className="px-4 py-3">Thời gian</th><th className="px-4 py-3 text-right">Thao tác</th></tr></thead>
+            <tbody className="divide-y divide-[var(--border)]">
+              {filtered.map(c => <tr key={c.id}>
+                <td className="px-4 py-3"><p className="font-medium">{c.title}</p><p className="mt-1 text-[var(--text-secondary)]">{c.rule_type} · {c.is_public ? 'Công khai' : 'Riêng tư'}</p></td>
+                <td className="px-4 py-3 text-[var(--text-secondary)]"><p>{new Date(c.start_time).toLocaleString('vi-VN')}</p><p>đến {new Date(c.end_time).toLocaleString('vi-VN')}</p></td>
+                <td className="px-4 py-3"><div className="flex justify-end flex-wrap gap-2">
+                  {(c.registration_required || !c.is_public) && <button onClick={() => setRegistrationsContest(c)} className={secondary}>Duyệt đăng ký</button>}
+                  <button aria-label="Chỉnh sửa kỳ thi" title="Chỉnh sửa kỳ thi" onClick={() => startEditContest(c)} className={secondary}><MorphIcon icon={EditData} size={14} /></button>
+                  <button aria-label="Xóa kỳ thi" title="Xóa kỳ thi" onClick={() => handleDeleteContest(c.id, c.title)} className={`${secondary} text-[var(--danger)]`}><MorphIcon icon={Trash2Data} size={14} /></button>
+                </div></td>
+              </tr>)}
+              {filtered.length === 0 && <tr><td colSpan={3} className="p-6 text-center text-[var(--text-secondary)]">{search ? 'Không có kỳ thi phù hợp.' : 'Chưa có kỳ thi.'}</td></tr>}
+            </tbody>
+          </table>
+        </div>}
+      </>}
+      {registrationsContest && <ContestRegistrationsDialog contest={registrationsContest} onClose={() => setRegistrationsContest(null)} />}
     </div>
   );
 }

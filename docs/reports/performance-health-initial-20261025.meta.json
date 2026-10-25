@@ -1,0 +1,8 @@
+{
+  "complete": false,
+  "reason": "Stopped for the final worker update; includes a persistence timeout before reconciliation was added.",
+  "samples": 50,
+  "failures": 2,
+  "startedAt": "2026-10-25T16:03:18.710Z",
+  "lastAt": "2026-10-25T16:15:34.158Z"
+}

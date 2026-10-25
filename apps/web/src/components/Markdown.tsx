@@ -1,139 +1,99 @@
-import { Fragment } from 'react';
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
+import { Marked, type Token, type Tokens } from 'marked';
+import katex from 'katex';
+import 'katex/dist/katex.min.css';
+import './markdown.css';
 
-const CODE_RE = /`([^`]+)`/g;
-const BOLD_RE = /\*\*([^*]+)\*\*/g;
-const ITALIC_RE = /\*([^*\n]+)\*/g;
+const parser = new Marked({ gfm: true, breaks: true }, {
+  extensions: [
+    {
+      name: 'scriptText', level: 'inline',
+      start: source => source.search(/<(?:sup|sub)>/i),
+      tokenizer(source) {
+        const match = /^<(sup|sub)>([\s\S]*?)<\/\1>/i.exec(source);
+        if (match) return { type: 'scriptText', raw: match[0], tag: match[1].toLowerCase(), tokens: this.lexer.inlineTokens(match[2]) };
+      },
+    },
+    {
+      name: 'blockMath', level: 'block',
+      start: source => source.indexOf('$$'),
+      tokenizer(source) {
+        const match = /^\$\$([\s\S]+?)\$\$(?:\n|$)/.exec(source);
+        if (match) return { type: 'blockMath', raw: match[0], text: match[1].trim() };
+      },
+    },
+    {
+      name: 'inlineMath', level: 'inline',
+      start: source => source.indexOf('$'),
+      tokenizer(source) {
+        const match = /^\$([^$\n]+)\$(?!\$)/.exec(source);
+        if (match) return { type: 'inlineMath', raw: match[0], text: match[1].trim() };
+      },
+    },
+  ],
+});
 
-let uid = 0;
-const nextKey = () => `md-${++uid}`;
-
-function renderItalic(text: string): ReactNode[] {
-  const out: ReactNode[] = [];
-  let last = 0;
-  let m: RegExpExecArray | null;
-  ITALIC_RE.lastIndex = 0;
-  while ((m = ITALIC_RE.exec(text))) {
-    if (m.index > last) out.push(text.slice(last, m.index));
-    out.push(<em key={nextKey()}>{m[1]}</em>);
-    last = m.index + m[0].length;
-  }
-  if (last < text.length) out.push(text.slice(last));
-  return out;
+function math(text: string, displayMode: boolean) {
+  // Only KaTeX-generated markup is inserted; raw author HTML is rendered as text.
+  return <span className={displayMode ? 'block overflow-x-auto py-2 text-center' : 'inline-math'} dangerouslySetInnerHTML={{
+    __html: katex.renderToString(text, { displayMode, throwOnError: false, trust: false, maxExpand: 1000 }),
+  }} />;
 }
 
-function renderBold(text: string): ReactNode[] {
-  const out: ReactNode[] = [];
-  let last = 0;
-  let m: RegExpExecArray | null;
-  BOLD_RE.lastIndex = 0;
-  while ((m = BOLD_RE.exec(text))) {
-    if (m.index > last) out.push(...renderItalic(text.slice(last, m.index)));
-    out.push(<strong key={nextKey()} className="font-bold text-[var(--text-primary)]">{m[1]}</strong>);
-    last = m.index + m[0].length;
-  }
-  if (last < text.length) out.push(...renderItalic(text.slice(last)));
-  return out;
+function safeLink(href: string): string | undefined {
+  try { return ['http:', 'https:', 'mailto:'].includes(new URL(href, window.location.origin).protocol) ? href : undefined; }
+  catch { return undefined; }
+}
+
+function renderTokens(tokens: Token[] = []): ReactNode[] {
+  return tokens.map((token, index) => {
+    let node: ReactNode;
+    switch (token.type) {
+      case 'space': return null;
+      case 'scriptText': node = token.tag === 'sup' ? <sup>{renderTokens(token.tokens)}</sup> : <sub>{renderTokens(token.tokens)}</sub>; break;
+      case 'inlineMath': node = math(token.text, false); break;
+      case 'blockMath': node = math(token.text, true); break;
+      case 'paragraph': node = <p>{renderTokens(token.tokens || [])}</p>; break;
+      case 'text': node = token.tokens ? renderTokens(token.tokens) : token.text; break;
+      case 'strong': node = <strong>{renderTokens(token.tokens)}</strong>; break;
+      case 'em': node = <em>{renderTokens(token.tokens)}</em>; break;
+      case 'del': node = <del>{renderTokens(token.tokens)}</del>; break;
+      case 'codespan': node = <code>{token.text}</code>; break;
+      case 'br': node = <br />; break;
+      case 'hr': node = <hr />; break;
+      case 'heading': {
+        const Tag = `h${Math.min(token.depth, 6)}` as 'h1' | 'h2' | 'h3';
+        node = <Tag>{renderTokens(token.tokens)}</Tag>; break;
+      }
+      case 'blockquote': node = <blockquote>{renderTokens(token.tokens)}</blockquote>; break;
+      case 'list': {
+        const list = token as Tokens.List;
+        const items = list.items.map((item, i) => <li key={i}>{item.task && <input type="checkbox" checked={!!item.checked} disabled aria-label="Mục đã chọn" />}{renderTokens(item.tokens)}</li>);
+        node = list.ordered ? <ol start={list.start || 1}>{items}</ol> : <ul>{items}</ul>; break;
+      }
+      case 'link': node = <a href={safeLink(token.href)} title={token.title || undefined} rel="noopener noreferrer">{renderTokens(token.tokens)}</a>; break;
+      case 'image': node = token.text; break;
+      case 'table': {
+        const table = token as Tokens.Table;
+        node = <div className="overflow-x-auto"><table><thead><tr>{table.header.map((cell, i) => <th key={i} style={{ textAlign: table.align[i] || 'left' }}>{renderTokens(cell.tokens)}</th>)}</tr></thead>
+          <tbody>{table.rows.map((row, i) => <tr key={i}>{row.map((cell, j) => <td key={j} style={{ textAlign: table.align[j] || 'left' }}>{renderTokens(cell.tokens)}</td>)}</tr>)}</tbody></table></div>; break;
+      }
+      case 'code': node = <div className="my-3 rounded-md border border-[var(--border)] overflow-hidden">
+        <div className="flex justify-between items-center bg-[var(--bg-secondary)] px-3 py-1 text-xs"><span>{token.lang || 'code'}</span><button type="button" onClick={() => navigator.clipboard?.writeText(token.text)}>Sao chép</button></div>
+        <pre><code>{token.text}</code></pre>
+      </div>; break;
+      default: node = token.raw;
+    }
+    return <Fragment key={index}>{node}</Fragment>;
+  });
 }
 
 export function renderInline(text: string): ReactNode[] {
-  const out: ReactNode[] = [];
-  let last = 0;
-  let m: RegExpExecArray | null;
-  CODE_RE.lastIndex = 0;
-  while ((m = CODE_RE.exec(text))) {
-    if (m.index > last) out.push(...renderBold(text.slice(last, m.index)));
-    out.push(
-      <code key={nextKey()} className="bg-[var(--bg-tertiary)] border border-[var(--border)] rounded px-1.5 py-0.5 font-code text-[0.9em] text-[var(--text-primary)]">
-        {m[1]}
-      </code>
-    );
-    last = m.index + m[0].length;
-  }
-  if (last < text.length) out.push(...renderBold(text.slice(last)));
-  return out;
+  return renderTokens(parser.Lexer.lexInline(text, parser.defaults));
 }
 
-/**
- * Renders lightweight Markdown (headings #/##/###, code blocks, lists, bold, italic, inline code).
- * Zero external libraries, clean and robust.
- */
+/** Render Markdown as React nodes; never trust author HTML or executable links. */
 export default function Markdown({ content, className }: { content: string; className?: string }) {
-  const raw = String(content || '').trim();
-  if (!raw) return null;
-
-  const blocks = raw.split(/\n{2,}/);
-
-  return (
-    <div className={className ?? 'text-[var(--text-secondary)] leading-relaxed space-y-2'}>
-      {blocks.map((block, i) => {
-        const trimmed = block.trim();
-        // Code block
-        if (trimmed.startsWith('```') && trimmed.endsWith('```')) {
-          const lines = trimmed.slice(3, -3).split('\n');
-          const codeLines = lines[0].match(/^[a-zA-Z0-9_-]+$/) ? lines.slice(1) : lines;
-          return (
-            <pre
-              key={i}
-              className="p-3 my-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] font-code text-xs text-[var(--text-primary)] overflow-x-auto whitespace-pre"
-            >
-              <code>{codeLines.join('\n')}</code>
-            </pre>
-          );
-        }
-
-        // Heading 1
-        if (trimmed.startsWith('# ')) {
-          return (
-            <h1 key={i} className="text-base font-extrabold text-[var(--text-primary)] pt-2 pb-0.5 border-b border-[var(--border)]">
-              {renderInline(trimmed.slice(2))}
-            </h1>
-          );
-        }
-
-        // Heading 2
-        if (trimmed.startsWith('## ')) {
-          return (
-            <h2 key={i} className="text-sm font-bold text-[var(--text-primary)] pt-1.5 pb-0.5">
-              {renderInline(trimmed.slice(3))}
-            </h2>
-          );
-        }
-
-        // Heading 3
-        if (trimmed.startsWith('### ')) {
-          return (
-            <h3 key={i} className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider pt-1">
-              {renderInline(trimmed.slice(4))}
-            </h3>
-          );
-        }
-
-        const lines = trimmed.split('\n');
-        const isList = lines.every((l) => /^\s*[-*]\s+/.test(l));
-        if (isList) {
-          return (
-            <ul key={i} className="list-disc list-inside space-y-1 my-1 pl-1 text-[var(--text-secondary)]">
-              {lines.map((l, j) => (
-                <li key={j} className="leading-relaxed">
-                  {renderInline(l.replace(/^\s*[-*]\s+/, ''))}
-                </li>
-              ))}
-            </ul>
-          );
-        }
-
-        return (
-          <p key={i} className="leading-relaxed">
-            {lines.map((line, j) => (
-              <Fragment key={j}>
-                {j > 0 && <br />}
-                {renderInline(line)}
-              </Fragment>
-            ))}
-          </p>
-        );
-      })}
-    </div>
-  );
+  if (!content?.trim()) return null;
+  return <div className={`markdown-content ${className ?? 'text-[var(--text-secondary)] leading-relaxed space-y-2'}`}>{renderTokens(parser.lexer(content))}</div>;
 }

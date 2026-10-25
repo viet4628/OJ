@@ -67,6 +67,8 @@ message SelfTestSummary {
   optional int32 execution_time = 4;
   // Memory usage of the program, in kiB. Unset if MLE and killed by judger.
   optional int32 memory_usage = 5;
+  // Explicit verdict distinguishes output/memory limits from a successful exit.
+  JudgeResult result = 6;
 }
 
 // The request containing the user's code and judge info.

@@ -17,41 +17,30 @@ export const STARTER_CODES: Record<SupportedLanguage, string> = {
 using namespace std;
 
 int main() {
-    // Đọc dữ liệu từ tiêu chuẩn đầu vào
-    long long a, b;
-    if (cin >> a >> b) {
-        // In ra kết quả
-        cout << a + b << endl;
-    }
+    // Tối ưu tốc độ cho cin và cout
+    ios_base::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    // TODO: code here
     return 0;
 }`,
   python: `import sys
 
 def solve():
-    # Đọc tất cả dữ liệu từ STDIN
-    input_data = sys.stdin.read().split()
-    if len(input_data) >= 2:
-        a = int(input_data[0])
-        b = int(input_data[1])
-        print(a + b)
+    # TODO: code here
+    pass
 
 if __name__ == '__main__':
     solve()
 `,
-  rust: `use std::io::{self, Read};
-
-fn main() {
-    let mut input = String::new();
-    io::stdin().read_to_string(&mut input).unwrap();
-    let nums: Vec<i64> = input
-        .split_whitespace()
-        .map(|s| s.parse().unwrap())
-        .collect();
-    if nums.len() >= 2 {
-        println!("{}", nums[0] + nums[1]);
-    }
+  rust: `fn main() {
+    // TODO: code here
 }`,
 };
+
+export function getStarterCode(problem: { starter_codes?: Partial<Record<SupportedLanguage, string>> } | null, language: SupportedLanguage): string {
+  return problem?.starter_codes?.[language]?.trim() ? problem.starter_codes[language]! : STARTER_CODES[language];
+}
 
 export const normOutput = (s: string): string =>
   String(s || '')

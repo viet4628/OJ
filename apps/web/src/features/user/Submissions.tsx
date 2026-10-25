@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { History, CheckCircle2, XCircle, Clock, AlertOctagon, RefreshCw, Eye, X, Code, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getSubmissions, getSubmission, supabase, type Submission } from '../../lib/api';
+import { RefreshCw, Eye, X, Code, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { getSubmissions, getSubmission, getUserPermissions, rejudgeSubmission, supabase, type Submission, type AppUser } from '../../lib/api';
 
 const PAGE_SIZE = 25;
 
-export default function Submissions() {
+export default function Submissions({ user }: { user: AppUser | null }) {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
@@ -16,6 +16,42 @@ export default function Submissions() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [loadError, setLoadError] = useState(false);
+  const [canRejudge, setCanRejudge] = useState(false);
+  const [managedContestId, setManagedContestId] = useState<string | null>(null);
+  const canManageSelectedContest = !selectedSubmission?.contest_id || user?.role === 'admin' || managedContestId === selectedSubmission.contest_id;
+  const [rejudging, setRejudging] = useState(false);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    setCanRejudge(user?.role === 'admin');
+    if (user && user.role !== 'admin') getUserPermissions(user.id).then(perms => {
+      if (!cancelled) setCanRejudge(perms.includes('submissions.view_all') && (perms.includes('problems.manage') || perms.includes('contests.manage')));
+    });
+    return () => { cancelled = true; };
+  }, [user?.id, user?.role]);
+  useEffect(() => {
+    let cancelled = false;
+    setManagedContestId(null);
+    const contestId = selectedSubmission?.contest_id;
+    if (contestId && user?.role !== 'admin') {
+      supabase.rpc('can_manage_contest', { p_contest_id: contestId })
+        .then(({ data, error }) => { if (!cancelled) setManagedContestId(!error && data === true ? contestId : null); });
+    }
+    return () => { cancelled = true; };
+  }, [selectedSubmission?.id, user?.id, user?.role]);
+  const handleRejudge = async () => {
+    if (!selectedSubmission || !canRejudge || !canManageSelectedContest || rejudging || !window.confirm('Chấm lại bài này theo bộ testcase hiện tại? Kết quả và xếp hạng sẽ được cập nhật.')) return;
+    setRejudging(true);
+    setActionError(null);
+    try {
+      await rejudgeSubmission(selectedSubmission.id);
+      setSelectedSubmission(null);
+      setActionNotice('Đã đưa bài nộp vào hàng đợi chấm lại.');
+      await loadSubmissions({ status: statusFilter, mine: mineOnly, page });
+    } catch (err: any) { setActionError(err.message || 'Chấm lại thất bại'); }
+    finally { setRejudging(false); }
+  };
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -67,7 +103,7 @@ export default function Submissions() {
           if (statusFilter !== 'ALL' && payload.new.status !== statusFilter) return;
           const { data } = await supabase
             .from('submissions')
-            .select('*, problems(title, slug), profiles(full_name, email)')
+            .select('*, problems(title, slug), profiles:profiles_public(full_name, email)')
             .eq('id', payload.new.id)
             .single();
           if (data) {
@@ -128,32 +164,32 @@ export default function Submissions() {
   const statusBadge = (status: string) => {
     if (status === 'ACCEPTED') {
       return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200">
-        <CheckCircle2 className="w-3.5 h-3.5" /> ACCEPTED
+         ACCEPTED
       </span>;
     }
     if (status === 'WRONG_ANSWER') {
       return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-red-50 text-red-700 border border-red-200">
-        <XCircle className="w-3.5 h-3.5" /> WRONG ANSWER
+         WRONG ANSWER
       </span>;
     }
     if (status === 'TIME_LIMIT_EXCEEDED') {
       return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-amber-50 text-amber-700 border border-amber-200">
-        <Clock className="w-3.5 h-3.5" /> TLE
+         TLE
       </span>;
     }
     if (status === 'COMPILE_ERROR') {
       return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-red-50 text-red-700 border border-red-200">
-        <AlertOctagon className="w-3.5 h-3.5" /> COMPILE ERROR
+         COMPILE ERROR
       </span>;
     }
     if (status === 'RUNTIME_ERROR') {
       return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-orange-50 text-orange-700 border border-orange-200">
-        <AlertOctagon className="w-3.5 h-3.5" /> RUNTIME ERROR
+         RUNTIME ERROR
       </span>;
     }
     if (status === 'MEMORY_LIMIT_EXCEEDED') {
       return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-purple-50 text-purple-700 border border-purple-200">
-        <AlertOctagon className="w-3.5 h-3.5" /> MLE
+         MLE
       </span>;
     }
     return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-bold">
@@ -163,11 +199,12 @@ export default function Submissions() {
 
   return (
     <div className="space-y-5">
+      {actionNotice && <p role="status" className="text-xs text-[var(--accent-text)]">{actionNotice}</p>}
       {/* Header & Filter */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[var(--bg-primary)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
         <div>
           <h1 className="text-xl font-extrabold text-[var(--text-primary)] flex items-center gap-2 tracking-tight">
-            <History className="w-5 h-5 text-[var(--accent-text)]" /> Nhật Ký Nộp Bài Realtime (Submissions)
+             Nhật Ký Nộp Bài Realtime (Submissions)
           </h1>
           <p className="text-[var(--text-secondary)] text-xs mt-1">Theo dõi thời gian thực các bài nộp từ toàn bộ thí sinh trên hệ thống</p>
         </div>
@@ -330,6 +367,8 @@ export default function Submissions() {
       {selectedSubmission && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedSubmission(null)}>
           <div role="dialog" aria-modal="true" aria-label="Chi tiết bài nộp" className="bg-[var(--bg-primary)] rounded-2xl max-w-2xl w-full p-6 border border-[var(--border)] shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
+            {actionError && <p role="alert" className="text-xs text-[var(--danger)]">{actionError}</p>}
+            {canRejudge && canManageSelectedContest && <button onClick={handleRejudge} disabled={rejudging || ['PENDING','JUDGING'].includes(selectedSubmission.status)} className="text-xs border border-[var(--border)] rounded px-3 py-1.5 disabled:opacity-50">{rejudging ? 'Đang yêu cầu...' : 'Chấm lại'}</button>}
             <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
               <div>
                 <h3 className="font-extrabold text-sm text-[var(--text-primary)]">Chi Tiết Bài Nộp #{selectedSubmission.id.slice(0, 12)}</h3>
@@ -367,7 +406,7 @@ export default function Submissions() {
 
             <div className="space-y-1">
               <label className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1">
-                <Code className="w-3.5 h-3.5 text-[var(--accent-text)]" /> Mã nguồn đã nộp ({selectedSubmission.language}):
+                 Mã nguồn đã nộp ({selectedSubmission.language}):
               </label>
               <pre className="bg-[var(--bg-editor)] text-[var(--text-primary)] p-4 rounded-xl font-code text-xs overflow-x-auto overflow-y-auto max-h-64 border border-[var(--border)]">
                 {selectedSubmission.code || '// Không có mã nguồn'}

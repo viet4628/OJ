@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Code2, Lock, KeyRound, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { KeyRound, Loader2 } from 'lucide-react';
 import { changePassword, supabase } from '../../lib/api';
 
 export default function ResetPassword() {
@@ -52,9 +52,7 @@ export default function ResetPassword() {
     <div className="min-h-[70vh] flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white border border-[var(--border)] rounded-2xl p-6 space-y-5 shadow-sm">
         <div className="text-center space-y-2">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-[var(--accent)] text-[var(--text-primary)] flex items-center justify-center shadow-sm">
-            <Code2 className="w-7 h-7" />
-          </div>
+
           <h1 className="text-lg font-black text-[var(--text-primary)]">Đặt Lại Mật Khẩu</h1>
           <p className="text-xs text-[var(--text-secondary)]">CodeJudge VN — Supabase Auth</p>
         </div>
@@ -68,7 +66,7 @@ export default function ResetPassword() {
         {phase === 'invalid' && (
           <div className="space-y-4">
             <div className="flex items-start gap-2 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-semibold">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+
               Liên kết không hợp lệ hoặc đã hết hạn. Hãy yêu cầu gửi lại email đặt lại mật khẩu.
             </div>
             <Link to="/" className="block text-center text-xs font-bold text-[var(--accent-text)] hover:underline">
@@ -80,7 +78,7 @@ export default function ResetPassword() {
         {phase === 'done' && (
           <div className="space-y-4">
             <div className="flex items-start gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-semibold">
-              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+
               Đã đổi mật khẩu thành công! Giờ bạn có thể đăng nhập bằng mật khẩu mới.
             </div>
             <Link to="/" className="block text-center px-4 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--text-primary)] font-bold text-xs transition-colors">
@@ -94,7 +92,7 @@ export default function ResetPassword() {
             <div className="space-y-1">
               <label className="text-xs font-semibold text-[var(--text-secondary)]">Mật Khẩu Mới</label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
+
                 <input
                   type="password"
                   required
@@ -110,7 +108,7 @@ export default function ResetPassword() {
             <div className="space-y-1">
               <label className="text-xs font-semibold text-[var(--text-secondary)]">Nhập Lại Mật Khẩu</label>
               <div className="relative">
-                <KeyRound className="w-4 h-4 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
+
                 <input
                   type="password"
                   required
@@ -125,7 +123,7 @@ export default function ResetPassword() {
 
             {error && (
               <div className="flex items-start gap-2 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-semibold animate-fade-in">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" /> {error}
+                 {error}
               </div>
             )}
 

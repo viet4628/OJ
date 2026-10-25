@@ -1,0 +1,13 @@
+{"at":"2026-10-24T21:13:46.583Z","ok":true,"health":{"ready":true,"stopping":false,"mode":"engine","realtime":"SUBSCRIBED","queued":0,"processing":0,"lastPollAt":1792876425058}}
+{"at":"2026-10-24T21:13:51.636Z","ok":true,"health":{"ready":true,"stopping":false,"mode":"engine","realtime":"SUBSCRIBED","queued":0,"processing":0,"lastPollAt":1792876431622}}
+{"at":"2026-10-24T21:13:56.640Z","ok":true,"health":{"ready":true,"stopping":false,"mode":"engine","realtime":"SUBSCRIBED","queued":0,"processing":0,"lastPollAt":1792876435807}}
+{"at":"2026-10-24T21:14:01.643Z","ok":true,"health":{"ready":true,"stopping":false,"mode":"engine","realtime":"SUBSCRIBED","queued":0,"processing":0,"lastPollAt":1792876440316}}
+{"at":"2026-10-24T21:14:06.652Z","ok":true,"health":{"ready":true,"stopping":false,"mode":"engine","realtime":"SUBSCRIBED","queued":0,"processing":0,"lastPollAt":1792876446587}}
+{"at":"2026-10-24T21:14:11.665Z","ok":true,"health":{"ready":true,"stopping":false,"mode":"engine","realtime":"SUBSCRIBED","queued":0,"processing":0,"lastPollAt":1792876451050}}
+{"at":"2026-10-24T21:14:16.671Z","ok":true,"health":{"ready":true,"stopping":false,"mode":"engine","realtime":"SUBSCRIBED","queued":0,"processing":0,"lastPollAt":1792876455238}}
+{"at":"2026-10-24T21:14:21.674Z","ok":true,"health":{"ready":true,"stopping":false,"mode":"engine","realtime":"SUBSCRIBED","queued":0,"processing":0,"lastPollAt":1792876459731}}
+{"at":"2026-10-24T21:14:26.684Z","ok":true,"health":{"ready":true,"stopping":false,"mode":"engine","realtime":"SUBSCRIBED","queued":0,"processing":0,"lastPollAt":1792876466016}}
+{"at":"2026-10-24T21:14:31.694Z","ok":false,"health":{"ready":false,"stopping":false,"mode":"engine","realtime":"SUBSCRIBED","queued":0,"processing":0,"lastPollAt":1792876470455}}
+{"at":"2026-10-24T21:14:36.703Z","ok":false,"health":{"ready":false,"stopping":false,"mode":"engine","realtime":"SUBSCRIBED","queued":0,"processing":0,"lastPollAt":1792876474638}}
+{"at":"2026-10-24T21:14:41.709Z","ok":true,"health":{"ready":true,"stopping":false,"mode":"engine","realtime":"SUBSCRIBED","queued":0,"processing":0,"lastPollAt":1792876481196}}
+{"at":"2026-10-24T21:14:46.585Z","ok":true,"health":{"ready":true,"stopping":false,"mode":"engine","realtime":"SUBSCRIBED","queued":0,"processing":0,"lastPollAt":1792876485400}}

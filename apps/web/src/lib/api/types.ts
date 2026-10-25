@@ -3,6 +3,7 @@ export interface Problem {
   slug: string;
   title: string;
   description: string;
+  starter_codes?: Partial<Record<'cpp' | 'python' | 'rust', string>>;
   input_format: string | null;
   output_format: string | null;
   samples: { input: string; output: string }[];
@@ -18,6 +19,7 @@ export interface Submission {
   id: string;
   user_id: string;
   problem_id: string;
+  contest_id?: string | null;
   language: string;
   code: string;
   status: string;
@@ -27,6 +29,7 @@ export interface Submission {
   error_log: string | null;
   details: unknown[];
   is_run?: boolean;
+  is_validation?: boolean;
   created_at: string;
   problems?: Pick<Problem, 'title' | 'slug'> | null;
   profiles?: { full_name: string | null; email: string } | null;
@@ -54,6 +57,8 @@ export interface Contest {
   is_public: boolean;
   created_by: string | null;
   created_at: string;
+  registration_required?: boolean;
+  freeze_at?: string | null;
 }
 
 export type ContestStatus = Contest['status'];
@@ -104,6 +109,7 @@ export interface Profile {
   avatar_url: string | null;
   role: 'user' | 'teacher' | 'admin';
   created_at: string;
+  is_suspended?: boolean;
 }
 
 export interface RankUser {
@@ -129,7 +135,7 @@ export type PermissionCode =
 export type ProblemInput = Pick<
   Problem,
   'slug' | 'title' | 'description' | 'input_format' | 'output_format' | 'difficulty' | 'time_limit_ms' | 'memory_limit_mb'
-> & { tags: string[]; samples: { input: string; output: string }[]; is_public: boolean };
+> & { tags: string[]; samples: { input: string; output: string }[]; is_public: boolean; starter_codes?: Problem['starter_codes'] };
 
 export interface TestcaseRow {
   id: string;
@@ -140,7 +146,7 @@ export interface TestcaseRow {
   is_sample: boolean;
 }
 
-export type ContestInput = Pick<Contest, 'title' | 'description' | 'rule_type' | 'start_time' | 'end_time' | 'is_public'>;
+export type ContestInput = Pick<Contest, 'title' | 'description' | 'rule_type' | 'start_time' | 'end_time' | 'is_public' | 'registration_required' | 'freeze_at'>;
 
 export type AnnouncementInput = Pick<Announcement, 'tag' | 'title' | 'content' | 'author' | 'is_public'>;
 

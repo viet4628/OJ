@@ -3,13 +3,12 @@ node_modules/
 .pnp
 .pnp.js
 
-# External / upstream (own git repos, kept as vendored references)
-engine/
-references/
-e2e/
+# External engine checkout (recreated by setup:engine)
+/engine/
 
 # Build & Dist
 dist/
+dist-e2e/
 build/
 out/
 .next/

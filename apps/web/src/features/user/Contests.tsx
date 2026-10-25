@@ -1,15 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import MorphIcon from '../../components/MorphIcon';
-import {
-  Trophy as TrophyData,
-  Calendar as CalendarData,
-  Clock as ClockData,
-  Search as SearchData,
-  Loader2 as Loader2Data,
-  Lock as LockData,
-  ChevronRight as ChevronRightData,
-} from 'lucide';
+import { Calendar as CalendarData, Clock as ClockData, Loader2 as Loader2Data, Lock as LockData, ChevronRight as ChevronRightData } from 'lucide';
 import { getContests, type Contest } from '../../lib/api';
 
 const STATUS_META: Record<Contest['status'], { label: string; className: string; dot: string }> = {
@@ -20,6 +12,7 @@ const STATUS_META: Record<Contest['status'], { label: string; className: string;
 
 export default function Contests() {
   const [contests, setContests] = useState<Contest[]>([]);
+  const [loadError, setLoadError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [ruleFilter, setRuleFilter] = useState<string>('ALL');
@@ -30,7 +23,7 @@ export default function Contests() {
       try {
         setContests(await getContests());
       } catch (err) {
-        console.error('Failed to load contests:', err);
+        setLoadError('Không tải được kỳ thi. Vui lòng tải lại trang.');
       } finally {
         setIsLoading(false);
       }
@@ -58,13 +51,14 @@ export default function Contests() {
 
   return (
     <div className="space-y-4">
+      {loadError && <p role="alert" className="text-sm text-[var(--danger)]">{loadError}</p>}
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[var(--bg-secondary)] p-4 rounded-md border border-[var(--border)]">
         <div>
           <h1 className="text-sm font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
-            <MorphIcon icon={TrophyData} size={16} className="text-[var(--accent-text)]" /> Đấu Trường Contest Trực Tuyến
+             Đấu Trường Contest Trực Tuyến
           </h1>
-          <p className="text-[var(--text-secondary)] text-xs mt-0.5">Kỳ thi lập trình thi đấu theo tiêu chuẩn quốc tế ACM/ICPC &amp; OI subtask</p>
+          <p className="text-[var(--text-secondary)] text-xs mt-0.5">Kỳ thi lập trình thi đấu theo thể thức ACM/ICPC và OI tính điểm</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -90,7 +84,7 @@ export default function Contests() {
           </select>
 
           <div className="relative">
-            <MorphIcon icon={SearchData} size={14} className="text-[var(--text-muted)] absolute left-2.5 top-1/2 -translate-y-1/2" />
+
             <input
               type="text"
               placeholder="Tìm kỳ thi..."
@@ -118,9 +112,7 @@ export default function Contests() {
               const meta = STATUS_META[c.status];
               return (
                 <li key={c.id} className="p-4 flex flex-wrap items-center gap-3 hover:bg-[var(--bg-primary)] transition-colors">
-                  <div className="w-8 h-8 shrink-0 rounded-md bg-[var(--bg-tertiary)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)]">
-                    <MorphIcon icon={TrophyData} size={16} />
-                  </div>
+
 
                   <Link to={`/contests/${c.id}`} className="flex-1 min-w-0 block">
                     <p className="text-xs font-medium text-[var(--text-primary)] flex items-center gap-1.5 hover:text-[#0969DA] dark:hover:text-[#58A6FF] transition-colors">

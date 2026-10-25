@@ -1,0 +1,7 @@
+{"at":"2026-10-25T16:19:23.054Z","user":1,"language":"python","expected":"ACCEPTED","ok":true,"status":"ACCEPTED","finishMs":9761,"queueMs":665}
+{"at":"2026-10-25T16:19:29.489Z","user":0,"language":"cpp","expected":"ACCEPTED","ok":true,"status":"ACCEPTED","finishMs":16196,"queueMs":9280}
+{"at":"2026-10-25T16:19:38.820Z","user":2,"language":"rust","expected":"ACCEPTED","ok":true,"status":"ACCEPTED","finishMs":25528,"queueMs":14940}
+{"at":"2026-10-25T16:19:46.139Z","user":3,"language":"cpp","expected":"ACCEPTED","ok":true,"status":"ACCEPTED","finishMs":32847,"queueMs":25139}
+{"at":"2026-10-25T16:19:48.164Z","user":4,"language":"python","expected":"ACCEPTED","ok":true,"status":"ACCEPTED","finishMs":34871,"queueMs":31684}
+{"at":"2026-10-25T16:19:50.361Z","user":1,"language":"rust","expected":"ACCEPTED","ok":true,"status":"ACCEPTED","finishMs":27306,"queueMs":24144}
+{"at":"2026-10-25T16:19:53.620Z","user":0,"language":"cpp","expected":"ACCEPTED","ok":true,"status":"ACCEPTED","finishMs":24130,"queueMs":20719}

@@ -1,0 +1,6 @@
+{
+  "pid": 118433,
+  "startedAt": "2026-10-24T21:17:26.560511+00:00",
+  "expectedEnd": "2026-10-25T21:17:26.560511+00:00",
+  "scope": "passive worker health only; not a judging load/soak acceptance"
+}

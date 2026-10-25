@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import MorphIcon from '../../../components/MorphIcon';
-import { Megaphone as MegaphoneData, Trash2 as Trash2Data } from 'lucide';
+import { Trash2 as Trash2Data } from 'lucide';
 import {
   getAnnouncements,
   createAnnouncement,
@@ -9,7 +9,7 @@ import {
 } from '../../../lib/api';
 
 const inputCls =
-  'w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#0969da] focus:ring-1 focus:ring-[#0969da] transition-colors';
+  'w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-colors';
 const labelCls = 'text-xs font-semibold text-[var(--text-secondary)]';
 
 export default function AdminAnnouncementsTab() {
@@ -65,7 +65,7 @@ export default function AdminAnnouncementsTab() {
     <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] p-4 space-y-4">
       <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]">
         <h3 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
-          <MorphIcon icon={MegaphoneData} size={14} className="text-[var(--accent-text)]" /> Quản Lý Thông Báo
+           Quản Lý Thông Báo
         </h3>
         {annNotice && <span className="text-[11px] text-[var(--accent-text)] font-mono">{annNotice}</span>}
       </div>

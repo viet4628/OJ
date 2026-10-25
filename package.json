@@ -9,6 +9,11 @@
     "build": "npm --prefix apps/web run build && npm --prefix apps/judge-worker run build",
     "build:web": "npm --prefix apps/web run build",
     "build:worker": "npm --prefix apps/judge-worker run build",
-    "clean": "rm -rf apps/web/node_modules apps/web/dist apps/judge-worker/node_modules apps/judge-worker/dist e2e/node_modules e2e/test-results"
+    "clean": "rm -rf apps/web/dist apps/web/dist-e2e apps/judge-worker/dist e2e/test-results e2e/playwright-report",
+    "test:db": "bash scripts/test-db.sh",
+    "test:pilot": "npm --prefix apps/judge-worker run build && node apps/judge-worker/scripts/smoke-pilot.mjs",
+    "test:e2e": "npm --prefix e2e test --",
+    "setup:engine": "bash scripts/setup-engine.sh",
+    "test:ops": "node scripts/test-health.mjs && node scripts/test-backup.mjs"
   }
 }

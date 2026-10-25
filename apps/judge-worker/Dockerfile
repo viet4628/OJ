@@ -11,7 +11,7 @@
 FROM node:22-bookworm-slim AS tsbuild
 WORKDIR /app
 COPY apps/judge-worker/package*.json ./
-RUN npm ci || npm install
+RUN npm ci
 COPY apps/judge-worker/tsconfig.json ./
 COPY apps/judge-worker/src ./src
 RUN npm run build
@@ -23,11 +23,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libseccomp-dev \
     && rm -rf /var/lib/apt/lists/* \
     && curl -sSL -o /usr/local/bin/buf \
-      "https://github.com/bufbuild/buf/releases/latest/download/buf-Linux-x86_64" \
+      "https://github.com/bufbuild/buf/releases/download/v1.72.0/buf-Linux-x86_64" \
     && chmod +x /usr/local/bin/buf
 WORKDIR /src
 COPY engine/rsjudge .
-RUN CARGO_TARGET_DIR=/tmp/rsjudge-target cargo build --release --bin rsjudge
+RUN CARGO_TARGET_DIR=/tmp/rsjudge-target cargo build --locked --release --bin rsjudge
 
 # ---- Stage 3: runtime ---------------------------------------
 FROM node:22-bookworm-slim
@@ -52,9 +52,10 @@ COPY apps/judge-worker/engine-config /etc/rsjudge
 WORKDIR /app
 COPY --from=tsbuild /app/dist ./dist
 COPY apps/judge-worker/proto ./proto
+COPY apps/judge-worker/scripts ./scripts
 COPY apps/judge-worker/package*.json ./
 COPY apps/judge-worker/package-lock.json* ./
-RUN npm ci --omit=dev || npm install --omit=dev
+RUN npm ci --omit=dev
 
 ENV NODE_ENV=production
 CMD ["node", "dist/worker.js"]

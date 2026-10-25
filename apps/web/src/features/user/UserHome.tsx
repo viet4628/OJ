@@ -1,21 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import MorphIcon from '../../components/MorphIcon';
-import {
-  BookOpen as BookOpenData,
-  FileCode2 as FileCode2Data,
-  History as HistoryData,
-  Mail as MailData,
-  Calendar as CalendarData,
-  Search as SearchData,
-  ExternalLink as ExternalLinkData,
-  Loader2 as Loader2Data,
-  AlertOctagon as AlertOctagonData,
-  CheckCircle2 as CheckCircle2Data,
-  Tag as TagData,
-  Clock as ClockData,
-  Edit3 as Edit3Data,
-} from 'lucide';
+import { BookOpen as BookOpenData, FileCode2 as FileCode2Data, History as HistoryData, Loader2 as Loader2Data, Edit3 as Edit3Data } from 'lucide';
 import {
   getUserProfile,
   getUserRankStats,
@@ -157,7 +143,7 @@ export default function UserHome({ currentUser }: UserHomeProps) {
   if (!profile) {
     return (
       <div className="py-24 text-center space-y-3">
-        <MorphIcon icon={AlertOctagonData} size={32} className="mx-auto text-[var(--text-muted)]" />
+
         <p className="text-xs text-[var(--text-secondary)]">Không tìm thấy người dùng này</p>
         <Link to="/ranklist" className="text-xs font-semibold text-[var(--accent-text)] hover:underline inline-block">
           ← Xem bảng xếp hạng
@@ -166,7 +152,7 @@ export default function UserHome({ currentUser }: UserHomeProps) {
     );
   }
 
-  const displayName = profile.full_name || profile.email.split('@')[0];
+  const displayName = profile.full_name || 'Người dùng';
   const isSelf = currentUser?.id === profile.id;
   const pinnedProblems = solvedProblems.slice(0, 6);
 
@@ -222,10 +208,10 @@ export default function UserHome({ currentUser }: UserHomeProps) {
       {/* 2. MAIN CONTAINER: 2 COLUMNS (GITHUB USER PROFILE LAYOUT) */}
       <div className="max-w-[1280px] mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-          
+
           {/* CỘT TRÁI (3-4 cols): GITHUB USER SIDEBAR */}
           <div className="md:col-span-4 lg:col-span-3 space-y-4">
-            
+
             {/* Avatar lớn hình tròn chuẩn GitHub */}
             <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-full md:aspect-square max-w-[280px] rounded-full overflow-hidden border border-[var(--border)] bg-[var(--bg-tertiary)] shadow-xs mx-auto md:mx-0">
               {profile.avatar_url ? (
@@ -248,7 +234,7 @@ export default function UserHome({ currentUser }: UserHomeProps) {
                 {displayName}
               </h1>
               <p className="text-sm text-[var(--text-muted)] font-mono font-normal">
-                @{profile.email.split('@')[0]}
+                @{profile.full_name || 'user'}
               </p>
             </div>
 
@@ -273,11 +259,11 @@ export default function UserHome({ currentUser }: UserHomeProps) {
             {/* Metadata (Email & Tham gia) */}
             <div className="space-y-2 pt-3 border-t border-[var(--border)] text-xs text-[var(--text-secondary)]">
               <div className="flex items-center gap-2 min-w-0">
-                <MorphIcon icon={MailData} size={14} className="text-[var(--text-muted)] shrink-0" />
-                <span className="truncate">{profile.email}</span>
+
+                <span className="truncate">{profile.email || 'Email được giữ riêng tư'}</span>
               </div>
               <div className="flex items-center gap-2">
-                <MorphIcon icon={CalendarData} size={14} className="text-[var(--text-muted)] shrink-0" />
+
                 <span>
                   Tham gia tháng {new Date(profile.created_at).getMonth() + 1}/{new Date(profile.created_at).getFullYear()}
                 </span>
@@ -315,11 +301,11 @@ export default function UserHome({ currentUser }: UserHomeProps) {
 
           {/* CỘT PHẢI (8-9 cols): GITHUB CONTENT AREA */}
           <div className="md:col-span-8 lg:col-span-9 space-y-6 min-w-0">
-            
+
             {/* TAB 1: TỔNG QUAN (OVERVIEW) */}
             {activeTab === 'overview' && (
               <div className="space-y-6">
-                
+
                 {/* 1. PINNED REPOSITORY CARDS (BÀI TẬP ĐÃ GIẢI NỔI BẬT) */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -400,7 +386,7 @@ export default function UserHome({ currentUser }: UserHomeProps) {
                     <h2 className="text-xs font-semibold text-[var(--text-primary)]">
                       Ngôn Ngữ Thường Dùng
                     </h2>
-                    
+
                     <div className="p-4 rounded-md border border-[var(--border)] bg-[var(--bg-secondary)] space-y-3">
                       {/* GitHub Multi-color progress bar */}
                       <div className="h-2 w-full rounded-full overflow-hidden flex bg-[var(--bg-tertiary)]">
@@ -485,7 +471,7 @@ export default function UserHome({ currentUser }: UserHomeProps) {
                 {/* Search & Filter toolbar */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[var(--border)]">
                   <div className="relative flex-1 max-w-sm">
-                    <MorphIcon icon={SearchData} size={14} className="text-[var(--text-muted)] absolute left-2.5 top-1/2 -translate-y-1/2" />
+
                     <input
                       type="text"
                       placeholder="Tìm bài tập đã giải..."

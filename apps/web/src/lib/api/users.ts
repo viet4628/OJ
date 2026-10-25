@@ -1,6 +1,19 @@
 import { supabase } from '../supabase';
 import type { PermissionCode, Profile, RankUser } from './types';
 
+export async function setAccountSuspension(userId: string, suspended: boolean, reason: string) {
+  const { data, error } = await supabase.rpc('set_account_suspension', { p_user_id: userId, p_suspended: suspended, p_reason: reason });
+  if (error) throw new Error(error.message);
+  return data as { suspended: boolean; revoked_sessions: number };
+}
+
+export async function getAdminAuditLog(page = 0) {
+  const { data, error } = await supabase.from('admin_audit_log').select('id,actor_id,action,target_id,payload,created_at')
+    .order('id', { ascending: false }).range(page * 50, page * 50 + 49);
+  if (error) throw new Error(error.message);
+  return (data || []) as { id: number; actor_id: string | null; action: string; target_id: string | null; payload: Record<string, unknown>; created_at: string }[];
+}
+
 export async function getProfiles(): Promise<Profile[]> {
   const { data, error } = await supabase
     .from('profiles')
@@ -18,7 +31,7 @@ export async function updateProfileRole(userId: string, role: Profile['role']) {
 }
 export async function getUserProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase
-    .from('profiles')
+    .from('profiles_public')
     .select('*')
     .eq('id', userId)
     .maybeSingle();
@@ -34,16 +47,16 @@ export async function getUserRankStats(userId: string): Promise<RankUser | null>
   if (error || !data) return null;
   return data as RankUser;
 }
-export async function getRanklist(): Promise<RankUser[]> {
-  const [{ data: rankData }, { data: staffProfiles }] = await Promise.all([
-    supabase.from('user_rank').select('*'),
-    supabase.from('profiles').select('id').in('role', ['teacher', 'admin']),
-  ]);
-  if (!rankData) return [];
-  const staffIds = new Set((staffProfiles || []).map((p) => p.id));
-  return (rankData as RankUser[]).filter(
-    (u) => !staffIds.has(u.user_id) && (!u.role || u.role === 'user')
-  );
+export async function getRanklist(params: { page?: number; pageSize?: number; type?: 'ACM' | 'OI'; search?: string } = {}, signal?: AbortSignal): Promise<RankUser[]> {
+  const pageSize = params.pageSize ?? 50;
+  const offset = (params.page ?? 0) * pageSize;
+  let query = supabase.from('user_rank').select('*').eq('role', 'user');
+  if (params.search?.trim()) query = query.ilike('username', `%${params.search.trim().replace(/[%_\\]/g, '\\$&')}%`);
+  const { data, error } = await query.order(params.type === 'OI' ? 'total_score' : 'accepted_number', { ascending: false })
+    .order('user_id', { ascending: true }).range(offset, offset + pageSize - 1)
+    .abortSignal(signal ?? AbortSignal.timeout(10000));
+  if (error) throw new Error(error.message);
+  return (data || []) as RankUser[];
 }
 export async function getStats() {
   const [{ count: problems }, { count: submissions }, { count: profiles }] = await Promise.all([
@@ -132,3 +145,17 @@ export async function saveSettings(patch: Record<string, string>): Promise<{ ok:
 }
 
 /* ─────────────── Account: profile, password, avatar ─────────────── */
+
+export interface JudgeServer {
+  id: string;
+  last_seen_at: string;
+  mode: 'local' | 'engine';
+  ready: boolean;
+  queued: number;
+  processing: number;
+}
+export async function getJudgeServers(): Promise<JudgeServer[]> {
+  const { data, error } = await supabase.from('judge_servers').select('*').order('id');
+  if (error) throw error;
+  return (data || []) as JudgeServer[];
+}
