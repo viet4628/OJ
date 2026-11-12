@@ -38,8 +38,14 @@ node apps/judge-worker/scripts/test-load.mjs
 node apps/judge-worker/scripts/load-staging.mjs --users 10 --jobs 50 --output /secure/load-smoke.json
 node apps/judge-worker/scripts/load-staging.mjs --users 5 --duration 86400 --output /secure/load-24h.json
 node apps/judge-worker/scripts/load-staging.mjs --users 5 --duration 600 --languages cpp,python,rust --cases 10 --storage --input-bytes 65536 --tle-every 10 --output /secure/load-storage.json
+node apps/judge-worker/scripts/worker-timings.mjs --since 30m --output /secure/worker-timings.json
+node apps/judge-worker/scripts/verify-verdicts.mjs
 node scripts/benchmark-db.mjs --output /secure/db-performance.json
 ```
+
+`worker-timings.mjs` đọc log container của worker và gom p50/p95/max cho `[Timing]` (claim/load/judge/save/total), `[CasesTiming]` (load/archive) và `[EngineTiming]` (compile/run). Dùng để đối chiếu trước–sau khi đổi engine hoặc worker.
+
+`verify-verdicts.mjs` tạo bài fixture riêng rồi nộp 5 chương trình (AC/WA/TLE/MLE/RTE) và in verdict thực tế kèm thời gian/bộ nhớ đo được; tự dọn fixture. Exit 1 nếu verdict sai. Chạy sau mỗi thay đổi cách chấm hoặc giới hạn tài nguyên.
 
 Root`.env` và web`.env.local` phải cùng staging riêng. Script tạo tài khoản xác nhận email riêng và bài A+B công khai tạm thời, đăng nhập thật, nộp/chờ verdict qua REST, dọn tài khoản/bài cuối test. Quota tối đa9 submission/phút/tài khoản, mỗi tài khoản chỉ có1 bài đang chờ. Chỉ dùng worker đang chạy, không tạo daemon thứ hai. SIGTERM/SIGINT ngừng tạo bài mới, đợi bài hiện tại và cleanup; không kill -9 trừ sự cố.
 
@@ -66,6 +72,14 @@ Mỗi kết quả mới có `submissionId`; khi dùng engine, báo cáo đối c
 5. Chạy tải/soak và lưu báo cáo trước khi tăng nhóm pilot.
 
 Giới hạn hiện tại: cgroup chỉ giới hạn toàn container, chưa có accounting toàn cây process theo từng job. UID thường không tạo được namespace bwrap trên host hiện tại. Giữ fail-closed, không tắt isolation. Chỉ pilot kín có giám sát; máy judge riêng và per-job cgroup còn là cổng trước mở cho người lạ.
+
+## Concurrency chấm bài
+
+Worker nhận `WORKER_CONCURRENCY` (mặc định 2, cho phép 1..8): số bài chấm song song trong một daemon. Claim nguyên tử vẫn giữ nên không chạy trùng; heartbeat và `/health` báo `queued`/`processing` thật.
+
+**Không được đặt concurrency vượt số CPU của engine** (`docker-compose.yml`: engine `cpus: 2`). Runner giết chương trình theo wall-time, nên khi nhiều job tranh CPU trên cùng số core, một chương trình sát thời gian có thể bị kết luận TLE giả. Tăng concurrency thì tăng `cpus` của engine tương ứng, và kiểm lại bằng `verify-verdicts.mjs`.
+
+Thời gian và bộ nhớ của bài nộp được đo bằng GNU time chạy **bên trong** sandbox, vì `wait4` ở ngoài chỉ thấy usage của bwrap (chương trình nằm trong PID namespace khác). Vì vậy `time_used_ms`/`memory_used_mb` phản ánh đúng chương trình của học sinh, và verdict MLE nhận diện theo RSS thật.
 
 
 Lượt health dự kiến 24 giờ trước đã dừng sau khoảng 5 phút; xem [verification](verification.md). Giữ dữ liệu báo cáo để đối chiếu; chạy lại health/soak khi nghiệm thu.

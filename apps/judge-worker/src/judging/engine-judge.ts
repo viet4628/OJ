@@ -4,6 +4,9 @@ import type { JudgeRepository } from '../data/judge-repository.js';
 import type { Problem, Submission, SubmissionStatus, Testcase, TestcaseResult } from '../types.js';
 import { protoStatusToSubmission, scoreForCases, type JudgeBackend, type JudgingResult } from './judge-backend.js';
 
+/** Upper bound of parallel Storage reads while preparing one problem archive. */
+const MAX_PARALLEL_LOADS = 8;
+
 /** Chấm bài qua rsjudge engine (compile/run trong Rust sandbox). */
 export class EngineJudge implements JudgeBackend {
   readonly mode = 'engine';
@@ -116,16 +119,28 @@ export class EngineJudge implements JudgeBackend {
     const cases: ProviderProblem['cases'] = [];
     let totalScore = 0;
     // Bound in-flight Storage requests while keeping archive order identical to verdict order.
-    for (let offset = 0; offset < testcases.length; offset += 2) {
-      const batch = testcases.slice(offset, offset + 2);
-      const contents = await Promise.all(batch.map(tc => this.repository.resolveTestcaseContent(tc)));
-      for (const [index, content] of contents.entries()) {
-        if (content.contentError) throw new Error(content.contentError);
-        cases.push({ input: content.inputContent, output: content.outputContent, score: batch[index].score });
-        totalScore += batch[index].score ?? 0;
-      }
+    const contents = await this.loadTestcaseContents(testcases);
+    for (const [index, content] of contents.entries()) {
+      if (content.contentError) throw new Error(content.contentError);
+      cases.push({ input: content.inputContent, output: content.outputContent, score: testcases[index].score });
+      totalScore += testcases[index].score ?? 0;
     }
     return { timeLimitMs: problem.time_limit_ms, memoryLimitMb: problem.memory_limit_mb,
       totalScore: totalScore > 0 ? totalScore : 100, cases };
+  }
+
+  /** Read every testcase with a bounded number of parallel Storage requests, preserving order. */
+  private async loadTestcaseContents(testcases: Testcase[]) {
+    const results = new Array<Awaited<ReturnType<JudgeRepository['resolveTestcaseContent']>>>(testcases.length);
+    let next = 0;
+    const readers = Array.from({ length: Math.min(MAX_PARALLEL_LOADS, testcases.length) }, async () => {
+      for (;;) {
+        const index = next++;
+        if (index >= testcases.length) return;
+        results[index] = await this.repository.resolveTestcaseContent(testcases[index]);
+      }
+    });
+    await Promise.all(readers);
+    return results;
   }
 }

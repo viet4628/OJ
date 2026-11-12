@@ -1859,10 +1859,10 @@ index e3fec44..69ea3c2 100644
  pub mod request;
 diff --git a/crates/rsjudge-judger/src/judger/pipeline.rs b/crates/rsjudge-judger/src/judger/pipeline.rs
 new file mode 100644
-index 0000000..80dd7c3
+index 0000000..613fcdf
 --- /dev/null
 +++ b/crates/rsjudge-judger/src/judger/pipeline.rs
-@@ -0,0 +1,683 @@
+@@ -0,0 +1,768 @@
 +// SPDX-License-Identifier: Apache-2.0
 +
 +//! The judging pipeline: prepare source, compile, run with resource limits,
@@ -2101,7 +2101,8 @@ index 0000000..80dd7c3
 +    }
 +    cmd.arg("--clearenv");
 +    for (key, value) in [("PATH", "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"),
-+        ("HOME", "/tmp"), ("TMPDIR", "/tmp"), ("LANG", "C.UTF-8"), ("PYTHONDONTWRITEBYTECODE", "1")] {
++        ("HOME", "/tmp"), ("TMPDIR", "/tmp"), ("LANG", "C.UTF-8"), ("LC_ALL", "C"),
++        ("PYTHONDONTWRITEBYTECODE", "1")] {
 +        cmd.args(["--setenv", key, value]);
 +    }
 +    cmd.kill_on_drop(true);
@@ -2352,10 +2353,15 @@ index 0000000..80dd7c3
 +    time_limit: Duration,
 +    memory_bytes: Option<u64>,
 +) -> Result<RunOutcome> {
-+    let argv: Vec<String> = match &prepared.execute_argv {
++    let user_argv: Vec<String> = match &prepared.execute_argv {
 +        Some(argv) => argv.clone(),
 +        None => vec![prepared.out_path.to_string_lossy().into_owned()],
 +    };
++    // `wait4` on the sandbox only reports the sandbox's own usage: the user
++    // program lives in a PID namespace, so its CPU time and peak RSS are lost.
++    // GNU time inside the sandbox measures the program itself.
++    let report = prepared.workdir.path().join(USAGE_REPORT);
++    let argv = usage_argv(&report, &user_argv);
 +
 +    let mut cmd = sandbox_command(prepared.workdir.path());
 +    cmd.args(&argv).current_dir(prepared.workdir.path());
@@ -2390,9 +2396,46 @@ index 0000000..80dd7c3
 +    let mut outcome = wait_with_captures(child, started_at)
 +        .await
 +        .map_err(|e| PipelineError(format!("{e}")))?;
++    // A killed program may not leave a report behind; keep the sandbox usage then.
++    if let Some((cpu_time, ram_kb)) = parse_usage_report(&report).await {
++        outcome.cpu_time = cpu_time;
++        outcome.ram_kb = ram_kb;
++    }
 +    outcome.timed_out |= outcome.cpu_time >= time_limit;
 +    if let Some(task) = stdin_task { task.abort(); }
 +    Ok(outcome)
++}
++
++/// Report file written by the usage wrapper inside the sandbox.
++const USAGE_REPORT: &str = ".usage-report";
++/// GNU time, present in the judge image and reachable through the read-only `/usr` bind.
++const TIME_BIN: &str = "/usr/bin/time";
++
++/// Wrap the user command so it reports its own CPU time and peak RSS.
++fn usage_argv(report: &Path, user_argv: &[String]) -> Vec<String> {
++    let mut argv = vec![
++        TIME_BIN.to_owned(),
++        "-f".to_owned(),
++        "%U %S %M".to_owned(),
++        "-o".to_owned(),
++        report.to_string_lossy().into_owned(),
++    ];
++    argv.extend(user_argv.iter().cloned());
++    argv
++}
++
++/// Parse the wrapper report into (CPU time, peak RSS in KiB).
++async fn parse_usage_report(report: &Path) -> Option<(Duration, u64)> {
++    let text = tokio::fs::read_to_string(report).await.ok()?;
++    let line = text
++        .lines()
++        .map(str::trim)
++        .find(|line| line.split_whitespace().count() == 3)?;
++    let mut parts = line.split_whitespace();
++    let user: f64 = parts.next()?.parse().ok()?;
++    let system: f64 = parts.next()?.parse().ok()?;
++    let max_rss: u64 = parts.next()?.parse().ok()?;
++    Some((Duration::from_secs_f64(user + system), max_rss))
 +}
 +
 +#[cfg(test)]
@@ -2533,6 +2576,48 @@ index 0000000..80dd7c3
 +        let outcome = run_once(&prepared, &def, &input, Duration::from_secs(5), None).await.unwrap();
 +        assert!(!outcome.timed_out);
 +        assert!(outcome.stdout.ends_with(b"262144\n"));
++    }
++
++    #[tokio::test]
++    async fn reports_the_program_cpu_time_and_peak_memory() {
++        let def: LanguageDef = toml::from_str(
++            r#"exec_type = "source_code"
++execute = "python3 {src_file}""#,
++        )
++        .unwrap();
++        let prepared = prepare_source(
++            "Python",
++            &def,
++            br#"
++import time
++end = time.time() + 0.5
++x = 0
++while time.time() < end:
++    x += 1
++print("ok")
++"#,
++            None,
++        )
++        .await
++        .unwrap();
++        let outcome = run_once(
++            &prepared,
++            &def,
++            b"",
++            Duration::from_secs(10),
++            Some(512 * 1024 * 1024),
++        )
++        .await
++        .unwrap();
++        // The sandbox hides the program behind a PID namespace, so the usage
++        // must come from the wrapper inside the sandbox.
++        assert!(
++            outcome.cpu_time >= Duration::from_millis(300),
++            "cpu time must measure the program itself: {:?}",
++            outcome.cpu_time
++        );
++        assert!(outcome.ram_kb > 0, "peak RSS must be reported");
++        assert_eq!(outcome.exit_code, 0);
 +    }
 +
 +    #[tokio::test]

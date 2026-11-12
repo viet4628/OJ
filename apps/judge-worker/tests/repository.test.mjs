@@ -78,6 +78,48 @@ for (const scenario of ['committed', 'judging', 'rejudged']) {
   });
 }
 
+test('a transient read failure is retried once instead of failing the submission', async () => {
+  let calls = 0;
+  const server = createServer((req, res) => {
+    calls++;
+    if (calls === 1) return req.socket.destroy();
+    res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify([{ id: 'tc' }]));
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const repo = new JudgeRepository(createClient(`http://127.0.0.1:${server.address().port}`, 'test-key',
+    { auth: { persistSession: false } }), 2000);
+  try {
+    const rows = await repo.getTestcases('problem');
+    assert.equal(rows.length, 1);
+    assert.equal(calls, 2, 'the read must be retried once');
+  } finally {
+    server.closeAllConnections();
+    await new Promise(resolve => server.close(resolve));
+  }
+});
+
+test('Storage reads stay within the global download cap', async () => {
+  let active = 0, peak = 0;
+  const server = createServer((_req, res) => {
+    active++; peak = Math.max(peak, active);
+    setTimeout(() => { active--; res.writeHead(200, { 'Content-Type': 'text/plain' }).end('payload'); }, 20);
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const repo = new JudgeRepository(createClient(`http://127.0.0.1:${server.address().port}`, 'test-key',
+    { auth: { persistSession: false } }), 5000);
+  const testcases = Array.from({ length: 20 }, (_, i) => ({ id: `tc-${i}`, problem_id: 'p',
+    input_path: `${i}.in`, output_path: `${i}.out`, input_content: null, output_content: null, score: 1 }));
+  try {
+    const contents = await Promise.all(testcases.map(tc => repo.resolveTestcaseContent(tc)));
+    assert.equal(contents.length, 20);
+    assert.equal(contents.filter(c => c.contentError).length, 0);
+    assert(peak <= 8, `too many parallel Storage reads: ${peak}`);
+  } finally {
+    server.closeAllConnections();
+    await new Promise(resolve => server.close(resolve));
+  }
+});
+
 test('worker health detects stale polls and recovers after the real DB request times out', async () => {
   let stalled = false;
   const server = createServer((req, res) => {

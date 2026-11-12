@@ -21,7 +21,7 @@ export class WorkerApp {
 
   constructor(private readonly config: WorkerConfig, private readonly repository: JudgeRepository, private readonly judge: JudgeBackend) {
     const service = new SubmissionService(repository, judge);
-    this.queue = new SubmissionQueue((submission) => service.process(submission));
+    this.queue = new SubmissionQueue((submission) => service.process(submission), config.concurrency);
   }
 
   stop(): void {

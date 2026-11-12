@@ -53,6 +53,23 @@ Owner đã áp dụng các migration bằng SQL Editor và báo thành công; RE
 
 Tiếp tục theo [plan](../plan.md), triển khai theo [runbook](pilot-runbook.md). Đã giữ bằng chứng đo lường; ảnh/video/kết quả Playwright có thể sinh lại và được dọn bằng `npm run clean`.
 
+## Đợt cải thiện hiệu năng và độ đúng chấm ngày 12/11/2026
+
+Đợt này chạy trên staging Supabase thật bằng `docker compose` (worker + rsjudge engine), cùng bộ tải 10 tài khoản/50 bài và bộ Storage 10 testcase/TLE. Ba việc đã đổi hành vi thật: (1) `WORKER_CONCURRENCY` cho phép chấm nhiều bài song song trong một daemon, claim nguyên tử giữ nguyên; (2) đọc testcase song song có ngân sách, kèm semaphore toàn cục 8 lượt tải Storage và một lần retry cho lỗi mạng tạm ở đường đọc; (3) sửa lỗi đo thời gian/bộ nhớ.
+
+| Bằng chứng | Kết quả và phạm vi |
+|---|---|
+| [Baseline trước](reports/baseline-20261112-inline.json) | 10 người/50 bài inline 1 testcase: 0 lỗi, p50 queue 10,19s, p95 hoàn tất 23,67s, 0,71 bài/s. Chạy trên laptop 8 core, worker+engine trên cùng host, DB Supabase từ xa nên độ trễ mạng là điều kiện riêng của môi trường đo |
+| [Sau khi tối ưu](reports/after-20261112-inline.json) | Cùng bộ tải: 0 lỗi, 0 lỗi health, p50 queue 2,35s, p95 hoàn tất 4,33s, 2,68 bài/s; đối chiếu execution 50/50 ID khớp, không trùng. Qua nhiều lượt p95 hoàn tất 4,3–10,1s, throughput 1,9–2,7 bài/s |
+| [Bộ Storage nặng](reports/after-20261112-storage.json) | 5 người/20 bài, 10 testcase Storage 64KiB, C++/Python/Rust và TLE: 20/20 verdict đúng, 0 lỗi. `cases.loadMs` p95 2,56s (trước 6,43s) |
+| [Timing worker](reports/after-20261112-inline-timings.json) | `totalMs` p50 693ms, p95 2,855s; `cases.loadMs` p50 0ms (testcase inline); RAM worker tối đa 5,23%, engine tối đa 6,25%, PID tối đa 14 |
+| Verdict qua API thật | `verify-verdicts.mjs`: AC/WA/TLE/MLE/RTE đều đúng. Chương trình 500ms CPU + 100MB trước khi sửa ghi 1ms/40MB, sau khi sửa ghi 550ms/103MB |
+| Kiểm thử mã | Worker 20/20 PASS (thêm test concurrency, retry đọc, trần tải Storage); Rust `cargo test -p rsjudge-judger` 17/17 PASS (thêm test đo CPU/RSS); `patches/rsjudge-integration.patch` áp sạch lên upstream `d33f85b` |
+
+Lỗi gốc đã tìm và sửa: `wait4` chỉ trả usage của tiến trình trực tiếp (bwrap), còn chương trình của học sinh nằm trong PID namespace khác nên CPU thật và RSS đỉnh đều mất — mọi bài đều bị ghi ~1ms/2MB và verdict MLE không nhận diện được. Nay đo bằng GNU time bên trong sandbox. Lỗi SYSTEM_ERROR rời rạc trong lúc tải là timeout đọc Storage khi nhiều job tải song song; đã thêm semaphore và retry đọc.
+
+Giới hạn còn lại: concurrency mặc định 2 và không được vượt `cpus` của engine (2), nếu không chương trình sát thời gian có thể bị TLE giả; campaign 5/10/20 người và soak 24h chưa chạy lại; số đo trên cùng một host nên chưa phải capacity công bố.
+
 ## Đợt cải thiện hiệu năng ngày 25/10/2026
 
 Đã triển khai bản worker có timeout DB/Storage, thời gian từng công đoạn và đối chiếu verdict sau lỗi ghi; claim không retry, ghi lại tối đa một lần sau read-back xác nhận còn JUDGING và luôn có điều kiện trạng thái. Metadata đề/test được dùng lại trong một job, tải Storage tối đa hai testcase đồng thời, callback provider được giải phóng sau job. Không thêm dependency, nhiều worker hoặc cache xuyên job chưa có invalidation đáng tin cậy.

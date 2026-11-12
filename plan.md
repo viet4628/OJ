@@ -91,6 +91,92 @@ Trạng thái lần chạy 25/10/2026: health30 phút PASS, nhưng vòng `load-5
 
 Mỗi bước triển khai thành diff riêng, so với baseline cùng workload. Nếu kết quả không cải thiện hoặc sai verdict/quyền, rollback bước đó; không gộp nâng dependency, thiết kế queue mới hoặc refactor diện rộng vào đợt tối ưu.
 
+## Kế hoạch cải thiện độ trễ chấm bài (bổ sung 12/11/2026)
+
+Bổ sung cho mục "Kế hoạch cải thiện hiệu năng" ở trên, dựa trên số đo `docs/reports/worker-timings-final-20261025.json` (22 bài) và `docs/reports/load-20261025.json` (10 tài khoản, 50 bài). Không đổi kiến trúc: vẫn một worker/DB, claim nguyên tử, testcase private, sandbox. Không thêm dependency hay queue service.
+
+Quy ước đặt tên: T0 và T1 là việc đã nằm trong P0–P2 hiện có (đo lại baseline và giảm chi phí mỗi bài); T2 là phần mới (concurrency giới hạn trong một daemon) và nằm đúng điều kiện đã viết ở P4; T3–T5 là việc còn lại.
+
+### Kết quả đợt 12/11/2026 (đã chạy trên staging thật)
+
+Đợt này chạy trên staging Supabase thật với `docker compose` (worker + rsjudge engine), bộ tải 10 tài khoản/50 bài và bộ Storage 10 testcase/TLE.
+
+| Việc | Kết quả |
+|---|---|
+| T0 — baseline đo lặp được | Thêm `apps/judge-worker/scripts/worker-timings.mjs` (tổng hợp p50/p95 từ log worker). Baseline cũ: p50 queue 10,19s, p95 hoàn tất 23,67s, 0,71 bài/s |
+| T1.1 — tải Storage song song có ngân sách | Đọc testcase chạy 8 request/lần thay vì 2; thêm semaphore toàn cục 8 lượt tải Storage để nhiều job không làm quá tải bucket. `cases.loadMs` p95 6,43s → 2,56s |
+| T1.2 — cache bundle theo phiên bản | **Hoãn**: web luôn lưu testcase inline (`input_content`), nên `cases.loadMs` p50 = 0ms; cache chỉ thêm rủi ro trả verdict sai khi tín hiệu version không đáng tin cậy |
+| T2 — concurrency giới hạn | `WORKER_CONCURRENCY` (mặc định 2, cho phép 1..8). Hàng đợi drain song song, claim nguyên tử giữ nguyên. Lượt cuối: p50 queue 2,35s, p95 hoàn tất 4,33s, 2,68 bài/s, 0 lỗi; qua nhiều lượt p95 hoàn tất 4,3–10,1s và throughput 1,9–2,7 bài/s |
+| Retry đường đọc | Một lần retry cho lỗi mạng tạm ở đọc problem/testcase/Storage; trước đó lỗi này thành SYSTEM_ERROR |
+| **Sửa lỗi đo thời gian/bộ nhớ** | `wait4` chỉ trả usage của bwrap (PID namespace) nên mọi bài đều ghi ~1ms/2MB. Bọc chương trình bằng GNU time trong sandbox (cả engine lẫn chấm local): bài 500ms CPU/100MB nay ghi đúng 550ms/103MB; verdict MLE nhận diện đúng |
+
+Quy tắc vận hành: **concurrency không được vượt số CPU của engine** (engine `cpus: 2`, worker `WORKER_CONCURRENCY: 2`). Runner giết theo wall-time, nên nếu nhiều job tranh CPU trên cùng số core, một chương trình sát thời gian có thể bị TLE giả. Muốn tăng concurrency thì phải tăng `cpus` của engine tương ứng.
+
+Còn lại: T3 (giới hạn hàng đợi trong RAM), T4 (vị trí xếu hàng cho người dùng), T5 (campaign 5/10/20 người + soak 24h). Chưa sửa `updated_at` cho testcase vì chưa dùng cache bundle.
+
+### Số đo hiện tại và mục tiêu
+
+| Hạng mục | Hiện tại | Mục tiêu | Nút thắt |
+|---|---|---|---|
+| `totalMs` chấm 1 bài, p50 / p95 | 4,8s / 10,0s | <= 2,5s / <= 6s | tải testcase từ Storage |
+| `cases.loadMs` p50 / p95 | 2,68s / 6,43s | <= 0,5s | Storage round-trip |
+| `cases.archiveMs` p95 | 558ms | <= 100ms | build tar+zstd mỗi bài |
+| `judgeMs` p50 | 2,58s | <= 1,5s | = load + compile + run |
+| Queue wait p95 (10 người đồng thời) | 6,36s | <= 3s | concurrency = 1 |
+| SYSTEM_ERROR dưới tải | có (vòng 5 người đã thất bại) | 0 | chưa rõ nguyên nhân |
+
+### T0 — Chốt baseline đo lặp được
+
+- Vòng `load-5-round-1` đã thất bại nên chưa có baseline hợp lệ để so sánh. Không làm T1/T2 trước khi có số đo lặp lại được trên cùng bộ tải.
+- Thay đổi: script tổng hợp log worker (`[Timing]`, `[CasesTiming]`, `[EngineTiming]`) ra p50/p95 theo nhóm ngôn ngữ và số testcase, lưu `docs/reports/`. Không đụng code runtime.
+- Phạm vi: `apps/judge-worker/scripts/` (script mới); chỉ sửa file liên quan nguyên nhân thật.
+- Hoàn thành: chạy 3 lần trên cùng bộ tải, sai số p50 <= 15%, có bảng theo nhóm bài.
+- Kiểm chứng: `npm --prefix apps/judge-worker run build && node apps/judge-worker/scripts/test-load.mjs`.
+
+### T1 — Giảm thời gian chuẩn bị testcase (song song với P2 hiện có)
+
+- Tải Storage song song theo ngân sách: `judging/engine-judge.ts` đang tải 2 request mỗi lượt (input + output của một testcase); đổi sang 8 request đồng thời, <= 32 MiB đang bay.
+- Cache bundle theo phiên bản để bỏ lượt tải lặp: bảng `testcases` chưa có `updated_at`; thêm trigger bump `problems.updated_at` khi testcases INSERT/UPDATE/DELETE (migration idempotent). Version = `problems.updated_at` cộng hash `(id, input_path, output_path, score)` để bắt đổi path/blob. Cache chỉ nằm trong RAM tiến trình worker, không ghi testcase ra ngoài thư mục tạm.
+- Cache archive bytes theo version để bỏ `mkdtemp` + `tar` + `zstd` mỗi bài (`engine/cases-provider.ts`); engine đã nhận tar thuần.
+- Phạm vi: `judging/engine-judge.ts`, `engine/cases-provider.ts`, `data/judge-repository.ts`, `supabase/schema.sql` cùng migration mới.
+- Hoàn thành: `cases.loadMs` p50 <= 0,5s, `archiveMs` p95 <= 100ms, `totalMs` p50 <= 2,5s; sửa/xóa testcase dùng ngay phiên bản mới; RAM/disk không vượt ngân sách; weighted verdict, trial score và testcase secrecy giữ nguyên.
+- Kiểm chứng: `npm --prefix apps/judge-worker test`, `npm --prefix apps/judge-worker run smoke`, `npm run test:pilot`, `npm run test:db` (có migration).
+
+### T2 — Concurrency giới hạn trong một daemon (chỉ khi T1 xong)
+
+- Điều kiện tiên quyết, phải kiểm chứng được chứ không "tin": `RLIMIT_CPU/AS/FSIZE` đặt qua `setrlimit` trong `pre_exec` nên kế thừa cho cháu, nhưng `RLIMIT_CPU` tính theo từng process chứ không theo cây; giữ concurrency <= 2 và nâng `cpus` engine để có biên. Mỗi job giữ tối đa `memory_limit_mb` của đề nên nâng `mem_limit` engine khi bật concurrency.
+- Thay đổi: `submissions/submission-queue.ts` nhận `concurrency` (env `WORKER_CONCURRENCY`, mặc định 1); `config.ts` validate env mới; `worker-app.ts` heartbeat/health báo đúng số job đang chạy. Không đổi DB — `claim_submission` nguyên tử đã chặn chạy trùng.
+- Phạm vi: `submissions/submission-queue.ts`, `config.ts`, `worker-app.ts`, `docker-compose.yml`.
+- Hoàn thành: concurrency 2 cho queue p95 <= 3s ở 10 người, throughput >= 2 bài/s, 0 SYSTEM_ERROR, RAM engine <= 80% limit; isolation, drain và recover vẫn đúng.
+- Kiểm chứng: `npm --prefix apps/judge-worker test`, `npm run test:pilot`, campaign 5/10/20 người >= 10 phút mỗi mức.
+- Điều kiện dừng: nếu T1 đã đạt `totalMs` p50 <= 2,5s và queue p95 <= 3s thì không làm T2, giữ concurrency 1 (đơn giản và an toàn hơn).
+
+### T3 — Công bằng và giới hạn hàng đợi
+
+- Không ưu tiên theo tài khoản để tránh starvation; nếu cần thì ưu tiên contest sắp đóng, lấy deadline qua `contest_id`.
+- `SubmissionQueue.pending` hiện không giới hạn độ dài; quota ở DB đã chặn (<= 3 bài chờ mỗi người) nhưng vẫn cần giới hạn số bài giữ trong RAM.
+- Phạm vi: `data/judge-repository.ts` (`getPending`), `submissions/submission-queue.ts`.
+- Hoàn thành: hàng đợi trong RAM có trần; không ưu tiên gây starvation; phản hồi vị trí xếu hàng khớp với hàng đợi thật.
+- Kiểm chứng: `npm --prefix apps/judge-worker test`, `npm run test:pilot`.
+
+### T4 — Phản hồi về người dùng
+
+- Realtime `UPDATE` đã cho phản hồi dưới 1s; không tăng tần suất poll (poll dự phòng 5s giữ nguyên) để không tăng tải DB.
+- Thiếu là thông báo vị trí xếu hàng và thời gian chờ; dùng `judge_servers.queued` từ heartbeat hoặc RPC đếm bài PENDING có `created_at` nhỏ hơn bài của người dùng.
+- Phạm vi: `apps/web/src/features/user/ProblemDetail.tsx`, `apps/web/src/lib/api/submissions.ts`, có thể `supabase/schema.sql` (RPC đếm vị trí xếu hàng).
+- Hoàn thành: hiển thị "Đang xếu hàng (vị trí N)" và thời gian chờ; UI vẫn theo dõi bài chấm > 30s và hủy listener/timer khi rời trang; verdict và quyền không đổi.
+- Kiểm chứng: `npm --prefix apps/web run build`, `npm run test:e2e`; `npm run test:db` nếu sửa SQL.
+
+### T5 — Nghiệm thu tải và công bố capacity
+
+- Chạy lại campaign 5/10/20 người (10 phút mỗi mức) rồi soak 24h theo `scripts/health.mjs`, có kịch bản restart/drain; lưu báo cáo `docs/reports/`.
+- Hoàn thành: không mất verdict/claim trùng/bài treo; 0 SYSTEM_ERROR do hạ tầng; queue không tăng vô hạn ở tải công bố; recovery sau restart đạt; ghi p95 theo nhóm bài và chọn tải vận hành có biên dự phòng.
+- Kiểm chứng: `npm run test:pilot`, `node scripts/health.mjs`; cập nhật `docs/verification.md` và `docs/pilot-runbook.md` bằng kết quả đã chạy.
+
+### Thứ tự và quy tắc dừng
+
+T0 → T1 → T2 → T4 → T5. T1 và T2 không làm cùng lúc vì cùng đổi vùng `judging/engine-judge.ts` và cùng ảnh hưởng `judgeMs`, khó quy kết nguyên nhân hồi quy; T1 trước vì độc lập, rủi ro thấp và không đụng concurrency. Mỗi bước thành diff riêng so với baseline của T0; nếu sai verdict/quyền hoặc hồi quy thì rollback bước đó. Số đo bổ sung đưa vào `docs/verification.md` và `docs/reports/`.
+
 ## Giữ phạm vi
 
 Một SPA và một worker/DB. Chưa cần Redis, nhiều worker, microservice mới hoặc thêm thư viện. SPJ, interactive, subtask và plagiarism chỉ lên phase riêng khi có nhu cầu/tiêu chí cụ thể. Không coi build hoặc canary A+B ngắn là chứng nhận mở công khai.

@@ -1,0 +1,756 @@
+{
+  "at": "2026-11-12T17:01:27.930Z",
+  "loadStartedAt": "2026-11-12T17:01:02.176Z",
+  "users": 10,
+  "completed": 50,
+  "failures": 0,
+  "elapsedSeconds": 18.675448215999996,
+  "p50QueueMs": 2353,
+  "p95QueueMs": 3115,
+  "p99QueueMs": 3529,
+  "p50FinishMs": 3327,
+  "p95FinishMs": 4332,
+  "p99FinishMs": 4812,
+  "throughputPerSecond": 2.677311913572335,
+  "healthFailures": 0,
+  "cleanupFailed": false,
+  "stopped": false,
+  "stopReason": null,
+  "groups": [
+    {
+      "key": "cpp:ACCEPTED",
+      "count": 17,
+      "failures": 0,
+      "p50FinishMs": 3093,
+      "p95FinishMs": 4812,
+      "p99FinishMs": 4812
+    },
+    {
+      "key": "python:ACCEPTED",
+      "count": 17,
+      "failures": 0,
+      "p50FinishMs": 3365,
+      "p95FinishMs": 4602,
+      "p99FinishMs": 4602
+    },
+    {
+      "key": "rust:ACCEPTED",
+      "count": 16,
+      "failures": 0,
+      "p50FinishMs": 3427,
+      "p95FinishMs": 4281,
+      "p99FinishMs": 4281
+    }
+  ],
+  "executionAudit": {
+    "available": true,
+    "submitted": 50,
+    "uniqueSubmitted": 50,
+    "duplicateExecutionIds": [],
+    "missingExecutionIds": []
+  },
+  "workload": {
+    "languages": [
+      "cpp",
+      "python",
+      "rust"
+    ],
+    "cases": 1,
+    "storage": false,
+    "inputBytes": 5,
+    "tleEvery": 0,
+    "duration": 0,
+    "jobTimeout": 1200,
+    "model": "closed-loop; one outstanding job per user"
+  },
+  "runtime": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz",
+    "cpuCount": 8,
+    "hostMemoryBytes": 8198332416
+  },
+  "results": [
+    {
+      "user": 0,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "a94c687a-8ba5-48c5-98d3-7e41d7baebc2",
+      "status": "ACCEPTED",
+      "finishMs": 2157,
+      "queueMs": 764
+    },
+    {
+      "user": 4,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "75360aab-e640-4c80-98cd-f73236ee5025",
+      "status": "ACCEPTED",
+      "finishMs": 2359,
+      "queueMs": 415
+    },
+    {
+      "user": 5,
+      "language": "rust",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "5d599136-2edc-412c-97ff-ae06667373c6",
+      "status": "ACCEPTED",
+      "finishMs": 2814,
+      "queueMs": 1555
+    },
+    {
+      "user": 2,
+      "language": "rust",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "ab1f69a6-8a49-4145-9a64-f73ec790b7c7",
+      "status": "ACCEPTED",
+      "finishMs": 3081,
+      "queueMs": 1645
+    },
+    {
+      "user": 8,
+      "language": "rust",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "2a141bd3-a71c-47f6-9c54-2f8b9ac88de4",
+      "status": "ACCEPTED",
+      "finishMs": 3427,
+      "queueMs": 2363
+    },
+    {
+      "user": 7,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "5c8fdb3e-7371-45b6-a63e-a75926c2a269",
+      "status": "ACCEPTED",
+      "finishMs": 3745,
+      "queueMs": 2406
+    },
+    {
+      "user": 6,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "3d8a030f-2d1f-4334-8b08-f285a0e0a4c9",
+      "status": "ACCEPTED",
+      "finishMs": 4107,
+      "queueMs": 3161
+    },
+    {
+      "user": 3,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "54aaf593-51a1-4c1b-ae92-b10cd66bb7cd",
+      "status": "ACCEPTED",
+      "finishMs": 4140,
+      "queueMs": 3026
+    },
+    {
+      "user": 1,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "87cac7a9-da3f-4acd-b740-8e0b4b9ec46a",
+      "status": "ACCEPTED",
+      "finishMs": 4602,
+      "queueMs": 2988
+    },
+    {
+      "user": 9,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "a7140f53-1995-40ae-9919-5da868363e2b",
+      "status": "ACCEPTED",
+      "finishMs": 4812,
+      "queueMs": 3529
+    },
+    {
+      "user": 0,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "8d7e3a19-ae07-4d2f-8bf6-9ea561b3bf88",
+      "status": "ACCEPTED",
+      "finishMs": 3259,
+      "queueMs": 2267
+    },
+    {
+      "user": 5,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "f5eae9f5-526d-4a99-b791-43dbd03e03c3",
+      "status": "ACCEPTED",
+      "finishMs": 2926,
+      "queueMs": 2216
+    },
+    {
+      "user": 4,
+      "language": "rust",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "0c68c65f-dac1-4d97-ac16-db0ab43bde76",
+      "status": "ACCEPTED",
+      "finishMs": 3812,
+      "queueMs": 2353
+    },
+    {
+      "user": 2,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "942877a2-7f43-4f04-a163-7bd1dcfbb669",
+      "status": "ACCEPTED",
+      "finishMs": 3376,
+      "queueMs": 2310
+    },
+    {
+      "user": 7,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "c9bfc38c-ea3b-4ec8-98dc-f942dc15a484",
+      "status": "ACCEPTED",
+      "finishMs": 2974,
+      "queueMs": 2263
+    },
+    {
+      "user": 8,
+      "language": "rust",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "8becfd16-4230-455a-b959-fc1c93e8d5b0",
+      "status": "ACCEPTED",
+      "finishMs": 3686,
+      "queueMs": 2533
+    },
+    {
+      "user": 6,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "10d08998-d5b9-4906-bcbb-52a72ad19550",
+      "status": "ACCEPTED",
+      "finishMs": 3424,
+      "queueMs": 2581
+    },
+    {
+      "user": 3,
+      "language": "rust",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "04fd28e2-c36a-46d2-a1f9-1ea9aa07ff88",
+      "status": "ACCEPTED",
+      "finishMs": 3672,
+      "queueMs": 2652
+    },
+    {
+      "user": 1,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "ba32d6f2-f03b-4dd9-950e-5096dcf7d158",
+      "status": "ACCEPTED",
+      "finishMs": 3380,
+      "queueMs": 2663
+    },
+    {
+      "user": 9,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "4ee2e240-0d7a-406f-99ac-779dec6bbe4e",
+      "status": "ACCEPTED",
+      "finishMs": 3365,
+      "queueMs": 2741
+    },
+    {
+      "user": 5,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "2eea2012-80c9-4056-a252-5d7a96bd69cf",
+      "status": "ACCEPTED",
+      "finishMs": 2843,
+      "queueMs": 2211
+    },
+    {
+      "user": 0,
+      "language": "rust",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "8974cd47-5fa4-468f-bb34-9551014e2ffb",
+      "status": "ACCEPTED",
+      "finishMs": 3288,
+      "queueMs": 2203
+    },
+    {
+      "user": 2,
+      "language": "rust",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "a5e4dbfe-8b4d-4ead-8f1c-91147ac9b6cc",
+      "status": "ACCEPTED",
+      "finishMs": 3001,
+      "queueMs": 2110
+    },
+    {
+      "user": 4,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "c3c981f5-434f-4bd3-8149-76c2b3abeb4f",
+      "status": "ACCEPTED",
+      "finishMs": 3806,
+      "queueMs": 2375
+    },
+    {
+      "user": 8,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "420c462a-180e-4615-bbaa-99f6b0e2fc26",
+      "status": "ACCEPTED",
+      "finishMs": 3031,
+      "queueMs": 2285
+    },
+    {
+      "user": 7,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "8ddb118f-ca4b-45c0-b0e7-29c631df1b44",
+      "status": "ACCEPTED",
+      "finishMs": 4275,
+      "queueMs": 2611
+    },
+    {
+      "user": 6,
+      "language": "rust",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "e0e3cee4-978e-4349-b34e-40d185f74227",
+      "status": "ACCEPTED",
+      "finishMs": 3697,
+      "queueMs": 2463
+    },
+    {
+      "user": 1,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "87abd7a1-83f4-4f8a-9661-4bad4d93548c",
+      "status": "ACCEPTED",
+      "finishMs": 3284,
+      "queueMs": 2731
+    },
+    {
+      "user": 3,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "3fe78d60-2aa9-40f5-a797-b792cdd60576",
+      "status": "ACCEPTED",
+      "finishMs": 3476,
+      "queueMs": 2192
+    },
+    {
+      "user": 0,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "c9d358e3-99ae-4961-8a17-72607118d5fb",
+      "status": "ACCEPTED",
+      "finishMs": 3327,
+      "queueMs": 2730
+    },
+    {
+      "user": 9,
+      "language": "rust",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "264c5cbe-659e-4f86-99dd-8de49f6bb8bb",
+      "status": "ACCEPTED",
+      "finishMs": 4281,
+      "queueMs": 2908
+    },
+    {
+      "user": 5,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "288f1610-5849-493e-ad3c-5a9356145a5c",
+      "status": "ACCEPTED",
+      "finishMs": 4332,
+      "queueMs": 3115
+    },
+    {
+      "user": 4,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "70197b76-1905-4551-9ba3-68991729fae7",
+      "status": "ACCEPTED",
+      "finishMs": 3093,
+      "queueMs": 2436
+    },
+    {
+      "user": 2,
+      "language": "rust",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "955139cd-9d50-4044-ae53-e67b563e5113",
+      "status": "ACCEPTED",
+      "finishMs": 3735,
+      "queueMs": 2786
+    },
+    {
+      "user": 8,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "2d0e85ed-bbff-497b-b85c-633fe4f728ea",
+      "status": "ACCEPTED",
+      "finishMs": 3833,
+      "queueMs": 2229
+    },
+    {
+      "user": 6,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "d42587e3-befd-417b-88ab-acfc28da7263",
+      "status": "ACCEPTED",
+      "finishMs": 2985,
+      "queueMs": 2190
+    },
+    {
+      "user": 7,
+      "language": "rust",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "87e79431-a615-42f4-9bb7-dcaca459028f",
+      "status": "ACCEPTED",
+      "finishMs": 3555,
+      "queueMs": 1937
+    },
+    {
+      "user": 1,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "b9eada0e-3eca-4e73-9df2-8a6e60a23c38",
+      "status": "ACCEPTED",
+      "finishMs": 3515,
+      "queueMs": 2585
+    },
+    {
+      "user": 3,
+      "language": "rust",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "666ae1e7-bf19-43b8-aa30-45bbed6bdfc0",
+      "status": "ACCEPTED",
+      "finishMs": 3753,
+      "queueMs": 2763
+    },
+    {
+      "user": 0,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "f7bef814-ada7-4885-8f08-6fc050d246f1",
+      "status": "ACCEPTED",
+      "finishMs": 3129,
+      "queueMs": 2414
+    },
+    {
+      "user": 9,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "c5dbba87-8e15-4c6a-819a-8b9e7a7ac06a",
+      "status": "ACCEPTED",
+      "finishMs": 2825,
+      "queueMs": 2334
+    },
+    {
+      "user": 5,
+      "language": "rust",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "12b05e05-652f-4fe2-9286-503c3fdae0e9",
+      "status": "ACCEPTED",
+      "finishMs": 2744,
+      "queueMs": 1886
+    },
+    {
+      "user": 4,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "b052d234-86d8-48f5-8833-cd5a3251b810",
+      "status": "ACCEPTED",
+      "finishMs": 2617,
+      "queueMs": 2072
+    },
+    {
+      "user": 2,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "bd9b4bfc-b54f-4408-9f75-86bb8e1d9652",
+      "status": "ACCEPTED",
+      "finishMs": 2921,
+      "queueMs": 2359
+    },
+    {
+      "user": 8,
+      "language": "rust",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "ad6d0b42-0a7b-44e3-bd75-d96964376b70",
+      "status": "ACCEPTED",
+      "finishMs": 2603,
+      "queueMs": 1554
+    },
+    {
+      "user": 7,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "d5745358-b8ce-4aca-8296-5922a51fec10",
+      "status": "ACCEPTED",
+      "finishMs": 2213,
+      "queueMs": 1635
+    },
+    {
+      "user": 6,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "fd31f19a-6b46-4d18-9dfc-107058d276e2",
+      "status": "ACCEPTED",
+      "finishMs": 2702,
+      "queueMs": 1944
+    },
+    {
+      "user": 1,
+      "language": "rust",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "177dc4fa-090e-42be-921e-885e375de13c",
+      "status": "ACCEPTED",
+      "finishMs": 2843,
+      "queueMs": 1874
+    },
+    {
+      "user": 3,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "8ca0d804-7882-4108-be43-8fafe6fd1012",
+      "status": "ACCEPTED",
+      "finishMs": 2935,
+      "queueMs": 1992
+    },
+    {
+      "user": 0,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "3dbdc66d-b1f4-44b8-be31-3f12e579cc87",
+      "status": "ACCEPTED",
+      "finishMs": 3510,
+      "queueMs": 2585
+    }
+  ],
+  "health": [
+    {
+      "at": "2026-11-12T17:00:54.718Z",
+      "ok": true,
+      "ready": true,
+      "stopping": false,
+      "mode": "engine",
+      "realtime": "SUBSCRIBED",
+      "queued": 0,
+      "processing": 0,
+      "lastPollAt": 1794502853299,
+      "startedAt": 1794502828515,
+      "lastPollDurationMs": 333,
+      "lastPollError": null
+    },
+    {
+      "at": "2026-11-12T17:01:07.177Z",
+      "ok": true,
+      "ready": true,
+      "stopping": false,
+      "mode": "engine",
+      "realtime": "SUBSCRIBED",
+      "queued": 7,
+      "processing": 2,
+      "lastPollAt": 1794502865031,
+      "startedAt": 1794502828515,
+      "lastPollDurationMs": 339,
+      "lastPollError": null
+    },
+    {
+      "at": "2026-11-12T17:01:12.176Z",
+      "ok": true,
+      "ready": true,
+      "stopping": false,
+      "mode": "engine",
+      "realtime": "SUBSCRIBED",
+      "queued": 6,
+      "processing": 2,
+      "lastPollAt": 1794502871502,
+      "startedAt": 1794502828515,
+      "lastPollDurationMs": 92,
+      "lastPollError": null
+    },
+    {
+      "at": "2026-11-12T17:01:17.178Z",
+      "ok": true,
+      "ready": true,
+      "stopping": false,
+      "mode": "engine",
+      "realtime": "SUBSCRIBED",
+      "queued": 5,
+      "processing": 2,
+      "lastPollAt": 1794502875684,
+      "startedAt": 1794502828515,
+      "lastPollDurationMs": 89,
+      "lastPollError": null
+    }
+  ],
+  "resources": [
+    {
+      "at": "2026-11-12T17:00:56.782Z",
+      "pending": 0,
+      "judging": 0,
+      "containers": [
+        {
+          "BlockIO": "270kB / 0B",
+          "CPUPerc": "0.70%",
+          "Container": "online-judge-worker-1",
+          "ID": "5754440dd3df",
+          "MemPerc": "4.21%",
+          "MemUsage": "43.09MiB / 1GiB",
+          "Name": "online-judge-worker-1",
+          "NetIO": "112kB / 85.7kB",
+          "PIDs": "12"
+        },
+        {
+          "BlockIO": "245MB / 590kB",
+          "CPUPerc": "0.00%",
+          "Container": "online-judge-engine-1",
+          "ID": "0bd951102c31",
+          "MemPerc": "1.29%",
+          "MemUsage": "39.71MiB / 3GiB",
+          "Name": "online-judge-engine-1",
+          "NetIO": "285kB / 242kB",
+          "PIDs": "5"
+        }
+      ],
+      "diskAvailableBytes": 38743891968
+    },
+    {
+      "at": "2026-11-12T17:01:09.217Z",
+      "pending": 8,
+      "judging": 2,
+      "containers": [
+        {
+          "BlockIO": "270kB / 0B",
+          "CPUPerc": "14.89%",
+          "Container": "online-judge-worker-1",
+          "ID": "5754440dd3df",
+          "MemPerc": "4.96%",
+          "MemUsage": "50.75MiB / 1GiB",
+          "Name": "online-judge-worker-1",
+          "NetIO": "295kB / 227kB",
+          "PIDs": "12"
+        },
+        {
+          "BlockIO": "245MB / 590kB",
+          "CPUPerc": "65.12%",
+          "Container": "online-judge-engine-1",
+          "ID": "0bd951102c31",
+          "MemPerc": "1.32%",
+          "MemUsage": "40.55MiB / 3GiB",
+          "Name": "online-judge-engine-1",
+          "NetIO": "307kB / 261kB",
+          "PIDs": "6"
+        }
+      ],
+      "diskAvailableBytes": 38743879680
+    },
+    {
+      "at": "2026-11-12T17:01:14.208Z",
+      "pending": 7,
+      "judging": 1,
+      "containers": [
+        {
+          "BlockIO": "270kB / 0B",
+          "CPUPerc": "14.18%",
+          "Container": "online-judge-worker-1",
+          "ID": "5754440dd3df",
+          "MemPerc": "5.36%",
+          "MemUsage": "54.9MiB / 1GiB",
+          "Name": "online-judge-worker-1",
+          "NetIO": "427kB / 332kB",
+          "PIDs": "12"
+        },
+        {
+          "BlockIO": "245MB / 590kB",
+          "CPUPerc": "60.40%",
+          "Container": "online-judge-engine-1",
+          "ID": "0bd951102c31",
+          "MemPerc": "3.59%",
+          "MemUsage": "110.3MiB / 3GiB",
+          "Name": "online-judge-engine-1",
+          "NetIO": "330kB / 280kB",
+          "PIDs": "14"
+        }
+      ],
+      "diskAvailableBytes": 38743875584
+    },
+    {
+      "at": "2026-11-12T17:01:18.218Z",
+      "pending": 6,
+      "judging": 2,
+      "containers": [
+        {
+          "BlockIO": "270kB / 0B",
+          "CPUPerc": "17.41%",
+          "Container": "online-judge-worker-1",
+          "ID": "5754440dd3df",
+          "MemPerc": "5.48%",
+          "MemUsage": "56.12MiB / 1GiB",
+          "Name": "online-judge-worker-1",
+          "NetIO": "548kB / 429kB",
+          "PIDs": "12"
+        },
+        {
+          "BlockIO": "245MB / 590kB",
+          "CPUPerc": "97.05%",
+          "Container": "online-judge-engine-1",
+          "ID": "0bd951102c31",
+          "MemPerc": "3.34%",
+          "MemUsage": "102.7MiB / 3GiB",
+          "Name": "online-judge-engine-1",
+          "NetIO": "354kB / 302kB",
+          "PIDs": "14"
+        }
+      ],
+      "diskAvailableBytes": 38743875584
+    }
+  ]
+}

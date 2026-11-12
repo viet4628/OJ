@@ -1,0 +1,744 @@
+{
+  "at": "2026-11-12T16:29:10.300Z",
+  "loadStartedAt": "2026-11-12T16:28:15.851Z",
+  "users": 5,
+  "completed": 20,
+  "failures": 0,
+  "elapsedSeconds": 48.126359668000006,
+  "p50QueueMs": 4075,
+  "p95QueueMs": 10751,
+  "p99QueueMs": 10993,
+  "p50FinishMs": 7612,
+  "p95FinishMs": 16922,
+  "p99FinishMs": 17371,
+  "throughputPerSecond": 0.41557267447548757,
+  "healthFailures": 0,
+  "cleanupFailed": false,
+  "stopped": false,
+  "stopReason": null,
+  "groups": [
+    {
+      "key": "python:ACCEPTED",
+      "count": 5,
+      "failures": 0,
+      "p50FinishMs": 5282,
+      "p95FinishMs": 13081,
+      "p99FinishMs": 13081
+    },
+    {
+      "key": "rust:ACCEPTED",
+      "count": 5,
+      "failures": 0,
+      "p50FinishMs": 7016,
+      "p95FinishMs": 16344,
+      "p99FinishMs": 16344
+    },
+    {
+      "key": "cpp:ACCEPTED",
+      "count": 6,
+      "failures": 0,
+      "p50FinishMs": 7282,
+      "p95FinishMs": 12458,
+      "p99FinishMs": 12458
+    },
+    {
+      "key": "python:TIME_LIMIT_EXCEEDED",
+      "count": 2,
+      "failures": 0,
+      "p50FinishMs": 15538,
+      "p95FinishMs": 16922,
+      "p99FinishMs": 16922
+    },
+    {
+      "key": "cpp:TIME_LIMIT_EXCEEDED",
+      "count": 1,
+      "failures": 0,
+      "p50FinishMs": 17371,
+      "p95FinishMs": 17371,
+      "p99FinishMs": 17371
+    },
+    {
+      "key": "rust:TIME_LIMIT_EXCEEDED",
+      "count": 1,
+      "failures": 0,
+      "p50FinishMs": 15627,
+      "p95FinishMs": 15627,
+      "p99FinishMs": 15627
+    }
+  ],
+  "executionAudit": {
+    "available": true,
+    "submitted": 20,
+    "uniqueSubmitted": 20,
+    "duplicateExecutionIds": [],
+    "missingExecutionIds": []
+  },
+  "workload": {
+    "languages": [
+      "cpp",
+      "python",
+      "rust"
+    ],
+    "cases": 10,
+    "storage": true,
+    "inputBytes": 65536,
+    "tleEvery": 5,
+    "duration": 0,
+    "jobTimeout": 1200,
+    "model": "closed-loop; one outstanding job per user"
+  },
+  "runtime": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz",
+    "cpuCount": 8,
+    "hostMemoryBytes": 8198332416
+  },
+  "results": [
+    {
+      "user": 1,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "2888ace4-a994-4367-9fa9-e2a513e7d5bf",
+      "status": "ACCEPTED",
+      "finishMs": 4988,
+      "queueMs": 116
+    },
+    {
+      "user": 2,
+      "language": "rust",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "9fe13131-d49f-492e-bc81-e8c618928c79",
+      "status": "ACCEPTED",
+      "finishMs": 5369,
+      "queueMs": 574
+    },
+    {
+      "user": 3,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "09b21154-725e-4537-a7af-32372fa208a7",
+      "status": "ACCEPTED",
+      "finishMs": 7282,
+      "queueMs": 4517
+    },
+    {
+      "user": 0,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "fb383451-c29c-4dd4-8c69-4151d57f0762",
+      "status": "ACCEPTED",
+      "finishMs": 10251,
+      "queueMs": 4881
+    },
+    {
+      "user": 1,
+      "language": "rust",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "61188053-ec50-45f3-8f4a-156866dd0686",
+      "status": "ACCEPTED",
+      "finishMs": 7612,
+      "queueMs": 4808
+    },
+    {
+      "user": 2,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "8ba50b23-21dd-4f1d-982f-df97119c12c6",
+      "status": "ACCEPTED",
+      "finishMs": 8358,
+      "queueMs": 6833
+    },
+    {
+      "user": 3,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "d121b67e-89d9-42ae-8d9a-8139bd57c523",
+      "status": "ACCEPTED",
+      "finishMs": 8390,
+      "queueMs": 6368
+    },
+    {
+      "user": 4,
+      "language": "python",
+      "expected": "TIME_LIMIT_EXCEEDED",
+      "ok": true,
+      "submissionId": "3df6689d-4a40-44bb-894c-ddb1a95fdce8",
+      "status": "TIME_LIMIT_EXCEEDED",
+      "finishMs": 16922,
+      "queueMs": 4547
+    },
+    {
+      "user": 0,
+      "language": "rust",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "6d395c5e-a5c4-476f-8e3d-fb2c9b69fbaa",
+      "status": "ACCEPTED",
+      "finishMs": 7016,
+      "queueMs": 5251
+    },
+    {
+      "user": 2,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "a2df80dd-6d38-42ee-bad8-7e8332df76b4",
+      "status": "ACCEPTED",
+      "finishMs": 4715,
+      "queueMs": 3091
+    },
+    {
+      "user": 3,
+      "language": "rust",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "d2c03dbc-94d1-49bc-ab88-61fd88e9e6a6",
+      "status": "ACCEPTED",
+      "finishMs": 4454,
+      "queueMs": 2566
+    },
+    {
+      "user": 4,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "b812c394-f792-4bde-b939-c024039dd0b7",
+      "status": "ACCEPTED",
+      "finishMs": 4368,
+      "queueMs": 3069
+    },
+    {
+      "user": 0,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "4363cbb3-1599-4467-976e-51537270d05e",
+      "status": "ACCEPTED",
+      "finishMs": 5282,
+      "queueMs": 3560
+    },
+    {
+      "user": 1,
+      "language": "cpp",
+      "expected": "TIME_LIMIT_EXCEEDED",
+      "ok": true,
+      "submissionId": "6d5f1a39-8c73-4ab2-9737-c021fc59be48",
+      "status": "TIME_LIMIT_EXCEEDED",
+      "finishMs": 17371,
+      "queueMs": 3729
+    },
+    {
+      "user": 3,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "9ba2b93a-2451-483e-bed7-2240cf44a943",
+      "status": "ACCEPTED",
+      "finishMs": 12458,
+      "queueMs": 9803
+    },
+    {
+      "user": 2,
+      "language": "rust",
+      "expected": "TIME_LIMIT_EXCEEDED",
+      "ok": true,
+      "submissionId": "7e6dcda5-af42-4bc4-9f7d-5402fb5f9c52",
+      "status": "TIME_LIMIT_EXCEEDED",
+      "finishMs": 15627,
+      "queueMs": 4075
+    },
+    {
+      "user": 4,
+      "language": "python",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "22cd590c-5f8d-4c19-8908-96d55ff2757f",
+      "status": "ACCEPTED",
+      "finishMs": 13081,
+      "queueMs": 10751
+    },
+    {
+      "user": 1,
+      "language": "cpp",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "706fa0fc-59fc-4ed1-bb15-3ed11cda63bb",
+      "status": "ACCEPTED",
+      "finishMs": 6473,
+      "queueMs": 3853
+    },
+    {
+      "user": 0,
+      "language": "rust",
+      "expected": "ACCEPTED",
+      "ok": true,
+      "submissionId": "912e0a8e-09e3-438c-8c50-82ddee20bb5e",
+      "status": "ACCEPTED",
+      "finishMs": 16344,
+      "queueMs": 10993
+    },
+    {
+      "user": 3,
+      "language": "python",
+      "expected": "TIME_LIMIT_EXCEEDED",
+      "ok": true,
+      "submissionId": "7aa0d6ec-0d80-4646-9cf8-184ac15b9f21",
+      "status": "TIME_LIMIT_EXCEEDED",
+      "finishMs": 15538,
+      "queueMs": 3481
+    }
+  ],
+  "health": [
+    {
+      "at": "2026-11-12T16:27:52.126Z",
+      "ok": true,
+      "ready": true,
+      "stopping": false,
+      "mode": "engine",
+      "realtime": "SUBSCRIBED",
+      "queued": 0,
+      "processing": 0,
+      "lastPollAt": 1794500871724,
+      "startedAt": 1794500733150,
+      "lastPollDurationMs": 91,
+      "lastPollError": null
+    },
+    {
+      "at": "2026-11-12T16:28:20.851Z",
+      "ok": true,
+      "ready": true,
+      "stopping": false,
+      "mode": "engine",
+      "realtime": "SUBSCRIBED",
+      "queued": 2,
+      "processing": 2,
+      "lastPollAt": 1794500900447,
+      "startedAt": 1794500733150,
+      "lastPollDurationMs": 92,
+      "lastPollError": null
+    },
+    {
+      "at": "2026-11-12T16:28:25.851Z",
+      "ok": true,
+      "ready": true,
+      "stopping": false,
+      "mode": "engine",
+      "realtime": "SUBSCRIBED",
+      "queued": 2,
+      "processing": 2,
+      "lastPollAt": 1794500904634,
+      "startedAt": 1794500733150,
+      "lastPollDurationMs": 92,
+      "lastPollError": null
+    },
+    {
+      "at": "2026-11-12T16:28:30.852Z",
+      "ok": true,
+      "ready": true,
+      "stopping": false,
+      "mode": "engine",
+      "realtime": "SUBSCRIBED",
+      "queued": 3,
+      "processing": 2,
+      "lastPollAt": 1794500908809,
+      "startedAt": 1794500733150,
+      "lastPollDurationMs": 84,
+      "lastPollError": null
+    },
+    {
+      "at": "2026-11-12T16:28:35.852Z",
+      "ok": true,
+      "ready": true,
+      "stopping": false,
+      "mode": "engine",
+      "realtime": "SUBSCRIBED",
+      "queued": 2,
+      "processing": 2,
+      "lastPollAt": 1794500914435,
+      "startedAt": 1794500733150,
+      "lastPollDurationMs": 1116,
+      "lastPollError": null
+    },
+    {
+      "at": "2026-11-12T16:28:40.852Z",
+      "ok": true,
+      "ready": true,
+      "stopping": false,
+      "mode": "engine",
+      "realtime": "SUBSCRIBED",
+      "queued": 3,
+      "processing": 2,
+      "lastPollAt": 1794500918875,
+      "startedAt": 1794500733150,
+      "lastPollDurationMs": 349,
+      "lastPollError": null
+    },
+    {
+      "at": "2026-11-12T16:28:45.853Z",
+      "ok": true,
+      "ready": true,
+      "stopping": false,
+      "mode": "engine",
+      "realtime": "SUBSCRIBED",
+      "queued": 2,
+      "processing": 2,
+      "lastPollAt": 1794500925295,
+      "startedAt": 1794500733150,
+      "lastPollDurationMs": 84,
+      "lastPollError": null
+    },
+    {
+      "at": "2026-11-12T16:28:50.853Z",
+      "ok": true,
+      "ready": true,
+      "stopping": false,
+      "mode": "engine",
+      "realtime": "SUBSCRIBED",
+      "queued": 1,
+      "processing": 2,
+      "lastPollAt": 1794500929725,
+      "startedAt": 1794500733150,
+      "lastPollDurationMs": 344,
+      "lastPollError": null
+    },
+    {
+      "at": "2026-11-12T16:28:55.853Z",
+      "ok": true,
+      "ready": true,
+      "stopping": false,
+      "mode": "engine",
+      "realtime": "SUBSCRIBED",
+      "queued": 0,
+      "processing": 1,
+      "lastPollAt": 1794500934093,
+      "startedAt": 1794500733150,
+      "lastPollDurationMs": 89,
+      "lastPollError": null
+    },
+    {
+      "at": "2026-11-12T16:29:00.854Z",
+      "ok": true,
+      "ready": true,
+      "stopping": false,
+      "mode": "engine",
+      "realtime": "SUBSCRIBED",
+      "queued": 0,
+      "processing": 1,
+      "lastPollAt": 1794500940605,
+      "startedAt": 1794500733150,
+      "lastPollDurationMs": 343,
+      "lastPollError": null
+    }
+  ],
+  "resources": [
+    {
+      "at": "2026-11-12T16:27:54.180Z",
+      "pending": 0,
+      "judging": 0,
+      "containers": [
+        {
+          "BlockIO": "5.78MB / 0B",
+          "CPUPerc": "1.06%",
+          "Container": "online-judge-worker-1",
+          "ID": "39455abc9ca1",
+          "MemPerc": "5.62%",
+          "MemUsage": "57.53MiB / 1GiB",
+          "Name": "online-judge-worker-1",
+          "NetIO": "722kB / 615kB",
+          "PIDs": "12"
+        },
+        {
+          "BlockIO": "242MB / 0B",
+          "CPUPerc": "0.01%",
+          "Container": "online-judge-engine-1",
+          "ID": "0bd951102c31",
+          "MemPerc": "7.09%",
+          "MemUsage": "217.9MiB / 3GiB",
+          "Name": "online-judge-engine-1",
+          "NetIO": "92.5kB / 77.6kB",
+          "PIDs": "4"
+        }
+      ],
+      "diskAvailableBytes": 38746939392
+    },
+    {
+      "at": "2026-11-12T16:28:22.895Z",
+      "pending": 3,
+      "judging": 2,
+      "containers": [
+        {
+          "BlockIO": "5.98MB / 0B",
+          "CPUPerc": "12.05%",
+          "Container": "online-judge-worker-1",
+          "ID": "39455abc9ca1",
+          "MemPerc": "6.55%",
+          "MemUsage": "67.04MiB / 1GiB",
+          "Name": "online-judge-worker-1",
+          "NetIO": "938kB / 811kB",
+          "PIDs": "12"
+        },
+        {
+          "BlockIO": "242MB / 73.7kB",
+          "CPUPerc": "14.69%",
+          "Container": "online-judge-engine-1",
+          "ID": "0bd951102c31",
+          "MemPerc": "7.49%",
+          "MemUsage": "230.1MiB / 3GiB",
+          "Name": "online-judge-engine-1",
+          "NetIO": "99.2kB / 84.4kB",
+          "PIDs": "5"
+        }
+      ],
+      "diskAvailableBytes": 38746935296
+    },
+    {
+      "at": "2026-11-12T16:28:27.876Z",
+      "pending": 3,
+      "judging": 2,
+      "containers": [
+        {
+          "BlockIO": "5.98MB / 0B",
+          "CPUPerc": "1.50%",
+          "Container": "online-judge-worker-1",
+          "ID": "39455abc9ca1",
+          "MemPerc": "6.79%",
+          "MemUsage": "69.58MiB / 1GiB",
+          "Name": "online-judge-worker-1",
+          "NetIO": "1.02MB / 882kB",
+          "PIDs": "12"
+        },
+        {
+          "BlockIO": "242MB / 147kB",
+          "CPUPerc": "140.79%",
+          "Container": "online-judge-engine-1",
+          "ID": "0bd951102c31",
+          "MemPerc": "7.89%",
+          "MemUsage": "242.3MiB / 3GiB",
+          "Name": "online-judge-engine-1",
+          "NetIO": "105kB / 89.9kB",
+          "PIDs": "9"
+        }
+      ],
+      "diskAvailableBytes": 38746935296
+    },
+    {
+      "at": "2026-11-12T16:28:32.886Z",
+      "pending": 3,
+      "judging": 2,
+      "containers": [
+        {
+          "BlockIO": "5.98MB / 0B",
+          "CPUPerc": "10.41%",
+          "Container": "online-judge-worker-1",
+          "ID": "39455abc9ca1",
+          "MemPerc": "6.78%",
+          "MemUsage": "69.41MiB / 1GiB",
+          "Name": "online-judge-worker-1",
+          "NetIO": "1.16MB / 1MB",
+          "PIDs": "12"
+        },
+        {
+          "BlockIO": "242MB / 258kB",
+          "CPUPerc": "146.69%",
+          "Container": "online-judge-engine-1",
+          "ID": "0bd951102c31",
+          "MemPerc": "10.07%",
+          "MemUsage": "309.3MiB / 3GiB",
+          "Name": "online-judge-engine-1",
+          "NetIO": "113kB / 96.5kB",
+          "PIDs": "17"
+        }
+      ],
+      "diskAvailableBytes": 38746931200
+    },
+    {
+      "at": "2026-11-12T16:28:37.876Z",
+      "pending": 2,
+      "judging": 2,
+      "containers": [
+        {
+          "BlockIO": "6.11MB / 0B",
+          "CPUPerc": "2.92%",
+          "Container": "online-judge-worker-1",
+          "ID": "39455abc9ca1",
+          "MemPerc": "6.88%",
+          "MemUsage": "70.43MiB / 1GiB",
+          "Name": "online-judge-worker-1",
+          "NetIO": "1.35MB / 1.17MB",
+          "PIDs": "12"
+        },
+        {
+          "BlockIO": "242MB / 406kB",
+          "CPUPerc": "115.67%",
+          "Container": "online-judge-engine-1",
+          "ID": "0bd951102c31",
+          "MemPerc": "7.88%",
+          "MemUsage": "242.2MiB / 3GiB",
+          "Name": "online-judge-engine-1",
+          "NetIO": "124kB / 108kB",
+          "PIDs": "13"
+        }
+      ],
+      "diskAvailableBytes": 38746931200
+    },
+    {
+      "at": "2026-11-12T16:28:42.877Z",
+      "pending": 3,
+      "judging": 2,
+      "containers": [
+        {
+          "BlockIO": "6.11MB / 0B",
+          "CPUPerc": "0.05%",
+          "Container": "online-judge-worker-1",
+          "ID": "39455abc9ca1",
+          "MemPerc": "6.87%",
+          "MemUsage": "70.39MiB / 1GiB",
+          "Name": "online-judge-worker-1",
+          "NetIO": "1.4MB / 1.21MB",
+          "PIDs": "12"
+        },
+        {
+          "BlockIO": "243MB / 442kB",
+          "CPUPerc": "199.59%",
+          "Container": "online-judge-engine-1",
+          "ID": "0bd951102c31",
+          "MemPerc": "7.87%",
+          "MemUsage": "241.9MiB / 3GiB",
+          "Name": "online-judge-engine-1",
+          "NetIO": "128kB / 112kB",
+          "PIDs": "14"
+        }
+      ],
+      "diskAvailableBytes": 38746931200
+    },
+    {
+      "at": "2026-11-12T16:28:47.877Z",
+      "pending": 3,
+      "judging": 2,
+      "containers": [
+        {
+          "BlockIO": "6.11MB / 0B",
+          "CPUPerc": "1.80%",
+          "Container": "online-judge-worker-1",
+          "ID": "39455abc9ca1",
+          "MemPerc": "5.46%",
+          "MemUsage": "55.9MiB / 1GiB",
+          "Name": "online-judge-worker-1",
+          "NetIO": "1.47MB / 1.26MB",
+          "PIDs": "12"
+        },
+        {
+          "BlockIO": "243MB / 442kB",
+          "CPUPerc": "106.39%",
+          "Container": "online-judge-engine-1",
+          "ID": "0bd951102c31",
+          "MemPerc": "7.83%",
+          "MemUsage": "240.4MiB / 3GiB",
+          "Name": "online-judge-engine-1",
+          "NetIO": "130kB / 114kB",
+          "PIDs": "10"
+        }
+      ],
+      "diskAvailableBytes": 38746927104
+    },
+    {
+      "at": "2026-11-12T16:28:52.927Z",
+      "pending": 1,
+      "judging": 2,
+      "containers": [
+        {
+          "BlockIO": "6.11MB / 0B",
+          "CPUPerc": "18.87%",
+          "Container": "online-judge-worker-1",
+          "ID": "39455abc9ca1",
+          "MemPerc": "5.79%",
+          "MemUsage": "59.33MiB / 1GiB",
+          "Name": "online-judge-worker-1",
+          "NetIO": "1.63MB / 1.42MB",
+          "PIDs": "12"
+        },
+        {
+          "BlockIO": "243MB / 553kB",
+          "CPUPerc": "9.50%",
+          "Container": "online-judge-engine-1",
+          "ID": "0bd951102c31",
+          "MemPerc": "7.81%",
+          "MemUsage": "239.9MiB / 3GiB",
+          "Name": "online-judge-engine-1",
+          "NetIO": "137kB / 121kB",
+          "PIDs": "6"
+        }
+      ],
+      "diskAvailableBytes": 38746923008
+    },
+    {
+      "at": "2026-11-12T16:28:57.878Z",
+      "pending": 0,
+      "judging": 1,
+      "containers": [
+        {
+          "BlockIO": "6.11MB / 0B",
+          "CPUPerc": "0.17%",
+          "Container": "online-judge-worker-1",
+          "ID": "39455abc9ca1",
+          "MemPerc": "5.87%",
+          "MemUsage": "60.11MiB / 1GiB",
+          "Name": "online-judge-worker-1",
+          "NetIO": "1.64MB / 1.43MB",
+          "PIDs": "12"
+        },
+        {
+          "BlockIO": "243MB / 590kB",
+          "CPUPerc": "100.16%",
+          "Container": "online-judge-engine-1",
+          "ID": "0bd951102c31",
+          "MemPerc": "7.90%",
+          "MemUsage": "242.8MiB / 3GiB",
+          "Name": "online-judge-engine-1",
+          "NetIO": "141kB / 124kB",
+          "PIDs": "10"
+        }
+      ],
+      "diskAvailableBytes": 38746923008
+    },
+    {
+      "at": "2026-11-12T16:29:02.879Z",
+      "pending": 0,
+      "judging": 1,
+      "containers": [
+        {
+          "BlockIO": "6.11MB / 0B",
+          "CPUPerc": "0.04%",
+          "Container": "online-judge-worker-1",
+          "ID": "39455abc9ca1",
+          "MemPerc": "5.93%",
+          "MemUsage": "60.71MiB / 1GiB",
+          "Name": "online-judge-worker-1",
+          "NetIO": "1.65MB / 1.44MB",
+          "PIDs": "12"
+        },
+        {
+          "BlockIO": "243MB / 590kB",
+          "CPUPerc": "100.22%",
+          "Container": "online-judge-engine-1",
+          "ID": "0bd951102c31",
+          "MemPerc": "7.90%",
+          "MemUsage": "242.6MiB / 3GiB",
+          "Name": "online-judge-engine-1",
+          "NetIO": "141kB / 125kB",
+          "PIDs": "10"
+        }
+      ],
+      "diskAvailableBytes": 38746923008
+    }
+  ]
+}

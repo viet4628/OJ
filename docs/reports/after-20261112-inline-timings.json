@@ -1,0 +1,77 @@
+{
+  "at": "2026-11-12T17:01:28.016Z",
+  "container": "online-judge-worker-1",
+  "since": "4m",
+  "metrics": {
+    "Timing": {
+      "count": 55,
+      "fields": {
+        "claimMs": {
+          "p50": 93,
+          "p95": 429,
+          "max": 1087
+        },
+        "loadMs": {
+          "p50": 114,
+          "p95": 570,
+          "max": 574
+        },
+        "judgeMs": {
+          "p50": 121,
+          "p95": 473,
+          "max": 1089
+        },
+        "saveMs": {
+          "p50": 92,
+          "p95": 574,
+          "max": 653
+        },
+        "totalMs": {
+          "p50": 693,
+          "p95": 1317,
+          "max": 1572
+        }
+      }
+    },
+    "CasesTiming": {
+      "count": 55,
+      "fields": {
+        "cases": {
+          "p50": 1,
+          "p95": 1,
+          "max": 1
+        },
+        "loadMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "archiveMs": {
+          "p50": 8,
+          "p95": 14,
+          "max": 17
+        },
+        "archiveBytes": {
+          "p50": 266,
+          "p95": 267,
+          "max": 267
+        }
+      }
+    },
+    "EngineTiming": {
+      "count": 55,
+      "fields": {
+        "compileRpcMs": {
+          "p50": 95,
+          "p95": 447,
+          "max": 496
+        },
+        "afterCompileMs": {
+          "p50": 20,
+          "p95": 36,
+          "max": 1014
+        }
+      }
+    }
+  }
+}

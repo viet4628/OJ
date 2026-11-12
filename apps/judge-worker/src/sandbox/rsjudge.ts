@@ -83,6 +83,7 @@ export class SandboxEngine {
       '--setenv', 'HOME', '/tmp',
       '--setenv', 'TMPDIR', '/tmp',
       '--setenv', 'LANG', 'C.UTF-8',
+      '--setenv', 'LC_ALL', 'C',
       '--setenv', 'PYTHONDONTWRITEBYTECODE', '1',
     ];
     // Đường tồn tại tuỳ hệ thống: usrmerge (/bin -> /usr/bin), runtime loaders, java alternatives
@@ -166,18 +167,22 @@ export class SandboxEngine {
 
     const hasTime = await this.timeAvailable();
     const hasTimeout = await this.timeoutAvailable();
-    const statDir = await fs.mkdtemp(path.join(os.tmpdir(), 'oj-stat-'));
-    const statFile = path.join(statDir, 'stats.txt');
+    const jobDir = path.dirname(executableOrScriptPath);
+    // Báo cáo usage nằm trong thư mục bài (ghi được trong sandbox) vì usage của
+    // chương trình phải đo bên trong namespace: wait4 ở ngoài chỉ thấy bwrap.
+    const statFile = path.join(jobDir, '.usage-report');
     const startedAt = Date.now();
 
     const argv: string[] = [];
-    if (hasTime) argv.push('/usr/bin/time', '-v', '-o', statFile);
     if (hasTimeout)
       argv.push('timeout', '--signal=KILL', String((timeLimitMs + 1500) / 1000));
-    argv.push(this.bwrapPath, ...(await this.bwrapArgs(path.dirname(executableOrScriptPath))));
+    argv.push(this.bwrapPath, ...(await this.bwrapArgs(jobDir)));
     // Apply limits inside the namespace; pass argv as positional arguments.
     const addressLimitKb = language === 'java' ? 4 * 1024 * 1024 : memoryLimitMb * 1024;
-    argv.push('/bin/sh', '-c', `ulimit -t ${Math.max(1, Math.ceil(timeLimitMs / 1000))} && ulimit -v ${addressLimitKb} && ulimit -f 1024 && exec "$@"`, 'sandbox', ...toolArgs);
+    const inner = hasTime
+      ? ['/usr/bin/time', '-f', '%U %S %M', '-o', statFile, ...toolArgs]
+      : toolArgs;
+    argv.push('/bin/sh', '-c', `ulimit -t ${Math.max(1, Math.ceil(timeLimitMs / 1000))} && ulimit -v ${addressLimitKb} && ulimit -f 1024 && exec "$@"`, 'sandbox', ...inner);
 
     const stdoutSink = { text: '', truncated: false };
     const stderrSink = { text: '', truncated: false };
@@ -245,16 +250,18 @@ export class SandboxEngine {
         if (hasTime) {
           try {
             const stats = await fs.readFile(statFile, 'utf-8');
-            const mRss = stats.match(/Maximum resident set size \(kbytes\):\s*(\d+)/);
-            if (mRss) maxRssKb = parseInt(mRss[1], 10);
-            const mUser = stats.match(/User time \(seconds\):\s*([\d.]+)/);
-            const mSys = stats.match(/System time \(seconds\):\s*([\d.]+)/);
-            if (mUser && mSys) cpuSeconds = parseFloat(mUser[1]) + parseFloat(mSys[1]);
+            const line = stats.split('\n').map(row => row.trim())
+              .find(row => row.split(/\s+/).length === 3);
+            if (line) {
+              const [user, system, rss] = line.split(/\s+/);
+              cpuSeconds = parseFloat(user) + parseFloat(system);
+              maxRssKb = parseInt(rss, 10);
+            }
           } catch {
-            /* stats file may not exist */
+            /* report may be missing when the program was killed */
           }
+          await fs.rm(statFile, { force: true }).catch(() => {});
         }
-        await fs.rm(statDir, { recursive: true, force: true }).catch(() => {});
 
         const killedByTimeout =
           code === 124 ||

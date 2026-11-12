@@ -62,6 +62,29 @@ test('queue instances have isolated state and failures reach the caller', async 
   assert.deepEqual(seen, ['a']);
 });
 
+test('queue runs up to the configured number of jobs concurrently', async () => {
+  const gates = new Map();
+  let active = 0, peak = 0;
+  const queue = new SubmissionQueue(async row => {
+    active++; peak = Math.max(peak, active);
+    await new Promise(resolve => gates.set(row.id, resolve));
+    active--;
+  }, 2);
+  const drained = queue.enqueue(submission('a'));
+  queue.enqueue(submission('b'));
+  queue.enqueue(submission('c'));
+  await delay(10);
+  assert.equal(peak, 2, 'only the configured number of jobs may run at once');
+  assert.equal(queue.activeIds.size, 2);
+  gates.get('a')();
+  gates.get('b')();
+  while (!gates.has('c')) await delay(5);
+  assert.equal(peak, 2, 'a freed slot must be reused');
+  gates.get('c')();
+  await drained;
+  assert.equal(queue.activeIds.size, 0);
+});
+
 function serviceFixture() {
   const calls = [];
   const repository = {
@@ -118,6 +141,10 @@ test('backend errors become SYSTEM_ERROR; claim and persistence errors remain fa
 test('worker config validates numeric limits without reading global env', () => {
   const env = { SUPABASE_URL: 'http://127.0.0.1', SUPABASE_SERVICE_ROLE_KEY: 'test-key' };
   assert.equal(readWorkerConfig(env).pollIntervalMs, 2000);
+  assert.equal(readWorkerConfig(env).concurrency, 1);
+  assert.equal(readWorkerConfig({ ...env, WORKER_CONCURRENCY: '2' }).concurrency, 2);
+  assert.throws(() => readWorkerConfig({ ...env, WORKER_CONCURRENCY: '0' }), /Invalid/);
+  assert.throws(() => readWorkerConfig({ ...env, WORKER_CONCURRENCY: '9' }), /Invalid/);
   assert.throws(() => readWorkerConfig({ ...env, WORKER_HEALTH_PORT: '70000' }), /Invalid/);
   assert.throws(() => readWorkerConfig({ ...env, WORKER_POLL_INTERVAL_MS: '0' }), /Invalid/);
   assert.throws(() => readWorkerConfig({}), /required/);
@@ -232,7 +259,7 @@ test('engine provider reuses the job metadata, bounds Storage loads and preserve
   const result = await backend.judge(submission('snapshot'), { id: 'problem', time_limit_ms: 1234, memory_limit_mb: 128 }, testcases);
   assert.equal(result.status, 'ACCEPTED');
   assert.equal(result.score, 100);
-  assert.equal(peak, 2);
+  assert.equal(peak, 5, 'testcase reads must overlap instead of running in pairs');
   assert.deepEqual(snapshot.cases.map(tc => tc.input), testcases.map(tc => tc.id));
   assert.equal(snapshot.timeLimitMs, 1234);
   assert.equal(snapshot.memoryLimitMb, 128);

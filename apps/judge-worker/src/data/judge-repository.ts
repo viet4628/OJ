@@ -14,16 +14,16 @@ export class JudgeRepository {
   }
 
   async getProblem(id: string): Promise<Problem> {
-    const { data, error } = await this.db.from('problems').select('*').eq('id', id)
-      .abortSignal(AbortSignal.timeout(this.requestTimeoutMs)).single();
+    const { data, error } = await this.read(() => this.db.from('problems').select('*').eq('id', id)
+      .abortSignal(AbortSignal.timeout(this.requestTimeoutMs)).single());
     if (error || !data) throw new Error(error?.message || 'Problem not found in database');
     return data as Problem;
   }
 
   async getTestcases(problemId: string): Promise<Testcase[]> {
-    const { data, error } = await this.db.from('testcases').select('*').eq('problem_id', problemId)
+    const { data, error } = await this.read(() => this.db.from('testcases').select('*').eq('problem_id', problemId)
       .order('created_at', { ascending: true }).order('id', { ascending: true })
-      .abortSignal(AbortSignal.timeout(this.requestTimeoutMs));
+      .abortSignal(AbortSignal.timeout(this.requestTimeoutMs)));
     if (error || !data?.length) throw new Error(error?.message || 'No testcases available for this problem');
     return data as Testcase[];
   }
@@ -33,12 +33,14 @@ export class JudgeRepository {
     let outputContent = tc.output_content ?? '';
     try {
       if (tc.input_content == null) {
-        const { data, error } = await this.db.storage.from('testcases').download(tc.input_path, {}, { signal: AbortSignal.timeout(30000) });
+        const { data, error } = await this.read(() => withDownloadSlot(() =>
+          this.db.storage.from('testcases').download(tc.input_path, {}, { signal: AbortSignal.timeout(30000) })));
         if (error || !data) throw new Error(error?.message || 'Missing testcase input');
         inputContent = await data.text();
       }
       if (tc.output_content == null) {
-        const { data, error } = await this.db.storage.from('testcases').download(tc.output_path, {}, { signal: AbortSignal.timeout(30000) });
+        const { data, error } = await this.read(() => withDownloadSlot(() =>
+          this.db.storage.from('testcases').download(tc.output_path, {}, { signal: AbortSignal.timeout(30000) })));
         if (error || !data) throw new Error(error?.message || 'Missing testcase answer');
         outputContent = await data.text();
       }
@@ -46,6 +48,20 @@ export class JudgeRepository {
       return { inputContent: '', outputContent: '', contentError: `Cannot load testcase: ${err}` };
     }
     return { inputContent: normalizeNewlines(inputContent), outputContent: normalizeNewlines(outputContent) };
+  }
+
+  /**
+   * Run a read and retry once when the transport fails. Reads are idempotent,
+   * so a transient network fault must not fail the whole submission.
+   */
+  private async read<T>(query: () => PromiseLike<T>): Promise<T> {
+    try {
+      return await query();
+    } catch (err) {
+      if (!isTransient(err)) throw err;
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      return query();
+    }
   }
 
   async saveResult(submissionId: string, result: JudgingResult): Promise<void> {
@@ -112,4 +128,31 @@ function normalizeNewlines(content: string): string {
   const real = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   if (real.includes('\n')) return real;
   return real.replace(/\\r\\n/g, '\n').replace(/\\r/g, '\n').replace(/\\n/g, '\n');
+}
+
+/** Transport faults worth one retry; data errors are final. */
+function isTransient(err: unknown): boolean {
+  const message = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+  return /timeout|timed out|abort|fetch failed|econnreset|etimedout|enotfound|network|socket/i.test(message);
+}
+
+/**
+ * Global cap on concurrent Storage reads. Parallel jobs must not overwhelm
+ * the bucket, otherwise slow downloads time out and fail the submission.
+ */
+const MAX_CONCURRENT_DOWNLOADS = 8;
+let activeDownloads = 0;
+const downloadWaiters: (() => void)[] = [];
+
+async function withDownloadSlot<T>(download: () => PromiseLike<T>): Promise<T> {
+  if (activeDownloads >= MAX_CONCURRENT_DOWNLOADS) {
+    await new Promise<void>((resolve) => downloadWaiters.push(resolve));
+  }
+  activeDownloads++;
+  try {
+    return await download();
+  } finally {
+    activeDownloads--;
+    downloadWaiters.shift()?.();
+  }
 }
