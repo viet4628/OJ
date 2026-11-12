@@ -1,0 +1,80 @@
+{
+  "at": "2026-10-25T16:30:55.436Z",
+  "scope": "Final worker logs include short Storage load and staging smoke; synthetic jobs, not a 24h soak.",
+  "image": "sha256:00c612df41770a839b761fafcdd10e3448732ca3dc3e37c2b482229ebc2bcfba",
+  "restarts": 0,
+  "memoryLimitBytes": 1073741824,
+  "cpuLimit": 2,
+  "metrics": {
+    "CasesTiming": {
+      "count": 19,
+      "fields": {
+        "cases": {
+          "p50": 10,
+          "p95": 10,
+          "max": 10
+        },
+        "loadMs": {
+          "p50": 2680,
+          "p95": 6433,
+          "max": 6433
+        },
+        "archiveMs": {
+          "p50": 25,
+          "p95": 558,
+          "max": 558
+        },
+        "archiveBytes": {
+          "p50": 515,
+          "p95": 526,
+          "max": 526
+        }
+      }
+    },
+    "EngineTiming": {
+      "count": 20,
+      "fields": {
+        "compileRpcMs": {
+          "p50": 133,
+          "p95": 2464,
+          "max": 6553
+        },
+        "afterCompileMs": {
+          "p50": 2848,
+          "p95": 7348,
+          "max": 14203
+        }
+      }
+    },
+    "Timing": {
+      "count": 22,
+      "fields": {
+        "claimMs": {
+          "p50": 110,
+          "p95": 645,
+          "max": 7817
+        },
+        "loadMs": {
+          "p50": 353,
+          "p95": 1906,
+          "max": 2132
+        },
+        "judgeMs": {
+          "p50": 2584,
+          "p95": 9402,
+          "max": 14311
+        },
+        "saveMs": {
+          "p50": 129,
+          "p95": 688,
+          "max": 793
+        },
+        "totalMs": {
+          "p50": 4808,
+          "p95": 9961,
+          "max": 14932
+        }
+      }
+    }
+  }
+}

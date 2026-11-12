@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-25T16:21:41.675Z",
+  "environment": "Playwright Chromium, production preview, API fixture, external fonts blocked; preview transport may differ from hosting",
+  "cpuThrottle": 4,
+  "network": {
+    "latencyMs": 150,
+    "downloadBytesPerSecond": 200000,
+    "uploadBytesPerSecond": 100000
+  },
+  "lcpMs": 1460,
+  "interactionEventMaxMs": 48,
+  "note": "Short synthetic interaction sample, not field INP or a before/after LCP comparison."
+}

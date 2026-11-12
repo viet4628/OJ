@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-25T16:29:29.093Z",
+  "status": "failed",
+  "stage": "health-30m",
+  "exitCode": 143,
+  "pid": 187089,
+  "reason": "Replaced with a detached campaign before any benchmark stages; not a workload failure."
+}

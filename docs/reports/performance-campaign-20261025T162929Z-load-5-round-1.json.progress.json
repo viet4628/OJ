@@ -1,0 +1,1 @@
+{"at":"2026-10-25T17:20:24.047Z","loadStartedAt":"2026-10-25T16:59:53.903Z","completed":11,"failures":2,"stopped":true,"stopReason":"SYSTEM_ERROR","lastHealth":{"at":"2026-10-25T17:20:24.020Z","ok":false,"error":"Health unavailable"},"lastResource":{"at":"2026-10-25T17:20:24.047Z","error":"Resource/queue measurement unavailable"}}

@@ -1,0 +1,14 @@
+{"at":"2026-10-25T17:00:05.882Z","user":1,"language":"python","expected":"ACCEPTED","ok":true,"submissionId":"e53f478c-c253-4b4c-afab-c9bb2158624d","status":"ACCEPTED","finishMs":11978,"queueMs":711}
+{"at":"2026-10-25T17:00:07.686Z","user":0,"language":"cpp","expected":"ACCEPTED","ok":true,"submissionId":"845c7364-237e-4675-84dd-27c4fd730d97","status":"ACCEPTED","finishMs":13782,"queueMs":11610}
+{"at":"2026-10-25T17:00:11.779Z","user":3,"language":"cpp","expected":"ACCEPTED","ok":true,"submissionId":"1a0d081f-ce94-4a44-a986-07f2ed82825f","status":"ACCEPTED","finishMs":17874,"queueMs":13477}
+{"at":"2026-10-25T17:00:16.270Z","user":2,"language":"rust","expected":"ACCEPTED","ok":true,"submissionId":"bec1e09e-ff51-4df0-b994-f3d7ec289932","status":"ACCEPTED","finishMs":22366,"queueMs":17417}
+{"at":"2026-10-25T17:00:18.711Z","user":4,"language":"python","expected":"ACCEPTED","ok":true,"submissionId":"6db91915-ceb7-4c0f-8e07-ffd7cc4748d7","status":"ACCEPTED","finishMs":24807,"queueMs":21526}
+{"at":"2026-10-25T17:00:21.588Z","user":1,"language":"rust","expected":"ACCEPTED","ok":true,"submissionId":"52dc2778-eefc-4aea-ba35-a7fd830a5b73","status":"ACCEPTED","finishMs":15705,"queueMs":12564}
+{"at":"2026-10-25T17:00:24.084Z","user":0,"language":"cpp","expected":"ACCEPTED","ok":true,"submissionId":"75fde9fe-5686-43f5-bac9-43b466bb9e56","status":"ACCEPTED","finishMs":16397,"queueMs":13782}
+{"at":"2026-10-25T17:00:25.050Z","user":3,"language":"python","expected":"ACCEPTED","ok":true,"submissionId":"d20c0d1a-cc3c-4976-8496-b67b96544e61","status":"ACCEPTED","finishMs":13271,"queueMs":11256}
+{"at":"2026-10-25T17:00:28.856Z","user":2,"language":"rust","expected":"ACCEPTED","ok":true,"submissionId":"9b6f5c00-9fda-4ddc-b3fc-d8a03765f9d1","status":"ACCEPTED","finishMs":12585,"queueMs":8598}
+{"at":"2026-10-25T17:00:40.143Z","user":4,"language":"cpp","expected":"TIME_LIMIT_EXCEEDED","ok":false,"submissionId":"8de257c9-f714-4b46-ae75-c1c66b456b29","status":"SYSTEM_ERROR","finishMs":21430,"queueMs":9829}
+{"at":"2026-10-25T17:20:21.714Z","user":1,"language":"python","expected":"ACCEPTED","ok":false,"submissionId":"42c64bbc-ff96-4a2e-9b96-63ae62a8d939","error":"Judging timeout"}
+{"at":"2026-10-25T17:20:24.413Z","user":0,"language":"rust","expected":"ACCEPTED","ok":false,"submissionId":"8b372101-f77e-4c5c-b370-ecd8bb04bbe6","error":"Judging timeout"}
+{"at":"2026-10-25T17:20:25.117Z","user":3,"language":"cpp","expected":"ACCEPTED","ok":false,"submissionId":"ea258dea-5941-4057-a1a2-e5bb56c54cce","error":"Judging timeout"}
+{"at":"2026-10-25T17:20:28.889Z","user":2,"language":"python","expected":"ACCEPTED","ok":false,"submissionId":"345e2e36-e04b-4499-b584-7f1ceaad9edc","error":"Judging timeout"}
