@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Save, Loader2 } from 'lucide-react';
+import RewardCollection from './settings/RewardCollection';
 import {
   changePassword, updateMyProfile, uploadAvatar, type AppUser,
 } from '../../lib/api';
@@ -197,6 +198,8 @@ export default function Settings({ user, onOpenAuth, onProfileSaved }: SettingsP
       </form>
 
       {/* SECURITY SECTION */}
+      <RewardCollection userId={user.id} />
+
       <form onSubmit={handleChangePassword} className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border)] shadow-sm p-6 space-y-5">
         <h2 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2 border-b border-[var(--border)] pb-3">
            Bảo Mật — Đổi Mật Khẩu

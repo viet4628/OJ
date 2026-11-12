@@ -111,6 +111,8 @@ export interface Profile {
   role: 'user' | 'teacher' | 'admin';
   created_at: string;
   is_suspended?: boolean;
+  equipped_frame?: string | null;
+  equipped_banner?: string | null;
 }
 
 export interface RankUser {

@@ -8,6 +8,7 @@ import {
   type Contest, type ContestProblemRow, type ContestRankRow,
 } from '../../lib/api';
 import Markdown from '../../components/Markdown';
+import ContestRewardsPanel from './contest/ContestRewardsPanel';
 import { CONTEST_STATUS_META } from '../../components/contestStatus';
 
 type Tab = 'overview' | 'problems' | 'rank';
@@ -353,6 +354,8 @@ export default function ContestDetail() {
               </div>
             )}
           </div>
+
+          <ContestRewardsPanel contestId={contest.id} />
 
           {/* Rules & Guidelines */}
           <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border)] shadow-sm p-6 space-y-4">

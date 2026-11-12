@@ -2,9 +2,14 @@ import { useEffect, useState, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import MorphIcon from '../../components/MorphIcon';
 import VerdictBadge from '../../components/VerdictBadge';
+import { AvatarFrame, ProfileBanner, RewardSwatch } from '../../components/Rewards';
 import { BookOpen as BookOpenData, FileCode2 as FileCode2Data, History as HistoryData, Loader2 as Loader2Data, Edit3 as Edit3Data } from 'lucide';
 import {
   getUserProfile,
+  getEarnedRewards,
+  getRewardCatalog,
+  type EarnedReward,
+  type Reward,
   getUserRankStats,
   getSubmissionsByUser,
   type Profile,
@@ -58,6 +63,18 @@ export default function UserHome({ currentUser }: UserHomeProps) {
         setLoading(false);
       }
     })();
+  }, [id]);
+
+  // Contest trophies are decoration: a failure must not break the profile.
+  const [trophies, setTrophies] = useState<EarnedReward[]>([]);
+  const [rewardCatalog, setRewardCatalog] = useState<Reward[]>([]);
+  useEffect(() => {
+    if (!id) return;
+    let active = true;
+    Promise.all([getEarnedRewards(id), getRewardCatalog()])
+      .then(([rows, items]) => { if (active) { setTrophies(rows); setRewardCatalog(items); } })
+      .catch(() => {});
+    return () => { active = false; };
   }, [id]);
 
   // Unique Solved Problems list (like GitHub Repositories)
@@ -199,13 +216,15 @@ export default function UserHome({ currentUser }: UserHomeProps) {
 
       {/* 2. MAIN CONTAINER: 2 COLUMNS (GITHUB USER PROFILE LAYOUT) */}
       <div className="max-w-[1280px] mx-auto">
+        <ProfileBanner banner={profile.equipped_banner} className="h-24 sm:h-28 rounded-2xl mb-6" />
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
 
           {/* CỘT TRÁI (3-4 cols): GITHUB USER SIDEBAR */}
           <div className="md:col-span-4 lg:col-span-3 space-y-4">
 
             {/* Avatar lớn hình tròn chuẩn GitHub */}
-            <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-full md:aspect-square max-w-[280px] rounded-full overflow-hidden border border-[var(--border)] bg-[var(--bg-tertiary)] shadow-xs mx-auto md:mx-0">
+            <AvatarFrame frame={profile.equipped_frame} className="w-48 h-48 sm:w-56 sm:h-56 md:w-full md:h-auto md:aspect-square max-w-[280px] mx-auto md:mx-0">
+            <div className={`${profile.equipped_frame ? 'w-full h-full' : 'w-48 h-48 sm:w-56 sm:h-56 md:w-full md:h-auto md:aspect-square max-w-[280px] mx-auto md:mx-0'} rounded-full overflow-hidden border border-[var(--border)] bg-[var(--bg-tertiary)] shadow-xs`}>
               {profile.avatar_url ? (
                 <img
                   src={profile.avatar_url}
@@ -219,6 +238,7 @@ export default function UserHome({ currentUser }: UserHomeProps) {
                 </div>
               )}
             </div>
+            </AvatarFrame>
 
             {/* Tên & Handle */}
             <div className="space-y-0.5 text-center md:text-left">
@@ -236,6 +256,23 @@ export default function UserHome({ currentUser }: UserHomeProps) {
                 {profile.role === 'admin' ? 'Administrator' : profile.role === 'teacher' ? 'Educator' : 'Coder'}
               </span>
             </div>
+
+            {trophies.length > 0 && (
+              <section aria-labelledby="trophies" className="space-y-2">
+                <h2 id="trophies" className="text-xs font-semibold text-[var(--text-primary)]">Thành tích kỳ thi</h2>
+                <ul className="space-y-1.5">
+                  {trophies.slice(0, 6).map(t => (
+                    <li key={t.id} className="flex items-center gap-2 text-xs">
+                      <RewardSwatch rewardId={t.reward_id} />
+                      <div className="min-w-0">
+                        <div className="font-medium text-[var(--text-primary)] truncate">{rewardCatalog.find(r => r.id === t.reward_id)?.name ?? t.reward_id}</div>
+                        <div className="text-[var(--text-muted)] truncate">{t.contest_title} · hạng {t.rank}</div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
             {/* Nút Chỉnh sửa hồ sơ nếu là tài khoản của mình */}
             {isSelf && (

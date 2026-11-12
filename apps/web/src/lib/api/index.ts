@@ -8,3 +8,4 @@ export * from './users';
 export * from './classrooms';
 export * from './auth';
 export * from './tracks';
+export * from './rewards';

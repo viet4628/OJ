@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import MorphIcon from '../../../components/MorphIcon';
 import ContestProblemsEditor from '../components/ContestProblemsEditor';
+import ContestRewardsEditor from '../components/ContestRewardsEditor';
 import ContestRegistrationsDialog from '../components/ContestRegistrationsDialog';
 import { Edit as EditData, Trash2 as Trash2Data } from 'lucide';
 import {
@@ -183,7 +184,11 @@ export default function AdminContestsTab({ userId, isAdmin = false }: { userId: 
           {contestError && <p role="alert" className="text-xs text-[var(--danger)]">{contestError}</p>}
           <div className="pt-3 border-t border-[var(--border)]"><button disabled={contestSaving || problemSaving} className={primary}>{contestSaving ? 'Đang lưu...' : contestEditingId ? 'Cập Nhật' : 'Lưu kỳ thi'}</button></div>
         </form>
-        {contestEditingId ? <ContestProblemsEditor key={contestEditingId} contestId={contestEditingId} rule={contestForm.rule_type} disabled={contestSaving} onBusyChange={setProblemSaving} /> : <p className="text-xs text-[var(--text-secondary)]">Lưu thông tin kỳ thi để thêm bài thi.</p>}
+        {contestEditingId ? <>
+          <ContestProblemsEditor key={contestEditingId} contestId={contestEditingId} rule={contestForm.rule_type} disabled={contestSaving} onBusyChange={setProblemSaving} />
+          <ContestRewardsEditor key={`rewards-${contestEditingId}`} contestId={contestEditingId} disabled={contestSaving}
+            ended={!!contestForm.end_time && new Date(contestForm.end_time).getTime() <= Date.now()} />
+        </> : <p className="text-xs text-[var(--text-secondary)]">Lưu thông tin kỳ thi để thêm bài thi và phần thưởng.</p>}
       </> : <>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold">Quản Lý Kỳ Thi</h2>

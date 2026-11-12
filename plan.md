@@ -127,6 +127,8 @@ Từ đợt rà soát DB và engine. Mỗi việc một commit, kiểm chứng t
 | T3 — trần hàng đợi | Tối đa 20 bài trong RAM; phần dư vẫn PENDING trong DB và quay lại qua poll theo `created_at` |
 | Kiểm thử | Worker test chạy trong một tiến trình (lỗi IPC của trình chạy test khi máy tải nặng); lệnh test engine là `cargo test --workspace` |
 
+Tính năng 13/11: lộ trình luyện tập (`20261113_learning_tracks.sql`) và phần thưởng contest (`20261113_contest_rewards.sql`); cần chạy trên staging theo thứ tự: problem_write_path → problem_ownership → queue_position → learning_tracks → contest_rewards (đã thử trên schema bản trước + toàn bộ test DB).
+
 Cô lập sandbox (13/11): seccomp của engine áp lên mọi bài nộp qua bwrap `--seccomp`; worker không capability và FS chỉ đọc; engine chỉ mạng nội bộ, tắt REST. Còn lại theo thứ tự: profile seccomp Docker riêng cho container engine (cho phép `pivot_root`) thay `unconfined`; cgroup v2 theo job; máy judge riêng; thử gVisor (`runtime: runsc`) và so time/verdict với baseline native.
 
 Quyền đề/testcase theo người tạo (`can_manage_problem`, như contest): giáo viên chỉ đọc testcase ẩn, sửa, kiểm định, xóa đề mình tạo; admin quản lý tất cả; đề cũ không có người tạo chỉ admin quản lý (staging: 7/7 đề). **Cần chạy `supabase/migrations/20261113_problem_ownership.sql` sau migration write-path.** Chi tiết: [docs/contest-ownership.md](docs/contest-ownership.md).

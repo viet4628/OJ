@@ -1034,3 +1034,62 @@ test('Giáo viên tạo lộ trình: slug tự sinh, chọn bài theo thứ tự
   expect(saved).toEqual({ p_track_id: null, p_problem_ids: [problem.id],
     p_track: { slug: 'nhap-mon-lap-trinh', title: 'Nhập môn lập trình', description: '', sort_order: 0, is_public: true } });
 });
+
+const rewardCatalog = [
+  { id: 'frame-gold', kind: 'frame', tier: 'gold', name: 'Khung Vàng', sort_order: 1 },
+  { id: 'frame-silver', kind: 'frame', tier: 'silver', name: 'Khung Bạc', sort_order: 2 },
+  { id: 'frame-participant', kind: 'frame', tier: 'participant', name: 'Khung Chiến binh', sort_order: 4 },
+  { id: 'banner-gold', kind: 'banner', tier: 'gold', name: 'Nền Hoàng kim', sort_order: 5 },
+];
+
+test('Người tạo contest đặt phần thưởng theo hạng và trao giải sau khi kết thúc', async ({ page }) => {
+  await teacherWorkspace(page);
+  let rules: any = null, awarded = false;
+  await page.route('**/rest/v1/rewards?**', route => route.fulfill({ json: rewardCatalog }));
+  await page.route('**/rest/v1/contest_rewards?**', route => route.fulfill({ json: [] }));
+  await page.route('**/rest/v1/rpc/set_contest_rewards', route => { rules = route.request().postDataJSON(); return route.fulfill({ status: 204, body: '' }); });
+  await page.route('**/rest/v1/rpc/award_contest_rewards', route => { awarded = true; return route.fulfill({ json: 3 }); });
+  await page.route('**/rest/v1/contests?**', route => route.fulfill({ json: [{ id: 'ended-contest', created_by: teacherId, title: 'Thi đã xong', description: '', rule_type: 'ACM',
+    registration_required: false, is_public: true, start_time: new Date(Date.now() - 7200000).toISOString(), end_time: new Date(Date.now() - 3600000).toISOString() }] }));
+  await page.getByRole('button', { name: 'Danh Sách Kỳ Thi', exact: true }).click();
+  await page.getByRole('button', { name: 'Chỉnh sửa kỳ thi', exact: true }).click();
+  const section = page.getByRole('region', { name: 'Phần thưởng', exact: true });
+  await section.getByRole('button', { name: 'Thêm phần thưởng', exact: true }).click();
+  await section.getByRole('button', { name: 'Thêm phần thưởng', exact: true }).click();
+  await section.getByLabel('Phần thưởng', { exact: true }).nth(1).selectOption('frame-silver');
+  await section.getByLabel('Hạng từ 1 đến').nth(1).fill('3');
+  await section.getByRole('button', { name: 'Thêm phần thưởng', exact: true }).click();
+  await section.getByLabel('Phần thưởng', { exact: true }).nth(2).selectOption('frame-participant');
+  await section.getByLabel('Mọi thí sinh').nth(2).check();
+  await section.getByRole('button', { name: 'Lưu phần thưởng', exact: true }).click();
+  await expect(section.getByRole('status')).toContainText('Đã lưu phần thưởng');
+  expect(rules).toEqual({ p_contest_id: 'ended-contest', p_rules: [
+    { reward_id: 'frame-gold', max_rank: 1 }, { reward_id: 'frame-silver', max_rank: 3 }, { reward_id: 'frame-participant', max_rank: null }] });
+  await section.getByRole('button', { name: 'Trao giải', exact: true }).click();
+  expect(awarded).toBe(false);
+  await section.getByRole('button', { name: 'Xác nhận trao giải', exact: true }).click();
+  await expect(section.getByRole('status')).toContainText('Đã trao 3 phần thưởng');
+  expect(awarded).toBe(true);
+});
+
+test('Học sinh xem phần thưởng contest, trang bị khung và hồ sơ hiển thị thành tích', async ({ page }) => {
+  await teacherWorkspace(page);
+  let equipped: any = null;
+  const earned = [{ id: 1, reward_id: 'frame-gold', contest_id: 'c1', contest_title: 'Thi tháng 11', rank: 1, awarded_at: '2026-11-13T00:00:00Z' }];
+  await page.route('**/rest/v1/rewards?**', route => route.fulfill({ json: rewardCatalog }));
+  await page.route('**/rest/v1/user_rewards?**', route => route.fulfill({ json: earned }));
+  await page.route('**/rest/v1/profiles_public?**', route => route.fulfill({ json: { id: teacherId, full_name: 'Teacher', avatar_url: null, role: 'user',
+    created_at: '2026-01-01T00:00:00Z', equipped_frame: equipped?.p_reward_id ?? null, equipped_banner: null } }));
+  await page.route('**/rest/v1/rpc/equip_reward', route => { equipped = route.request().postDataJSON(); return route.fulfill({ status: 204, body: '' }); });
+  await page.goto('/settings');
+  const collection = page.getByRole('region', { name: 'Bộ sưu tập phần thưởng' });
+  await expect(collection).toContainText('Khung Vàng');
+  await expect(collection).toContainText('Thi tháng 11 (hạng 1)');
+  await collection.getByRole('button', { name: 'Trang bị', exact: true }).click();
+  await expect(collection.getByRole('button', { name: 'Bỏ trang bị', exact: true })).toBeVisible();
+  expect(equipped).toEqual({ p_kind: 'frame', p_reward_id: 'frame-gold' });
+  await page.goto(`/users/${teacherId}`);
+  const trophies = page.getByRole('region', { name: 'Thành tích kỳ thi' });
+  await expect(trophies).toContainText('Khung Vàng');
+  await expect(trophies).toContainText('Thi tháng 11 · hạng 1');
+});

@@ -64,6 +64,8 @@ Tạo lớp, nhập tên và mã mời tùy chọn. Mã trùng có thông báo �
 
 Tạo contest với lịch thi, ACM/OI, public/private và yêu cầu đăng ký nếu cần. Tìm/chọn/sắp bài trong editor; OI cho điểm từng bài, ACM dùng quy tắc AC/penalty. Cấu hình freeze khi cần và lưu đúng phần metadata/danh sách bài. Khi tải/lưu danh sách lỗi, sửa lỗi hoặc thử lại trước khi tiếp tục.
 
+**Phần thưởng:** trong trang soạn contest, mục **Phần thưởng** đặt khung avatar và nền hồ sơ theo hạng (ví dụ Khung Vàng cho hạng 1, Khung Bạc cho top 3, Khung Chiến binh cho mọi thí sinh). Mỗi thí sinh nhận bậc cao nhất đạt được cho từng loại; giải theo hạng cần có kết quả lớn hơn 0; giáo viên/admin không nhận giải. Sau khi kỳ thi kết thúc và không còn bài đang chấm, bấm **Trao giải** rồi xác nhận: hệ thống tính bảng xếp hạng cuối cùng (bỏ freeze) và trao; bấm lại không trao trùng (chấm lại sau đó có thể trao thêm, không thu hồi). Học sinh xem giải ở trang kỳ thi, trang bị trong **Cài đặt → Bộ sưu tập phần thưởng**; khung và nền hiện trên hồ sơ công khai. Migration: `supabase/migrations/20261113_contest_rewards.sql`.
+
 Mỗi giáo viên chỉ quản lý contest mình tạo: sửa/xóa, danh sách bài, duyệt đăng ký và chấm lại. Admin quản lý toàn hệ thống. Contest cũ chưa có chủ chỉ admin quản lý; admin xác minh rồi gán người tạo. Chi tiết: [contest ownership](contest-ownership.md).
 
 ## Admin và người vận hành
