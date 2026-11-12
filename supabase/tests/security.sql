@@ -63,6 +63,11 @@ SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000002'
 SELECT pg_temp.assert_true(has_user_permission('testcases.manage'), 'teacher has testcase permission');
 SELECT pg_temp.assert_true(NOT has_user_permission('users.manage') AND NOT has_user_permission('announcements.manage'), 'teacher defaults minimal');
 SELECT pg_temp.assert_true((SELECT count(*)>0 FROM testcases), 'teacher can manage testcase');
+SELECT pg_temp.expect_error($q$INSERT INTO testcases(problem_id,input_path,output_path,input_content,output_content)
+ VALUES ('10000000-0000-0000-0000-000000000001','inline','inline','1','1')$q$, 'testcase insert must use save_problem_bundle');
+SELECT pg_temp.expect_error($q$UPDATE testcases SET output_content='forged'$q$, 'testcase edit must use save_problem_bundle');
+SELECT pg_temp.expect_error($q$DELETE FROM testcases$q$, 'testcase delete must use save_problem_bundle');
+SELECT pg_temp.expect_error($q$UPDATE problems SET time_limit_ms=2000$q$, 'problem edit must use save_problem_bundle');
 SELECT pg_temp.assert_true((SELECT count(*)=1 FROM classroom_members), 'owner can see students');
 SELECT save_problem_bundle(NULL,
  '{"slug":"starter-code-test","title":"Starter","description":"Public statement","difficulty":"Easy","time_limit_ms":1000,"memory_limit_mb":256,"is_public":true,"starter_codes":{"cpp":"// public template"}}',
@@ -82,7 +87,7 @@ SELECT pg_temp.expect_error($q$SELECT * FROM problem_editorials$q$, 'reference e
 RESET ROLE;
 SET ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',false);
-UPDATE problems SET starter_codes='{"cpp":"tampered"}' WHERE slug='starter-code-test';
+SELECT pg_temp.expect_error($q$UPDATE problems SET starter_codes='{"cpp":"tampered"}' WHERE slug='starter-code-test'$q$, 'student problem update denied');
 SELECT pg_temp.assert_true((SELECT starter_codes->>'cpp' = '// public template' FROM problems WHERE slug='starter-code-test'), 'student cannot change templates');
 SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000004',false);
 SELECT pg_temp.assert_true((SELECT count(*)=0 FROM classrooms), 'outsider classroom hidden');
@@ -98,4 +103,6 @@ SELECT pg_temp.assert_true(claim_submission((SELECT id FROM submissions WHERE st
 SELECT pg_temp.assert_true(NOT claim_submission((SELECT id FROM submissions WHERE status='JUDGING' LIMIT 1)), 'cannot double claim');
 RESET ROLE;
 SELECT pg_temp.assert_true((SELECT NOT public FROM storage.buckets WHERE id='testcases'), 'testcase bucket private');
+SELECT pg_temp.expect_error($q$UPDATE problems SET time_limit_ms=0 WHERE slug='two-sum'$q$, 'time limit must stay in range');
+SELECT pg_temp.expect_error($q$UPDATE problems SET memory_limit_mb=100000 WHERE slug='two-sum'$q$, 'memory limit must stay in range');
 SELECT 'Security regression tests passed' AS result;

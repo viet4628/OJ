@@ -176,23 +176,6 @@ export async function getAllProblems(): Promise<Problem[]> {
   if (error) throw error;
   return (data || []) as Problem[];
 }
-export async function createProblem(input: ProblemInput): Promise<{ ok: boolean; error?: string; id?: string }> {
-  const { data, error } = await supabase
-    .from('problems')
-    .insert(input)
-    .select('id')
-    .single();
-  if (error) return { ok: false, error: error.message };
-  return { ok: true, id: data?.id };
-}
-export async function updateProblem(id: string, input: ProblemInput): Promise<{ ok: boolean; error?: string }> {
-  const { error } = await supabase
-    .from('problems')
-    .update(input)
-    .eq('id', id);
-  if (error) return { ok: false, error: error.message };
-  return { ok: true };
-}
 export async function deleteProblem(id: string): Promise<{ ok: boolean; error?: string }> {
   // 1. Thử gọi RPC an toàn delete_problem (tự động xóa testcases/submissions/contest_problems và kiểm tra RBAC)
   const { error: rpcErr } = await supabase.rpc('delete_problem', { p_problem_id: id });
@@ -211,56 +194,6 @@ export async function deleteProblem(id: string): Promise<{ ok: boolean; error?: 
   }
   return { ok: true };
 }
-export async function addTestcase(input: {
-  problem_id: string;
-  input_content: string;
-  output_content: string;
-  score: number;
-  is_sample: boolean;
-}): Promise<{ ok: boolean; error?: string }> {
-  const { error } = await supabase.from('testcases').insert({
-    problem_id: input.problem_id,
-    input_path: 'inline',
-    output_path: 'inline',
-    input_content: input.input_content,
-    output_content: input.output_content,
-    score: input.score,
-    is_sample: input.is_sample,
-  });
-  if (error) return { ok: false, error: error.message };
-  return { ok: true };
-}
 
-export async function addTestcasesBatch(
-  cases: {
-    problem_id: string;
-    input_content: string;
-    output_content: string;
-    score: number;
-    is_sample: boolean;
-  }[]
-): Promise<{ ok: boolean; error?: string; count?: number }> {
-  if (cases.length === 0) return { ok: true, count: 0 };
-  const rows = cases.map((c) => ({
-    problem_id: c.problem_id,
-    input_path: 'inline',
-    output_path: 'inline',
-    input_content: c.input_content,
-    output_content: c.output_content,
-    score: c.score,
-    is_sample: c.is_sample,
-  }));
-  const { error } = await supabase.from('testcases').insert(rows);
-  if (error) return { ok: false, error: error.message };
-  return { ok: true, count: cases.length };
-}
-export async function deleteTestcase(id: string): Promise<{ ok: boolean; error?: string }> {
-  const { data, error } = await supabase.from('testcases').delete().eq('id', id).select('id');
-  if (error) return { ok: false, error: error.message };
-  if (!data || data.length === 0) {
-    return { ok: false, error: 'Không thể xóa testcase trên DB (kiểm tra quyền hạn RLS).' };
-  }
-  return { ok: true };
-}
 
 /* ─────────────── Admin: Contests ─────────────── */
