@@ -3,5 +3,5 @@
 [grpc]
 listen = ["0.0.0.0:50051"]
 
-[rest]
-listen = ["0.0.0.0:8080"]
+# The REST service runs code without authentication and the worker does not
+# use it, so it stays off. Omitting [rest] disables it.

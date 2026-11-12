@@ -23,7 +23,7 @@ flowchart TD
 | Bootstrap | `worker.ts` | Đọc env, chọn backend, ghép object, nhận SIGTERM/SIGINT |
 | Cấu hình | `config.ts` | Validate env, trả cấu hình rõ ràng cho từng instance |
 | Vòng đời | `worker-app.ts` | Start/stop, subscription, polling, health, heartbeat và dọn tài nguyên cả khi khởi động lỗi |
-| Hàng đợi | `submissions/submission-queue.ts` | Một bài tại một thời điểm; gộp sự kiện trùng; dừng nhận mới và chờ bài đang chạy |
+| Hàng đợi | `submissions/submission-queue.ts` | Chạy tối đa `WORKER_CONCURRENCY` bài; giữ tối đa 20 bài trong RAM (phần dư chờ ở DB); gộp sự kiện trùng; dừng nhận mới và chờ bài đang chạy |
 | Nghiệp vụ bài nộp | `submissions/submission-service.ts` | Claim nguyên tử trước thực thi; phân nhánh submit/run; chuyển lỗi xử lý thành SYSTEM_ERROR; ghi kết quả |
 | Dữ liệu | `data/judge-repository.ts` | Truy vấn bài/testcase, tải Storage, claim/lưu verdict, recover stale, heartbeat, Realtime |
 | Contract chấm | `judging/judge-backend.ts` | Contract cho hai implementation thật và kiểu kết quả; hàm thuần tính điểm/chuyển verdict |
@@ -31,6 +31,10 @@ flowchart TD
 | Chấm engine | `judging/engine-judge.ts` | Quản lý client/provider, registry UUID→int, đọc stream kết quả và SelfTest |
 
 Không dùng base class, service locator, DI framework hoặc repository generic. Các class hiện có `SandboxEngine`, `RsjudgeEngineClient`, `CasesProviderServer` tiếp tục được dùng. So sánh output và tính điểm giữ dạng hàm thuần.
+
+## Lớp cô lập bài nộp (engine)
+
+Từ ngoài vào trong: máy/VM judge → container engine (chỉ mạng nội bộ `judge`, không ra Internet, không giữ secret) → GNU time đo usage (ngoài sandbox) → bwrap `--unshare-all`, filesystem chỉ đọc trừ thư mục bài, môi trường bị xoá, `--cap-drop ALL` → chương trình là PID 1 dưới profile seccomp của engine (mạng, mount/namespace, đổi uid, ptrace, keyctl/bpf… bị kill) và rlimit CPU/AS/FSIZE, wall-time `limit + 1,5s`. Worker giữ service-role key nhưng không chạy code: không capability, root filesystem chỉ đọc. Còn thiếu: cgroup theo từng job (accounting toàn cây process) và máy judge riêng; gVisor (`runtime: runsc` cho container engine) là lớp bổ sung cần đo trước khi bật.
 
 ## Mở rộng và bảo trì
 

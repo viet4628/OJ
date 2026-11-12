@@ -1859,10 +1859,10 @@ index e3fec44..69ea3c2 100644
  pub mod request;
 diff --git a/crates/rsjudge-judger/src/judger/pipeline.rs b/crates/rsjudge-judger/src/judger/pipeline.rs
 new file mode 100644
-index 0000000..3f3b16e
+index 0000000..efc574a
 --- /dev/null
 +++ b/crates/rsjudge-judger/src/judger/pipeline.rs
-@@ -0,0 +1,868 @@
+@@ -0,0 +1,892 @@
 +// SPDX-License-Identifier: Apache-2.0
 +
 +//! The judging pipeline: prepare source, compile, run with resource limits,
@@ -1896,6 +1896,16 @@ index 0000000..3f3b16e
 +const COMPILE_FSIZE_BYTES: u64 = 256 * 1024 * 1024;
 +/// Extra wall time past the CPU limit (same margin as the worker's local sandbox).
 +const WALL_GRACE: Duration = Duration::from_millis(1500);
++
++/// Seccomp BPF program bwrap installs on every submission run.
++static SECCOMP_BPF: std::sync::OnceLock<Vec<u8>> = std::sync::OnceLock::new();
++
++/// Install the seccomp program applied to submission runs (not to compilers,
++/// which need a wider syscall set). Called once at startup; returns `false`
++/// when a program was already installed.
++pub fn install_seccomp(bpf: Vec<u8>) -> bool {
++    SECCOMP_BPF.set(bpf).is_ok()
++}
 +
 +/// Error of the judging pipeline.
 +#[derive(Debug)]
@@ -2374,6 +2384,20 @@ index 0000000..3f3b16e
 +    // daemon's pre-exec RSS (~15MB) as the program's peak.
 +    let report = usage_report_path(prepared.workdir.path());
 +    let mut cmd = sandbox_command(prepared.workdir.path(), &usage_wrapper(&report));
++    // bwrap loads the filter right before exec'ing the program, so its own
++    // namespace/mount setup is unaffected. The fd lives until spawn returns.
++    let seccomp = match SECCOMP_BPF.get() {
++        Some(bpf) => Some(
++            rsjudge_runner::utils::memfd_with(c"rsjudge-seccomp", bpf)
++                .map_err(|e| PipelineError(format!("cannot prepare seccomp filter: {e}")))?,
++        ),
++        None => None,
++    };
++    if let Some(fd) = &seccomp {
++        use std::os::fd::AsRawFd as _;
++        cmd.arg("--seccomp").arg(fd.as_raw_fd().to_string());
++        rsjudge_runner::utils::inherit_fd(&mut cmd, fd);
++    }
 +    cmd.arg("--as-pid-1").args(&user_argv).current_dir(prepared.workdir.path());
 +    cmd.stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped());
 +    clean_env(&mut cmd);
@@ -2843,6 +2867,80 @@ index 3d5f62e..1be0201 100644
 +    /// Full submission against the fetched cases archive.
      Submit { cases: CasesConfig },
  }
+diff --git a/crates/rsjudge-judger/tests/seccomp.rs b/crates/rsjudge-judger/tests/seccomp.rs
+new file mode 100644
+index 0000000..272e8b8
+--- /dev/null
++++ b/crates/rsjudge-judger/tests/seccomp.rs
+@@ -0,0 +1,68 @@
++// SPDX-License-Identifier: Apache-2.0
++
++//! Submission runs get the seccomp profile through bwrap. This is a separate
++//! test binary because the installed program is process-wide.
++
++use std::time::Duration;
++
++use rsjudge_judger::judger::pipeline::{compile, install_seccomp, prepare_source, run_once, verdict_of};
++use rsjudge_traits::judger::JudgeResult;
++use rsjudge_traits::language::config::LanguageDef;
++
++fn cpp() -> LanguageDef {
++    toml::from_str("exec_type = \"binary\"\ncompile = \"g++ -O2 -o {out_file} {src_file}\"\n").unwrap()
++}
++
++async fn run(src: &str, input: &[u8]) -> rsjudge_judger::judger::pipeline::RunOutcome {
++    let def = cpp();
++    let prepared = prepare_source("C++", &def, src.as_bytes(), None).await.unwrap();
++    let info = compile(&prepared, &def).await.unwrap();
++    assert!(info.success(), "{}", info.stderr);
++    run_once(&prepared, &def, input, Duration::from_secs(3), Some(256 * 1024 * 1024)).await.unwrap()
++}
++
++#[tokio::test]
++async fn submission_runs_under_the_seccomp_profile() {
++    let profile = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../config-demo/seccomp.toml")).unwrap();
++    let config: rsjudge_runner::SeccompConfig = toml::from_slice(&profile).unwrap();
++    assert!(install_seccomp(config.export_bpf_bytes().unwrap()));
++
++    // Network, namespace and kernel-key syscalls kill the program (SIGSYS):
++    // the meter reports 128 + 31, judged as a runtime error.
++    for (name, call) in [
++        ("socket", "socket(AF_INET, SOCK_STREAM, 0)"),
++        ("unshare", "unshare(CLONE_NEWUSER)"),
++        ("keyctl", "syscall(SYS_keyctl, 0, 0, 0, 0, 0)"),
++    ] {
++        let src = format!(
++            "#include <cstdio>\n#include <sched.h>\n#include <sys/socket.h>\n#include <sys/syscall.h>\n#include <unistd.h>\nint main(){{ {call}; puts(\"survived\"); }}"
++        );
++        let outcome = run(&src, b"").await;
++        assert_eq!(outcome.exit_code, 128 + 31, "{name}: {outcome:?}");
++        assert!(outcome.stdout.is_empty(), "{name} must not return");
++        assert!(matches!(verdict_of(&outcome, None), JudgeResult::RuntimeError), "{name}");
++    }
++
++    // Ordinary programs, including threads and memory use, are unaffected.
++    let normal = run(
++        r#"#include <cstdio>
++#include <thread>
++#include <vector>
++int main(){long long a,b; if(scanf("%lld %lld",&a,&b)!=2) return 1;
++std::vector<int> v(10000000, 1); long long s = 0;
++std::thread t([&]{ for (int x : v) s += x; }); t.join();
++printf("%lld\n", a + b + s);}"#,
++        b"3 4\n",
++    )
++    .await;
++    assert!(matches!(verdict_of(&normal, Some(256 * 1024 * 1024)), JudgeResult::Accepted), "{normal:?}");
++    assert_eq!(String::from_utf8_lossy(&normal.stdout).trim(), "10000007");
++
++    // Interpreted runtimes still start under the profile.
++    let py: LanguageDef = toml::from_str("exec_type = \"source_code\"\nexecute = \"python3 {src_file}\"").unwrap();
++    let prepared = prepare_source("Python", &py, b"import sys, json, threading\nprint(sum(map(int, sys.stdin.read().split())))", None)
++        .await
++        .unwrap();
++    let outcome = run_once(&prepared, &py, b"3 4", Duration::from_secs(3), Some(256 * 1024 * 1024)).await.unwrap();
++    assert_eq!(String::from_utf8_lossy(&outcome.stdout).trim(), "7", "{outcome:?}");
++}
 diff --git a/crates/rsjudge-rest/Cargo.toml b/crates/rsjudge-rest/Cargo.toml
 index 821c033..8a37487 100644
 --- a/crates/rsjudge-rest/Cargo.toml
@@ -3063,6 +3161,87 @@ index a5d383a..444203d 100644
      let listener = TcpListener::bind(addr).await?;
      axum::serve(listener, app).await?;
      Ok(())
+diff --git a/crates/rsjudge-runner/src/config.rs b/crates/rsjudge-runner/src/config.rs
+index 4f08a53..ad4e400 100644
+--- a/crates/rsjudge-runner/src/config.rs
++++ b/crates/rsjudge-runner/src/config.rs
+@@ -275,6 +275,31 @@ impl SeccompConfig {
+     }
+ }
+ 
++impl SeccompConfig {
++    /// Export the filter for an unprivileged process (no capabilities) as raw
++    /// BPF bytecode, e.g. for `bwrap --seccomp FD`, which installs it right
++    /// before `execve` so the sandbox setup itself is not filtered.
++    pub fn export_bpf_bytes(&self) -> Result<Vec<u8>> {
++        use std::io::{Read, Seek, SeekFrom};
++        use std::os::fd::AsFd;
++
++        use nix::sys::memfd::{MFdFlags, memfd_create};
++
++        let ctx = self.build_filter_with_caps(&CapSet::empty())?;
++        let memfd =
++            memfd_create(c"rsjudge-seccomp", MFdFlags::MFD_CLOEXEC).map_err(io::Error::other)?;
++        ctx.export_bpf(memfd.as_fd()).map_err(io::Error::other)?;
++        let mut file = std::fs::File::from(memfd);
++        file.seek(SeekFrom::Start(0))?;
++        let mut bpf = Vec::new();
++        file.read_to_end(&mut bpf)?;
++        if bpf.is_empty() {
++            return Err(io::Error::other("libseccomp exported an empty BPF program").into());
++        }
++        Ok(bpf)
++    }
++}
++
+ /// A compiled seccomp BPF program, ready to be loaded into a process.
+ ///
+ /// The bytecode is generated by libseccomp in the parent process, which may
+diff --git a/crates/rsjudge-runner/src/utils/mod.rs b/crates/rsjudge-runner/src/utils/mod.rs
+index c3c2eef..0d7dd93 100644
+--- a/crates/rsjudge-runner/src/utils/mod.rs
++++ b/crates/rsjudge-runner/src/utils/mod.rs
+@@ -2,3 +2,40 @@
+ 
+ pub mod cap_handle;
+ pub mod resources;
++
++use std::os::fd::{BorrowedFd, OwnedFd};
++
++use nix::fcntl::{FcntlArg, FdFlag, fcntl};
++use nix::sys::memfd::{MFdFlags, memfd_create};
++
++/// An anonymous in-memory file holding `bytes`, positioned at the start and
++/// close-on-exec in this process.
++///
++/// # Errors
++///
++/// Fails when the memfd cannot be created or written.
++pub fn memfd_with(name: &core::ffi::CStr, bytes: &[u8]) -> std::io::Result<OwnedFd> {
++    use std::io::{Seek, SeekFrom, Write};
++    let mut file = std::fs::File::from(memfd_create(name, MFdFlags::MFD_CLOEXEC)?);
++    file.write_all(bytes)?;
++    file.seek(SeekFrom::Start(0))?;
++    Ok(file.into())
++}
++
++/// Hand `fd` to the program started by `cmd` under the same number.
++///
++/// The fd stays close-on-exec in this process, so concurrently spawned
++/// children never inherit it; only the forked child clears the flag right
++/// before `execve`.
++pub fn inherit_fd(cmd: &mut tokio::process::Command, fd: &OwnedFd) {
++    use std::os::fd::AsRawFd;
++    let raw = fd.as_raw_fd();
++    // SAFETY: `fcntl` is async-signal-safe and allocates nothing; the fd is
++    // open in the child because `fork` copied the parent's descriptor table.
++    unsafe {
++        cmd.pre_exec(move || {
++            fcntl(BorrowedFd::borrow_raw(raw), FcntlArg::F_SETFD(FdFlag::empty()))?;
++            Ok(())
++        });
++    }
++}
 diff --git a/crates/rsjudge-traits/src/judger.rs b/crates/rsjudge-traits/src/judger.rs
 index 14aaa15..3f16a11 100644
 --- a/crates/rsjudge-traits/src/judger.rs
@@ -3177,7 +3356,7 @@ index 484cbfc..a77731d 100644
 +    pub register_endpoint: Option<String>,
  }
 diff --git a/src/lib.rs b/src/lib.rs
-index b4b458d..eabd1ed 100644
+index b4b458d..019d19a 100644
 --- a/src/lib.rs
 +++ b/src/lib.rs
 @@ -1,12 +1,15 @@
@@ -3200,17 +3379,11 @@ index b4b458d..eabd1ed 100644
  use sysinfo::System;
  
  pub use crate::cli::Args;
-@@ -24,13 +27,23 @@ mod config;
+@@ -24,13 +27,36 @@ mod config;
  pub async fn async_main(args: Args) -> anyhow::Result<()> {
      debug!("{args:?}");
  
 -    let config = Config::load_from_dir(&args.config_dir).await?;
--
--    debug!("Loaded {} executors", config.executors.len());
--    debug!(
--        "Seccomp default action: {:?}",
--        config.seccomp.default_action
--    );
 +    let executor_config_path = args.config_dir.join("executors.toml");
 +    let executors_raw = tokio::fs::read(&executor_config_path)
 +        .await
@@ -3229,9 +3402,27 @@ index b4b458d..eabd1ed 100644
 +        })?;
 +    info!("Loaded {} language executor(s)", executors.len());
  
+-    debug!("Loaded {} executors", config.executors.len());
+-    debug!(
+-        "Seccomp default action: {:?}",
+-        config.seccomp.default_action
+-    );
++    // Fail closed: submissions never run without the syscall filter.
++    let seccomp_path = args.config_dir.join("seccomp.toml");
++    let seccomp_raw = tokio::fs::read(&seccomp_path)
++        .await
++        .with_context(|| format!("Cannot load seccomp profile at {}", seccomp_path.display()))?;
++    let seccomp: rsjudge_runner::SeccompConfig = toml::from_slice(&seccomp_raw)
++        .with_context(|| format!("Failed to parse seccomp profile at {}", seccomp_path.display()))?;
++    let bpf = seccomp
++        .export_bpf_bytes()
++        .context("Cannot compile the seccomp profile")?;
++    rsjudge_judger::judger::pipeline::install_seccomp(bpf);
++    info!("Seccomp profile loaded for submission runs");
+ 
      match (System::name(), System::os_version()) {
          (Some(distro_name), Some(distro_version)) => {
-@@ -44,5 +57,157 @@ pub async fn async_main(args: Args) -> anyhow::Result<()> {
+@@ -44,5 +70,157 @@ pub async fn async_main(args: Args) -> anyhow::Result<()> {
          }
      }
  

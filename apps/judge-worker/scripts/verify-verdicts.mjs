@@ -30,6 +30,8 @@ const cases = [
   { name: 'TLE', expected: 'TIME_LIMIT_EXCEEDED', code: 'int main(){for(;;){}}' },
   { name: 'MLE', expected: 'MEMORY_LIMIT_EXCEEDED', code: '#include <cstdio>\n#include <vector>\nint main(){std::vector<char> b(400u*1024*1024,1);printf("%d\\n",(int)b[0]);}' },
   { name: 'RTE', expected: 'RUNTIME_ERROR', code: 'int main(){return 3;}' },
+  // Network syscalls are outside the seccomp profile: the program is killed.
+  { name: 'SECCOMP', expected: 'RUNTIME_ERROR', code: '#include <sys/socket.h>\n#include <cstdio>\nint main(){int a;scanf("%d",&a);socket(AF_INET,SOCK_STREAM,0);printf("%d\\n",a*7);}' },
 ];
 
 const results = [];

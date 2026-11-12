@@ -30,12 +30,15 @@ services:
     mem_limit: 1g
     cpus: 2
     pids_limit: 512
-    cap_add:
-      - SYS_ADMIN   # required for nested bwrap mounts; submission caps are dropped
+    # Engine mode: the worker never runs submissions, yet holds the service-role
+    # key, so it gets no capabilities and a read-only root filesystem.
+    cap_drop: [ALL]
     security_opt:
-      - apparmor=unconfined
-      - systempaths=unconfined
-      - seccomp=unconfined   # bwrap cần unshare; isolation chuyển xuống sandbox layer
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    networks: [default, judge]
 
   engine:
     build:
@@ -55,9 +58,18 @@ services:
     cap_add:
       - SYS_ADMIN   # required for nested bwrap mounts; submission caps are dropped
     security_opt:
-      - apparmor=unconfined
-      - systempaths=unconfined
-      - seccomp=unconfined   # bwrap enforces namespace isolation; kernel must allow user namespaces
+      - apparmor=unconfined     # docker-default AppArmor denies the mounts bwrap makes
+      - systempaths=unconfined  # masked /proc paths block bwrap's fresh procfs
+      # Docker's default seccomp profile blocks pivot_root, which bwrap needs.
+      # Submissions run under the engine's judge profile (seccomp.toml) instead.
+      - seccomp=unconfined
+      - no-new-privileges:true
+    # No route out: if a submission escaped the sandbox it could reach only the worker.
+    networks: [judge]
 
 # Ghi chú: chỉ nên chạy 1 instance worker / DB (claim chống trùng qua cập nhật
 # trạng thái PENDING->JUDGING). Muốn scale: tách queue PG notify/Redis trước.
+
+networks:
+  judge:
+    internal: true

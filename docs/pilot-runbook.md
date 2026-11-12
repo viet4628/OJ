@@ -47,7 +47,7 @@ curl --fail http://127.0.0.1:9090/health
 node apps/judge-worker/scripts/smoke-staging.mjs
 ```
 
-Provider50052, engine50051 và REST8080 chỉ dùng mạng Docker, không publish Internet. Health9090 bind host loopback. Không expose Docker socket hay thư mục dự án/secrets vào sandbox. `SYS_ADMIN`, `seccomp=unconfined`, `apparmor=unconfined` và `systempaths=unconfined` chỉ áp dụng container judge để bwrap tạo/mount namespace (đã thử trên host hiện tại); submission bị drop toàn bộ capabilities. Chạy judge trên máy/VM riêng; không áp dụng cho dịch vụ web/DB. Bảo vệ máy judge bằng giới hạn container và máy/VM riêng trước khi cho người lạ submit.
+Provider50052 và engine50051 chỉ dùng mạng Docker nội bộ `judge` (`internal: true`): engine không có đường ra Internet. REST8080 của engine đã tắt (chạy code không xác thực, worker không dùng). Health9090 bind host loopback. Không expose Docker socket hay thư mục dự án/secrets vào sandbox. Worker (giữ service-role key, không chạy code ở chế độ engine) chạy `cap_drop: ALL`, `no-new-privileges`, root filesystem chỉ đọc. Chỉ container engine có `SYS_ADMIN`, `apparmor=unconfined`, `systempaths=unconfined` và `seccomp=unconfined` để bwrap tạo/mount namespace (profile seccomp mặc định của Docker chặn `pivot_root`, đã thử 13/11); bản thân bài nộp chạy dưới profile seccomp của engine (`engine-config/seccomp.toml`, bwrap `--seccomp`), bị drop toàn bộ capabilities, là PID 1 trong namespace riêng. Engine dừng khởi động nếu thiếu profile. Chạy judge trên máy/VM riêng; không áp dụng cho dịch vụ web/DB. Bảo vệ máy judge bằng giới hạn container và máy/VM riêng trước khi cho người lạ submit.
 
 ## Theo dõi
 

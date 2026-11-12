@@ -79,7 +79,7 @@ Worker nhận `WORKER_CONCURRENCY` (mặc định 2, cho phép 1..8): số bài 
 
 **Không được đặt concurrency vượt số CPU của engine** (`docker-compose.yml`: engine `cpus: 2`). Runner giết chương trình theo wall-time, nên khi nhiều job tranh CPU trên cùng số core, một chương trình sát thời gian có thể bị kết luận TLE giả. Tăng concurrency thì tăng `cpus` của engine tương ứng, và kiểm lại bằng `verify-verdicts.mjs`.
 
-Thời gian và bộ nhớ của bài nộp được đo bằng GNU time chạy **bên trong** sandbox, vì `wait4` ở ngoài chỉ thấy usage của bwrap (chương trình nằm trong PID namespace khác). Vì vậy `time_used_ms`/`memory_used_mb` phản ánh đúng chương trình của học sinh, và verdict MLE nhận diện theo RSS thật.
+Thời gian và bộ nhớ của bài nộp được đo bằng GNU time chạy **bên ngoài** sandbox (từ 13/11): chương trình là PID 1 (`bwrap --as-pid-1`) nên usage đi lên qua `wait4`, báo cáo nằm ngoài thư mục bài nên chương trình không làm giả được. `time_used_ms`/`memory_used_mb` phản ánh đúng chương trình của học sinh; TLE theo CPU, wall-time có biên 1,5s.
 
 
 Lượt health dự kiến 24 giờ trước đã dừng sau khoảng 5 phút; xem [verification](verification.md). Giữ dữ liệu báo cáo để đối chiếu; chạy lại health/soak khi nghiệm thu.

@@ -53,7 +53,16 @@ Owner đã áp dụng các migration bằng SQL Editor và báo thành công; RE
 
 Tiếp tục theo [plan](../plan.md), triển khai theo [runbook](pilot-runbook.md). Đã giữ bằng chứng đo lường; ảnh/video/kết quả Playwright có thể sinh lại và được dọn bằng `npm run clean`.
 
-## Đợt sửa độ đúng chấm và bảo mật dữ liệu ngày 13/11/2026
+## Siết cô lập sandbox ngày 13/11/2026
+
+| Bằng chứng | Kết quả |
+|---|---|
+| Hiện trạng trước khi sửa | `seccomp.toml` được parse nhưng không áp lên bài nộp; worker (giữ service-role key) chạy `SYS_ADMIN` + unconfined dù không chạy code; engine bật REST 8080 chạy code không xác thực; engine ra được Internet |
+| Seccomp cho bài nộp | Test `crates/rsjudge-judger/tests/seccomp.rs`: `socket`, `unshare`, `keyctl` bị kill (SIGSYS, verdict RE); C++ có thread và Python vẫn AC. Staging `verify-verdicts.mjs` 7/7 gồm ca `SECCOMP` |
+| Container | Worker: `CapEff 0`, `NoNewPrivs 1`, root FS chỉ đọc, health ok. Engine: không resolve DNS/không ra TCP ngoài, chỉ gRPC 50051 lắng nghe, log "Seccomp profile loaded" |
+| Thử bỏ `seccomp=unconfined` ở engine | Thất bại: profile Docker chặn `pivot_root`, mọi bài ra COMPILE_ERROR trong vài phút; đã khôi phục, 0 bài nộp thật bị ảnh hưởng (truy vấn `error_log`) |
+| Kiểm thử mã | Rust 47 test, `test:pilot` PASS |
+
 
 | Bằng chứng | Kết quả |
 |---|---|
