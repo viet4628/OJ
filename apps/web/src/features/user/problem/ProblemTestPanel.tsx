@@ -140,7 +140,7 @@ export default function ProblemTestPanel({
                 <label className="font-semibold text-[var(--text-muted)] block text-[10px] uppercase">
                   Đầu vào tự tạo:
                 </label>
-                <textarea
+                <textarea aria-label="Đầu vào tự tạo"
                   value={customInput}
                   onChange={(e) => setCustomInput(e.target.value)}
                   onKeyDown={handleTabKey(setCustomInput)}

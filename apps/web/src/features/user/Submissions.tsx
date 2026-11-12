@@ -194,7 +194,7 @@ export default function Submissions({ user }: { user: AppUser | null }) {
             <span className="px-2.5 py-1.5">CỦA TÔI</span>
           </div>
 
-          <select
+          <select aria-label="Lọc theo kết quả"
             value={statusFilter}
             onChange={(e) => handleStatusChange(e.target.value)}
             className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg px-3 py-1.5 text-xs text-[var(--text-primary)] font-bold focus:outline-none focus:border-[var(--accent)] cursor-pointer"
@@ -207,7 +207,7 @@ export default function Submissions({ user }: { user: AppUser | null }) {
             <option value="RUNTIME_ERROR">RUNTIME_ERROR</option>
           </select>
 
-          <select
+          <select aria-label="Lọc theo ngôn ngữ"
             value={langFilter}
             onChange={(e) => setLangFilter(e.target.value)}
             className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg px-3 py-1.5 text-xs text-[var(--text-primary)] font-bold focus:outline-none focus:border-[var(--accent)] cursor-pointer"

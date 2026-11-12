@@ -807,9 +807,11 @@ test('Sửa mã chuẩn sau AC không bị hiểu là mã mới đã qua kiểm 
   await page.getByRole('button', { name: 'Danh Sách Bài Tập', exact: true }).click();
   await page.getByRole('button', { name: 'Chỉnh sửa bài tập', exact: true }).click();
   await page.getByRole('button', { name: 'Lời giải & Ghi chú' }).click();
-  await expect(page.getByRole('status')).toContainText('đạt toàn bộ testcase');
+  // The lazy editor shows its own role=status while loading; target the validation line.
+  const validationStatus = page.getByRole('status').filter({ hasText: /kiểm định/i });
+  await expect(validationStatus).toContainText('đạt toàn bộ testcase');
   await page.getByLabel('Mã nguồn kiểm định').fill('int main(){return 1;}');
-  await expect(page.getByRole('status')).toContainText('Mã hiện tại chưa được kiểm định');
+  await expect(validationStatus).toContainText('Mã hiện tại chưa được kiểm định');
 });
 
 test('Quản trị chỉ có một thao tác tạo bài, không hiện nhãn kỹ thuật và lối tắt lặp', async ({ page }) => {

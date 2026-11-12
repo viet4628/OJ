@@ -18,6 +18,7 @@ import {
   type ClassroomProgressItem,
   type Problem,
 } from '../../../lib/api';
+import { useEscapeKey } from '../../../lib/useEscapeKey';
 
 type SubTab = 'assignments' | 'students' | 'gradebook';
 
@@ -62,6 +63,7 @@ export default function TeacherClassroomsTab() {
   const [selectedProblemId, setSelectedProblemId] = useState<string>('');
   const [deadlineInput, setDeadlineInput] = useState('');
   const [isAddingProblem, setIsAddingProblem] = useState(false);
+  useEscapeKey(isAddProblemOpen, () => { if (!isAddingProblem) setIsAddProblemOpen(false); });
   const [assignmentError, setAssignmentError] = useState<string | null>(null);
   const [problemsLoading, setProblemsLoading] = useState(false);
 
@@ -800,7 +802,10 @@ export default function TeacherClassroomsTab() {
           {classrooms.map((c) => (
             <div
               key={c.id}
+              role="button"
+              tabIndex={0}
               onClick={() => { setActiveClass(c); setActiveClassId(c.id); }}
+              onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setActiveClass(c); setActiveClassId(c.id); } }}
               className="group p-5 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] hover:border-accent/50 transition-all shadow-sm hover:shadow-md cursor-pointer flex flex-col justify-between space-y-4"
             >
               <div className="space-y-2">

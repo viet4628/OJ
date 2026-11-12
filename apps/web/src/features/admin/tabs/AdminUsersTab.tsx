@@ -11,6 +11,7 @@ import {
   PERMISSION_DEFS,
   type Profile,
 } from '../../../lib/api';
+import { useEscapeKey } from '../../../lib/useEscapeKey';
 
 const PERMISSION_GROUPS = [...new Set(PERMISSION_DEFS.map((d) => d.group))];
 
@@ -42,6 +43,7 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
 
   // RBAC Permission Modal State
   const [permUser, setPermUser] = useState<Profile | null>(null);
+  useEscapeKey(permUser !== null, () => setPermUser(null));
   const [permCodes, setPermCodes] = useState<string[]>([]);
   const [permLoading, setPermLoading] = useState(false);
   const [permSaving, setPermSaving] = useState(false);

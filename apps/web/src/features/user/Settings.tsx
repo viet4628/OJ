@@ -173,7 +173,7 @@ export default function Settings({ user, onOpenAuth, onProfileSaved }: SettingsP
 
           <div>
             <label className={labelCls}>Tên hiển thị</label>
-            <input
+            <input aria-label="Tên hiển thị"
               type="text"
               required
               value={fullName}
@@ -216,7 +216,7 @@ export default function Settings({ user, onOpenAuth, onProfileSaved }: SettingsP
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className={labelCls}>Mật Khẩu Mới</label>
-            <input
+            <input aria-label="Mật Khẩu Mới"
               type="password"
               required
               minLength={6}
@@ -228,7 +228,7 @@ export default function Settings({ user, onOpenAuth, onProfileSaved }: SettingsP
           </div>
           <div className="space-y-1">
             <label className={labelCls}>Nhập Lại Mật Khẩu</label>
-            <input
+            <input aria-label="Nhập Lại Mật Khẩu"
               type="password"
               required
               minLength={6}

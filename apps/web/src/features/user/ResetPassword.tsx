@@ -93,7 +93,7 @@ export default function ResetPassword() {
               <label className="text-xs font-semibold text-[var(--text-secondary)]">Mật Khẩu Mới</label>
               <div className="relative">
 
-                <input
+                <input aria-label="Mật Khẩu Mới"
                   type="password"
                   required
                   autoFocus
@@ -109,7 +109,7 @@ export default function ResetPassword() {
               <label className="text-xs font-semibold text-[var(--text-secondary)]">Nhập Lại Mật Khẩu</label>
               <div className="relative">
 
-                <input
+                <input aria-label="Nhập Lại Mật Khẩu"
                   type="password"
                   required
                   minLength={6}

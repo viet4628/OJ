@@ -131,7 +131,7 @@ export default function Problems() {
               <div className="flex flex-wrap items-center gap-2">
                 <Link to="/learn" className="text-xs text-[var(--accent)] hover:underline">Luyện theo chủ đề</Link>
                 {/* Trạng thái cá nhân */}
-                <select
+                <select aria-label="Lọc theo trạng thái"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
                   className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-2.5 py-1 text-xs text-[var(--text-primary)] font-medium focus:outline-none focus:border-[var(--accent)] cursor-pointer"
@@ -146,7 +146,7 @@ export default function Problems() {
                 {/* Tìm kiếm */}
                 <div className="relative">
 
-                  <input
+                  <input aria-label="Lọc bài tập"
                     type="text"
                     placeholder="Lọc bài tập..."
                     value={keyword}

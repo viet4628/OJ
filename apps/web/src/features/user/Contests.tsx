@@ -57,7 +57,7 @@ export default function Contests() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <select
+          <select aria-label="Lọc theo thể thức"
             value={ruleFilter}
             onChange={(e) => setRuleFilter(e.target.value)}
             className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-2.5 py-1 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] cursor-pointer"
@@ -67,7 +67,7 @@ export default function Contests() {
             <option value="OI">OI</option>
           </select>
 
-          <select
+          <select aria-label="Lọc theo trạng thái"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-2.5 py-1 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] cursor-pointer"
@@ -80,7 +80,7 @@ export default function Contests() {
 
           <div className="relative">
 
-            <input
+            <input aria-label="Tìm kỳ thi"
               type="text"
               placeholder="Tìm kỳ thi..."
               value={keyword}

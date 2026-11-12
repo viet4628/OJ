@@ -76,7 +76,7 @@ export default function AdminGate() {
         <form onSubmit={handleLogin} className="space-y-3">
           <div className="space-y-1">
             <label className="text-xs font-semibold text-[var(--text-secondary)]">Email</label>
-            <input
+            <input aria-label="Email"
               type="email"
               required
               autoFocus
@@ -88,7 +88,7 @@ export default function AdminGate() {
           </div>
           <div className="space-y-1">
             <label className="text-xs font-semibold text-[var(--text-secondary)]">Mật Khẩu</label>
-            <input
+            <input aria-label="Mật Khẩu"
               type="password"
               required
               value={password}

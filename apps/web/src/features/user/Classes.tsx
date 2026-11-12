@@ -7,6 +7,7 @@ import {
   type Classroom,
   type AppUser,
 } from '../../lib/api';
+import { useEscapeKey } from '../../lib/useEscapeKey';
 
 interface ClassesProps {
   user: AppUser | null;
@@ -21,6 +22,7 @@ export default function Classes({ user, onOpenAuth }: ClassesProps) {
 
   /* join class modal */
   const [isJoinOpen, setIsJoinOpen] = useState(false);
+  useEscapeKey(isJoinOpen, () => setIsJoinOpen(false));
   const [joinCode, setJoinCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
@@ -192,6 +194,7 @@ export default function Classes({ user, onOpenAuth }: ClassesProps) {
           onClick={() => setIsJoinOpen(false)}
         >
           <div
+            role="dialog" aria-modal="true" aria-label="Tham gia lớp học"
             className="w-full max-w-md bg-[var(--bg-primary)] rounded-2xl border border-[var(--border)] p-6 space-y-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
@@ -217,7 +220,7 @@ export default function Classes({ user, onOpenAuth }: ClassesProps) {
                 <label className="text-xs font-bold text-[var(--text-secondary)]">
                   Mã lớp học (Class Code)
                 </label>
-                <input
+                <input aria-label="Mã lớp học (Class Code)"
                   type="text"
                   required
                   autoFocus

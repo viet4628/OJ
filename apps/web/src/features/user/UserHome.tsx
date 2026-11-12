@@ -461,7 +461,7 @@ export default function UserHome({ currentUser }: UserHomeProps) {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[var(--border)]">
                   <div className="relative flex-1 max-w-sm">
 
-                    <input
+                    <input aria-label="Tìm bài tập đã giải"
                       type="text"
                       placeholder="Tìm bài tập đã giải..."
                       value={searchSolved}

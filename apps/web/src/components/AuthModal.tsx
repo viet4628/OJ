@@ -99,6 +99,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
           </div>
 
           <button
+            type="button"
+            aria-label="Đóng"
             onClick={onClose}
             className="p-1 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer"
           >
@@ -126,7 +128,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
               <label className="font-semibold text-[var(--text-secondary)]">Tên Người Dùng</label>
               <div className="relative">
 
-                <input
+                <input aria-label="Tên Người Dùng"
                   type="text"
                   required
                   autoFocus
@@ -143,7 +145,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
             <label className="font-semibold text-[var(--text-secondary)]">Địa Chỉ Email</label>
             <div className="relative">
 
-              <input
+              <input aria-label="Địa Chỉ Email"
                 type="email"
                 required
                 autoFocus={mode !== 'register'}
@@ -160,7 +162,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
               <label className="font-semibold text-[var(--text-secondary)]">Mật Khẩu</label>
               <div className="relative">
 
-                <input
+                <input aria-label="Mật Khẩu"
                   type="password"
                   required
                   placeholder="••••••••"

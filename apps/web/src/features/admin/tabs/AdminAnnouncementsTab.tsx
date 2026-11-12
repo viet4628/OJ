@@ -73,7 +73,7 @@ export default function AdminAnnouncementsTab() {
       <form onSubmit={saveAnn} className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3.5 rounded-md bg-[var(--bg-primary)] border border-[var(--border)]">
         <div className="space-y-1">
           <label className={labelCls}>Nhãn (Tag)</label>
-          <input
+          <input aria-label="Nhãn (Tag)"
             type="text"
             value={annForm.tag}
             onChange={(e) => setAnnForm({ ...annForm, tag: e.target.value })}
@@ -82,7 +82,7 @@ export default function AdminAnnouncementsTab() {
         </div>
         <div className="space-y-1">
           <label className={labelCls}>Tiêu Đề *</label>
-          <input
+          <input aria-label="Tiêu Đề"
             type="text"
             required
             value={annForm.title}
@@ -93,7 +93,7 @@ export default function AdminAnnouncementsTab() {
         </div>
         <div className="space-y-1 md:col-span-2">
           <label className={labelCls}>Nội Dung *</label>
-          <textarea
+          <textarea aria-label="Nội Dung"
             rows={3}
             required
             value={annForm.content}

@@ -15,6 +15,7 @@ import {
 import { createZip, downloadBlob, parseZip, pairTestcases } from '../../../lib/zip';
 import Markdown from '../../../components/Markdown';
 import { STARTER_CODES, SUPPORTED_LANGUAGES, type SupportedLanguage } from '../../../constants/languages';
+import { useEscapeKey } from '../../../lib/useEscapeKey';
 
 const RichTextEditor = lazy(() => import('../../../components/RichTextEditor'));
 const ProblemStatementEditor = lazy(() => import('../../../components/RichTextEditor').then(module => ({ default: module.ProblemStatementEditor })));
@@ -166,6 +167,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
 
   // Student view preview modal
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  useEscapeKey(showPreviewModal, () => setShowPreviewModal(false));
 
   const fetchProblems = async () => {
     setLoading(true);
@@ -664,7 +666,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                   <div className="md:col-span-8 space-y-1">
                     <label className="block text-xs font-semibold text-[var(--text-primary)]">Tên bài tập *</label>
-                    <input
+                    <input aria-label="Tên bài tập"
                       type="text"
                       required
                       value={problemForm.title}
@@ -692,7 +694,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
                         Tự động
                       </label>
                     </div>
-                    <input
+                    <input aria-label="Slug"
                       type="text"
                       required
                       value={problemForm.slug}
@@ -747,7 +749,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
                         ))}
                       </div>
                     </div>
-                    <input
+                    <input aria-label="Thời gian (ms)"
                       type="number"
                       min={100}
                       step={100}
@@ -774,7 +776,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
                         ))}
                       </div>
                     </div>
-                    <input
+                    <input aria-label="Bộ nhớ (MB)"
                       type="number"
                       min={16}
                       step={16}
@@ -806,7 +808,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
                         );
                       })}
                     </div>
-                    <input
+                    <input aria-label="Thêm thẻ chủ đề"
                       type="text"
                       value={customTagInput}
                       onChange={(e) => setCustomTagInput(e.target.value)}
@@ -908,7 +910,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <label className="block text-[11px] font-semibold text-[var(--text-secondary)]">Đầu vào (Input) *</label>
-                        <textarea
+                        <textarea aria-label="Đầu vào (Input)"
                           rows={3}
                           value={sample.input}
                           onChange={(e) => handleSampleChange(idx, 'input', e.target.value)}
@@ -919,7 +921,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
 
                       <div className="space-y-1">
                         <label className="block text-[11px] font-semibold text-[var(--text-secondary)]">Đầu ra (Output) *</label>
-                        <textarea
+                        <textarea aria-label="Đầu ra (Output)"
                           rows={3}
                           value={sample.output}
                           onChange={(e) => handleSampleChange(idx, 'output', e.target.value)}
@@ -930,7 +932,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
 
                       <div className="md:col-span-2 space-y-1">
                         <label className="block text-[11px] font-semibold text-[var(--text-secondary)]">Giải thích</label>
-                        <input
+                        <input aria-label="Giải thích"
                           type="text"
                           value={sample.explanation || ''}
                           onChange={(e) => handleSampleChange(idx, 'explanation', e.target.value)}
@@ -1020,14 +1022,14 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
                 </span>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <textarea
+                  <textarea aria-label="Input testcase mới"
                     rows={2}
                     value={manualInput}
                     onChange={(e) => setManualInput(e.target.value)}
                     placeholder="Input (dữ liệu vào)..."
                     className="w-full bg-[var(--bg-secondary)] border border-[var(--border)] rounded-md p-2 font-mono text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]"
                   />
-                  <textarea
+                  <textarea aria-label="Output testcase mới"
                     rows={2}
                     value={manualOutput}
                     onChange={(e) => setManualOutput(e.target.value)}
@@ -1152,7 +1154,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
                               </button>
                             </td>
                             <td className="px-3 py-2">
-                              <input
+                              <input aria-label="Trọng số testcase"
                                 type="number"
                                 min={1}
                                 max={100}
@@ -1233,6 +1235,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
             onClick={() => setShowPreviewModal(false)}
           >
             <div
+              role="dialog" aria-modal="true" aria-label="Xem trước đề bài"
               className="w-full max-w-3xl bg-[var(--bg-primary)] border border-[var(--border)] rounded-md shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
               onClick={(e) => e.stopPropagation()}
             >
@@ -1375,7 +1378,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
       <div className="flex flex-col sm:flex-row items-center gap-2">
         <div className="relative flex-1 w-full">
 
-          <input
+          <input aria-label="Tìm bài tập"
             type="text"
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}

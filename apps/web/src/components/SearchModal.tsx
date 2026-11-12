@@ -75,6 +75,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       onClick={onClose}
     >
       <div
+        role="dialog" aria-modal="true" aria-label="Tìm kiếm"
         className="w-full max-w-xl bg-[var(--bg-secondary)] border border-[var(--border)] rounded-md shadow-2xl overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
@@ -91,6 +92,8 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             className="w-full bg-transparent text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none"
           />
           <button
+            type="button"
+            aria-label="Đóng"
             onClick={onClose}
             className="p-1 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors cursor-pointer"
           >

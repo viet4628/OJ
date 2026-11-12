@@ -69,7 +69,7 @@ export default function Ranklist() {
           {/* Search box */}
           <div className="relative">
 
-            <input
+            <input aria-label="Tìm tài khoản"
               type="text"
               placeholder="Tìm tài khoản..."
               value={search}

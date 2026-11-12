@@ -621,7 +621,7 @@ export default function ProblemDetail({ user, onOpenAuth, contest, contestProble
           {/* Top Editor Toolbar */}
           <div className="h-10 shrink-0 bg-[var(--bg-secondary)] border-b border-[var(--border)] px-3 flex items-center justify-between select-none">
             <div className="flex items-center gap-2">
-              <select
+              <select aria-label="Ngôn ngữ lập trình"
                 value={language}
                 disabled={isProblemLoading || !hasResolvedInitialCode}
                 onChange={(e) => handleLanguageChange(e.target.value as any)}
