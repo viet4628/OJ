@@ -111,7 +111,7 @@ export default function Classes({ user, onOpenAuth }: ClassesProps) {
       </div>
 
       {error && (
-        <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
+        <div className="p-3 rounded-xl bg-danger/10 border border-danger/30 text-danger text-xs font-semibold">
           {error}
         </div>
       )}
@@ -141,7 +141,7 @@ export default function Classes({ user, onOpenAuth }: ClassesProps) {
             <Link
               key={c.id}
               to={`/classes/${c.id}`}
-              className="group p-5 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] hover:border-[var(--accent)]/60 transition-all shadow-sm hover:shadow-md flex flex-col justify-between space-y-4"
+              className="group p-5 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] hover:border-accent/60 transition-all shadow-sm hover:shadow-md flex flex-col justify-between space-y-4"
             >
               <div className="space-y-3">
 
@@ -209,7 +209,7 @@ export default function Classes({ user, onOpenAuth }: ClassesProps) {
             </div>
 
             {joinError && (
-              <div className="p-3 rounded-xl bg-red-50 text-red-700 text-xs font-semibold">{joinError}</div>
+              <div className="p-3 rounded-xl bg-danger/10 text-danger text-xs font-semibold">{joinError}</div>
             )}
 
             <form onSubmit={handleJoinSubmit} className="space-y-4">

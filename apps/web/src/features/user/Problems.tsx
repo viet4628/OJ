@@ -134,7 +134,7 @@ export default function Problems() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-                  className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-2.5 py-1 text-xs text-[var(--text-primary)] font-medium focus:outline-none focus:border-[#0969DA] dark:focus:border-[#58A6FF] cursor-pointer"
+                  className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-2.5 py-1 text-xs text-[var(--text-primary)] font-medium focus:outline-none focus:border-[var(--accent)] cursor-pointer"
                   title="Lọc theo trạng thái"
                 >
                   <option value="ALL">Mọi trạng thái</option>
@@ -151,7 +151,7 @@ export default function Problems() {
                     placeholder="Lọc bài tập..."
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
-                    className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md pl-8 pr-2.5 py-1 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#0969DA] dark:focus:border-[#58A6FF] w-44 sm:w-52 transition-colors"
+                    className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md pl-8 pr-2.5 py-1 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] w-44 sm:w-52 transition-colors"
                   />
                 </div>
 
@@ -258,7 +258,7 @@ export default function Problems() {
                             <div className="flex items-baseline gap-2">
                               <Link
                                 to={`/problems/${p.slug}`}
-                                className="font-semibold text-xs text-[var(--text-primary)] hover:text-[#0969DA] dark:hover:text-[#58A6FF] transition-colors"
+                                className="font-semibold text-xs text-[var(--text-primary)] hover:text-[var(--accent-text)] transition-colors"
                               >
                                 {p.title}
                               </Link>
@@ -352,7 +352,7 @@ export default function Problems() {
               onClick={() => setSelectedTag('')}
               className={`px-2 py-0.5 rounded-full text-xs font-medium font-mono transition-colors cursor-pointer border ${
                 selectedTag === ''
-                  ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent-text)]'
+                  ? 'border-[var(--accent)] bg-accent/10 text-[var(--accent-text)]'
                   : 'border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'
               }`}
             >
@@ -364,7 +364,7 @@ export default function Problems() {
                 onClick={() => setSelectedTag(selectedTag === tag ? '' : tag)}
                 className={`px-2 py-0.5 rounded-full text-xs font-medium font-mono transition-colors cursor-pointer border ${
                   selectedTag === tag
-                    ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent-text)]'
+                    ? 'border-[var(--accent)] bg-accent/10 text-[var(--accent-text)]'
                     : 'border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'
                 }`}
               >

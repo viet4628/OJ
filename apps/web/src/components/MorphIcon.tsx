@@ -1,4 +1,3 @@
-import React from 'react';
 import { MorphIcon as BaseMorphIcon, type MorphIconProps } from 'morphicons/react';
 import type { IconNode } from 'morphicons';
 

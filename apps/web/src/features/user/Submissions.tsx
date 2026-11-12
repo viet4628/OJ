@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { RefreshCw, Eye, X, Code, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import VerdictBadge from '../../components/VerdictBadge';
 import { getSubmissions, getSubmission, getUserPermissions, rejudgeSubmission, supabase, type Submission, type AppUser } from '../../lib/api';
 
 const PAGE_SIZE = 25;
@@ -161,42 +162,6 @@ export default function Submissions({ user }: { user: AppUser | null }) {
     return d.toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
-  const statusBadge = (status: string) => {
-    if (status === 'ACCEPTED') {
-      return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200">
-         ACCEPTED
-      </span>;
-    }
-    if (status === 'WRONG_ANSWER') {
-      return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-red-50 text-red-700 border border-red-200">
-         WRONG ANSWER
-      </span>;
-    }
-    if (status === 'TIME_LIMIT_EXCEEDED') {
-      return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-amber-50 text-amber-700 border border-amber-200">
-         TLE
-      </span>;
-    }
-    if (status === 'COMPILE_ERROR') {
-      return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-red-50 text-red-700 border border-red-200">
-         COMPILE ERROR
-      </span>;
-    }
-    if (status === 'RUNTIME_ERROR') {
-      return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-orange-50 text-orange-700 border border-orange-200">
-         RUNTIME ERROR
-      </span>;
-    }
-    if (status === 'MEMORY_LIMIT_EXCEEDED') {
-      return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-purple-50 text-purple-700 border border-purple-200">
-         MLE
-      </span>;
-    }
-    return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-bold">
-      <RefreshCw className="w-3.5 h-3.5 animate-spin" /> {status === 'JUDGING' ? 'ĐANG CHẤM' : 'ĐANG CHỜ'}
-    </span>;
-  };
-
   return (
     <div className="space-y-5">
       {actionNotice && <p role="status" className="text-xs text-[var(--accent-text)]">{actionNotice}</p>}
@@ -210,15 +175,15 @@ export default function Submissions({ user }: { user: AppUser | null }) {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-bold font-code">
-            <RefreshCw className={`w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 ${isRefreshing ? 'animate-spin' : ''}`} /> Realtime Active
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/10 text-[var(--accent-text)] border border-accent/20 text-xs font-bold font-code">
+            <RefreshCw className={`w-3.5 h-3.5 text-[var(--accent-text)] ${isRefreshing ? 'animate-spin' : ''}`} /> Realtime Active
           </div>
 
           {/* Mine / All Toggle */}
           <div
             className={`flex items-center rounded-lg border font-bold text-[10px] overflow-hidden cursor-pointer transition-colors ${
               mineOnly
-                ? 'bg-[var(--accent)]/10 border-[var(--accent)]/30 text-[var(--accent-text)]'
+                ? 'bg-accent/10 border-accent/30 text-[var(--accent-text)]'
                 : 'bg-[var(--bg-secondary)] border-[var(--border)] text-[var(--text-secondary)]'
             }`}
             onClick={handleMineToggle}
@@ -270,7 +235,7 @@ export default function Submissions({ user }: { user: AppUser | null }) {
             <Loader2 className="w-4 h-4 animate-spin text-[var(--accent-text)]" /> Đang tải danh sách bài nộp...
           </div>
         ) : loadError ? (
-          <div className="py-16 text-center text-xs text-red-600 font-semibold">
+          <div className="py-16 text-center text-xs text-danger font-semibold">
             Không thể tải danh sách bài nộp. Vui lòng thử lại.
             <button onClick={handleRefresh} className="block mx-auto mt-3 px-4 py-1.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] font-bold text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer">
               Tải lại
@@ -298,7 +263,7 @@ export default function Submissions({ user }: { user: AppUser | null }) {
               </thead>
               <tbody className="divide-y divide-[var(--border)] font-code">
                 {filteredSubmissions.map((sub) => (
-                  <tr key={sub.id} className="hover:bg-[var(--bg-secondary)]/80 transition-colors">
+                  <tr key={sub.id} className="hover:bg-surface/80 transition-colors">
                     <td className="px-5 py-4 text-[var(--text-secondary)] font-code whitespace-nowrap">{formatTime(sub.created_at)}</td>
                     <td className="px-5 py-4 text-[var(--text-secondary)] font-bold">{sub.id.slice(0, 12)}</td>
                     <td className="px-5 py-4 font-bold text-[var(--text-primary)] font-sans text-xs">
@@ -318,7 +283,7 @@ export default function Submissions({ user }: { user: AppUser | null }) {
                         {sub.language}
                       </span>
                     </td>
-                    <td className="px-5 py-4 font-sans font-bold">{statusBadge(sub.status)}</td>
+                    <td className="px-5 py-4 font-sans font-bold"><VerdictBadge status={sub.status} long /></td>
                     <td className="px-5 py-4 text-[var(--text-secondary)]">{sub.time_used_ms} ms</td>
                     <td className="px-5 py-4 text-[var(--text-secondary)]">{sub.memory_used_mb} MB</td>
                     <td className="px-5 py-4 text-right font-sans">
@@ -398,7 +363,7 @@ export default function Submissions({ user }: { user: AppUser | null }) {
             </div>
 
             {selectedSubmission.error_log && (
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-600 dark:text-red-400 font-code">
+              <div className="p-3 rounded-xl bg-danger/10 border border-danger/30 text-xs text-danger font-code">
                 <span className="font-bold block mb-1">Error Log:</span>
                 <pre className="whitespace-pre-wrap">{selectedSubmission.error_log}</pre>
               </div>

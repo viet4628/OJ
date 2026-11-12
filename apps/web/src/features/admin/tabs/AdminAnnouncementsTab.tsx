@@ -119,7 +119,7 @@ export default function AdminAnnouncementsTab() {
             {annSaving ? 'Đang Đăng...' : 'Đăng Thông Báo'}
           </button>
         </div>
-        {annError && <div className="p-2 rounded-md bg-red-500/10 border border-red-500/20 text-[var(--danger)] text-[11px] font-medium md:col-span-2">{annError}</div>}
+        {annError && <div className="p-2 rounded-md bg-danger/10 border border-danger/20 text-[var(--danger)] text-[11px] font-medium md:col-span-2">{annError}</div>}
       </form>
 
       <div className="space-y-2">
@@ -127,7 +127,7 @@ export default function AdminAnnouncementsTab() {
           <div key={a.id} className="flex items-center justify-between gap-3 p-3 rounded-md border border-[var(--border)] bg-[var(--bg-primary)]">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="px-1.5 py-0.2 rounded bg-[var(--accent)]/10 text-[var(--accent-text)] text-[10px] font-mono border border-[var(--accent)]/20">
+                <span className="px-1.5 py-0.2 rounded bg-accent/10 text-[var(--accent-text)] text-[10px] font-mono border border-accent/20">
                   {a.tag}
                 </span>
                 <span className="text-xs font-semibold text-[var(--text-primary)] truncate">{a.title}</span>
@@ -140,7 +140,7 @@ export default function AdminAnnouncementsTab() {
               </span>
               <button
                 onClick={() => handleDeleteAnn(a.id, a.title)}
-                className="p-1 rounded text-[var(--danger)] hover:bg-red-500/10 transition-colors cursor-pointer"
+                className="p-1 rounded text-[var(--danger)] hover:bg-danger/10 transition-colors cursor-pointer"
                 title="Xóa thông báo"
               >
                 <MorphIcon icon={Trash2Data} size={14} />

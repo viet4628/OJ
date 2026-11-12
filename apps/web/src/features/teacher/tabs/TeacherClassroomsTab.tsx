@@ -408,10 +408,10 @@ export default function TeacherClassroomsTab() {
                                 <span
                                   className={`text-[10px] px-2 py-0.5 rounded font-bold border ${
                                     p?.difficulty === 'Easy'
-                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                      ? 'bg-accent/10 text-[var(--accent-text)] border-accent/30'
                                       : p?.difficulty === 'Medium'
-                                      ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                      : 'bg-red-50 text-red-700 border-red-200'
+                                      ? 'bg-warning/10 text-warning border-warning/30'
+                                      : 'bg-danger/10 text-danger border-danger/30'
                                   }`}
                                 >
                                   {p?.difficulty || 'N/A'}
@@ -424,7 +424,7 @@ export default function TeacherClassroomsTab() {
                                 {hasDeadline ? (
                                   <span
                                     className={`inline-flex items-center gap-1 font-mono text-xs ${
-                                      isExpired ? 'text-red-500 font-bold' : 'text-[var(--text-secondary)]'
+                                      isExpired ? 'text-danger font-bold' : 'text-[var(--text-secondary)]'
                                     }`}
                                   >
 
@@ -444,7 +444,7 @@ export default function TeacherClassroomsTab() {
                               <td className="px-4 py-3 text-right">
                                 <button
                                   onClick={() => handleRemoveProblem(cp.problem_id, p?.title || 'Bài tập')}
-                                  className="p-1.5 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                                  className="p-1.5 rounded-lg text-danger hover:bg-danger/10 transition-colors cursor-pointer"
                                   title="Gỡ khỏi lớp"
                                 >
                                   <MorphIcon icon={Trash2Data} size={14} />
@@ -464,20 +464,20 @@ export default function TeacherClassroomsTab() {
             {activeSubTab === 'students' && (
               <div className="space-y-4">
                 {/* Invite Code Box */}
-                <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 to-amber-600/5 border border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="p-4 rounded-2xl bg-accent/5 border border-accent/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <div className="text-xs font-bold text-amber-700 dark:text-amber-300">Mã Mời Tham Gia Lớp Học</div>
+                    <div className="text-xs font-bold text-[var(--accent-text)]">Mã Mời Tham Gia Lớp Học</div>
                     <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
                       Gửi mã này cho học sinh. Học sinh chỉ cần nhập mã tại mục "Lớp Học" để tự động gia nhập lớp.
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="px-4 py-2 rounded-xl bg-[var(--bg-primary)] border border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono text-base font-black tracking-wider">
+                    <span className="px-4 py-2 rounded-xl bg-[var(--bg-primary)] border border-accent/30 text-[var(--accent-text)] font-mono text-base font-black tracking-wider">
                       {activeClass.code}
                     </span>
                     <button
                       onClick={() => handleCopyCode(activeClass.code)}
-                      className="px-3 py-2 rounded-xl bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition-colors flex items-center gap-1.5 cursor-pointer"
+                      className="px-3 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-bold hover:bg-[var(--accent-hover)] transition-colors flex items-center gap-1.5 cursor-pointer"
                     >
                       {copiedCode ? <MorphIcon icon={CheckData} size={14} /> : <MorphIcon icon={CopyData} size={14} />}
                       <span>{copiedCode ? 'Đã sao chép' : 'Sao chép mã'}</span>
@@ -520,7 +520,7 @@ export default function TeacherClassroomsTab() {
                             <td className="px-4 py-3 text-right">
                               <button
                                 onClick={() => handleRemoveMember(m.user_id, m.profile?.username || 'học sinh')}
-                                className="p-1.5 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                                className="p-1.5 rounded-lg text-danger hover:bg-danger/10 transition-colors cursor-pointer"
                                 title="Xóa khỏi lớp"
                               >
                                 <MorphIcon icon={Trash2Data} size={14} />
@@ -563,7 +563,7 @@ export default function TeacherClassroomsTab() {
                               </div>
                             </th>
                           ))}
-                          <th className="px-4 py-3 text-center font-bold text-emerald-600 dark:text-emerald-400 min-w-[90px]">
+                          <th className="px-4 py-3 text-center font-bold text-[var(--accent-text)] min-w-[90px]">
                             Tổng AC
                           </th>
                         </tr>
@@ -590,8 +590,8 @@ export default function TeacherClassroomsTab() {
                                       <span
                                         className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono font-bold ${
                                           isAc
-                                            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
-                                            : 'bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30'
+                                            ? 'bg-accent/15 text-[var(--accent-text)] border border-accent/30'
+                                            : 'bg-danger/15 text-danger border border-danger/30'
                                         }`}
                                       >
 
@@ -603,7 +603,7 @@ export default function TeacherClassroomsTab() {
                                   </td>
                                 );
                               })}
-                              <td className="px-4 py-3 text-center font-mono font-black text-emerald-600 dark:text-emerald-400 border-l border-[var(--border)]">
+                              <td className="px-4 py-3 text-center font-mono font-black text-[var(--accent-text)] border-l border-[var(--border)]">
                                 {totalAc} / {classProblems.length}
                               </td>
                             </tr>
@@ -657,7 +657,7 @@ export default function TeacherClassroomsTab() {
                   />
                 </div>
 
-                <div className="max-h-48 overflow-y-auto border border-[var(--border)] rounded-xl divide-y divide-[var(--border)] bg-[var(--bg-secondary)]/50">
+                <div className="max-h-48 overflow-y-auto border border-[var(--border)] rounded-xl divide-y divide-[var(--border)] bg-surface/50">
                   {availableProblems
                     .filter(
                       (p) =>
@@ -677,7 +677,7 @@ export default function TeacherClassroomsTab() {
                             alreadyInClass
                               ? 'opacity-40 cursor-not-allowed bg-[var(--bg-tertiary)]'
                               : selectedProblemId === p.id
-                              ? 'bg-[var(--accent)]/15 border-l-4 border-[var(--accent)] cursor-pointer'
+                              ? 'bg-accent/15 border-l-4 border-[var(--accent)] cursor-pointer'
                               : 'hover:bg-[var(--bg-secondary)] cursor-pointer'
                           }`}
                         >
@@ -690,7 +690,7 @@ export default function TeacherClassroomsTab() {
                               {p.difficulty}
                             </span>
                             {alreadyInClass && (
-                              <span className="text-[10px] text-amber-500 font-bold">Đã có</span>
+                              <span className="text-[10px] text-[var(--text-muted)] font-bold">Đã có</span>
                             )}
                           </div>
                         </button>
@@ -771,7 +771,7 @@ export default function TeacherClassroomsTab() {
       )}
 
       {error && (
-        <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
+        <div className="p-3 rounded-xl bg-danger/10 border border-danger/30 text-danger text-xs font-semibold">
           {error}
         </div>
       )}
@@ -801,7 +801,7 @@ export default function TeacherClassroomsTab() {
             <div
               key={c.id}
               onClick={() => { setActiveClass(c); setActiveClassId(c.id); }}
-              className="group p-5 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] hover:border-[var(--accent)]/50 transition-all shadow-sm hover:shadow-md cursor-pointer flex flex-col justify-between space-y-4"
+              className="group p-5 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] hover:border-accent/50 transition-all shadow-sm hover:shadow-md cursor-pointer flex flex-col justify-between space-y-4"
             >
               <div className="space-y-2">
                 <div className="flex items-start justify-between gap-2">
@@ -836,7 +836,7 @@ export default function TeacherClassroomsTab() {
                     e.stopPropagation();
                     handleDeleteClass(c.id, c.name);
                   }}
-                  className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
                   title="Xóa lớp học"
                 >
                   <MorphIcon icon={Trash2Data} size={13} />

@@ -114,7 +114,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 }}
                 onMouseEnter={() => setSelectedIndex(idx)}
                 className={`w-full flex items-center justify-between p-2.5 rounded-md text-left transition-colors text-xs border ${
-                  selectedIndex === idx ? 'bg-[var(--accent)]/10 text-[var(--text-primary)] border-[var(--accent)]/30' : 'text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] border-transparent'
+                  selectedIndex === idx ? 'bg-accent/10 text-[var(--text-primary)] border-accent/30' : 'text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0">

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Save, Upload, Loader2 } from 'lucide-react';
+import { Save, Loader2 } from 'lucide-react';
 import {
   changePassword, updateMyProfile, uploadAvatar, type AppUser,
 } from '../../lib/api';
@@ -128,12 +128,12 @@ export default function Settings({ user, onOpenAuth, onProfileSaved }: SettingsP
         </h2>
 
         {profileNotice && (
-          <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-700 dark:text-emerald-400 font-semibold animate-fade-in">
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-accent/10 border border-accent/20 text-xs text-[var(--accent-text)] font-semibold animate-fade-in">
              {profileNotice}
           </div>
         )}
         {profileError && (
-          <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400 font-semibold animate-fade-in">
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-danger/10 border border-danger/20 text-xs text-danger font-semibold animate-fade-in">
              {profileError}
           </div>
         )}
@@ -143,7 +143,7 @@ export default function Settings({ user, onOpenAuth, onProfileSaved }: SettingsP
           <div>
             <label className={labelCls}>Ảnh đại diện (Avatar)</label>
             <div className="flex items-center gap-4 mt-2">
-              <div className="w-16 h-16 rounded-full bg-[var(--accent)]/10 text-[var(--accent-text)] border border-[var(--accent)]/20 flex items-center justify-center font-bold text-xl overflow-hidden shrink-0">
+              <div className="w-16 h-16 rounded-full bg-accent/10 text-[var(--accent-text)] border border-accent/20 flex items-center justify-center font-bold text-xl overflow-hidden shrink-0">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
@@ -203,12 +203,12 @@ export default function Settings({ user, onOpenAuth, onProfileSaved }: SettingsP
         </h2>
 
         {pwNotice && (
-          <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-700 dark:text-emerald-400 font-semibold animate-fade-in">
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-accent/10 border border-accent/20 text-xs text-[var(--accent-text)] font-semibold animate-fade-in">
              {pwNotice}
           </div>
         )}
         {pwError && (
-          <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400 font-semibold animate-fade-in">
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-danger/10 border border-danger/20 text-xs text-danger font-semibold animate-fade-in">
              {pwError}
           </div>
         )}
@@ -244,9 +244,9 @@ export default function Settings({ user, onOpenAuth, onProfileSaved }: SettingsP
           <button
             type="submit"
             disabled={pwSaving}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors disabled:opacity-50 cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-bold text-xs transition-colors disabled:opacity-50 cursor-pointer"
           >
-            {pwSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+            {pwSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             {pwSaving ? 'Đang Lưu...' : 'Cập Nhật Mật Khẩu'}
           </button>
         </div>

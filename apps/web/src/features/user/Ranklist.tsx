@@ -74,7 +74,7 @@ export default function Ranklist() {
               placeholder="Tìm tài khoản..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 pr-2.5 py-1 bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#0969da] focus:ring-1 focus:ring-[#0969da]"
+              className="pl-8 pr-2.5 py-1 bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-accent"
             />
           </div>
         </div>
@@ -92,7 +92,7 @@ export default function Ranklist() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[var(--bg-tertiary)]/50 text-[var(--text-secondary)] border-b border-[var(--border)] font-medium text-[11px]">
+              <thead className="bg-tertiary/50 text-[var(--text-secondary)] border-b border-[var(--border)] font-medium text-[11px]">
                 <tr>
                   <th className="px-3 py-2 w-16">Thứ Hạng</th>
                   <th className="px-3 py-2">Tài Khoản</th>

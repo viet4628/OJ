@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { BookOpen, Users, Trophy, ArrowLeft, Play } from 'lucide-react';
 import {
   getClassroomDetail,
@@ -20,7 +20,6 @@ type TabType = 'assignments' | 'leaderboard' | 'members';
 
 export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
   const { classId } = useParams<{ classId: string }>();
-  const navigate = useNavigate();
 
   const [classroom, setClassroom] = useState<Classroom | null>(null);
   const [members, setMembers] = useState<ClassroomMember[]>([]);
@@ -142,7 +141,7 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-black text-[var(--text-primary)]">{classroom.name}</h1>
-                <span className="px-2.5 py-0.5 rounded-full bg-[var(--bg-secondary)] border border-[var(--border)] font-mono text-xs font-bold text-amber-600 dark:text-amber-400">
+                <span className="px-2.5 py-0.5 rounded-full bg-[var(--bg-secondary)] border border-[var(--border)] font-mono text-xs font-bold text-[var(--accent-text)]">
                   {classroom.code}
                 </span>
               </div>
@@ -231,7 +230,7 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
                 return (
                   <div
                     key={cp.problem_id}
-                    className="p-4 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] hover:border-[var(--accent)]/50 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm"
+                    className="p-4 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] hover:border-accent/50 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm"
                   >
                     <div className="flex items-start gap-3.5">
                       <div className="w-8 h-8 rounded-xl bg-[var(--bg-secondary)] flex items-center justify-center font-mono font-bold text-xs text-[var(--text-secondary)] shrink-0">
@@ -249,10 +248,10 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
                           <span
                             className={`text-[10px] px-2 py-0.5 rounded font-bold border ${
                               p?.difficulty === 'Easy'
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                ? 'bg-accent/10 text-[var(--accent-text)] border-accent/30'
                                 : p?.difficulty === 'Medium'
-                                ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                : 'bg-red-50 text-red-700 border-red-200'
+                                ? 'bg-warning/10 text-warning border-warning/30'
+                                : 'bg-danger/10 text-danger border-danger/30'
                             }`}
                           >
                             {p?.difficulty || 'N/A'}
@@ -264,7 +263,7 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
                           {hasDeadline && (
                             <span
                               className={`flex items-center gap-1 font-mono ${
-                                isExpired ? 'text-red-500 font-bold' : 'text-amber-600 dark:text-amber-400'
+                                isExpired ? 'text-danger font-bold' : 'text-[var(--text-secondary)]'
                               }`}
                             >
                                Hạn nộp: {new Date(cp.deadline!).toLocaleString('vi-VN')}
@@ -280,11 +279,11 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
                       {user && (
                         <div>
                           {isAc ? (
-                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-bold">
+                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-accent/10 text-[var(--accent-text)] border border-accent/20 text-xs font-bold">
                                Đã Hoàn Thành
                             </div>
                           ) : myProg ? (
-                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 text-xs font-bold">
+                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-danger/10 text-danger border border-danger/20 text-xs font-bold">
                                {myProg.score}đ (Chưa AC)
                             </div>
                           ) : (
@@ -329,7 +328,7 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
                     <tr
                       key={item.member.user_id}
                       className={`hover:bg-[var(--bg-secondary)] transition-colors ${
-                        isMe ? 'bg-[var(--accent)]/5 font-semibold' : ''
+                        isMe ? 'bg-accent/5 font-semibold' : ''
                       }`}
                     >
                       <td className="px-4 py-3 text-center font-bold">
@@ -343,7 +342,7 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
                           <div className="font-bold text-[var(--text-primary)] flex items-center gap-1.5">
                             <span>{item.member.profile?.username}</span>
                             {isMe && (
-                              <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-600 font-mono font-bold">
+                              <span className="text-[10px] px-1.5 py-0.2 rounded bg-accent/15 text-[var(--accent-text)] font-mono font-bold">
                                 Bạn
                               </span>
                             )}
@@ -355,7 +354,7 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-center font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                      <td className="px-4 py-3 text-center font-mono font-bold text-[var(--accent-text)]">
                         {item.acCount} / {problems.length}
                       </td>
                       <td className="px-4 py-3 text-center font-mono font-bold text-[var(--text-primary)]">
@@ -375,14 +374,14 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
         <div className="space-y-4">
           <div className="p-4 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black">
+              <div className="w-10 h-10 rounded-full bg-accent/15 text-[var(--accent-text)] flex items-center justify-center font-black">
                 {(classroom.teacher?.username || 'T').charAt(0).toUpperCase()}
               </div>
               <div>
                 <div className="text-xs font-bold text-[var(--text-primary)]">
                   {classroom.teacher?.full_name || classroom.teacher?.username}
                 </div>
-                <div className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold">Giảng viên / Chủ nhiệm lớp</div>
+                <div className="text-[11px] text-[var(--text-secondary)] font-semibold">Giảng viên / Chủ nhiệm lớp</div>
               </div>
             </div>
           </div>

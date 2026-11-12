@@ -181,7 +181,7 @@ export default function Header({ onOpenSearch, onOpenAuth, user, onLogout, isAut
               icon={isDark ? SunData : MoonData}
               size={14}
               spring="snappy"
-              className={isDark ? 'text-amber-400' : 'text-slate-600'}
+              className="text-[var(--text-secondary)]"
             />
           </button>
 

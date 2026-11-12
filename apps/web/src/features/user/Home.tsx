@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import MorphIcon from '../../components/MorphIcon';
+import { CONTEST_STATUS_META } from '../../components/contestStatus';
 import ProblemDifficulty, { difficultyLabels as DIFF_LABEL } from '../../components/ProblemDifficulty';
 import { renderInline } from '../../components/Markdown';
 import { CheckCircle2, Circle } from 'lucide-react';
@@ -9,24 +10,6 @@ import {
   getAnnouncements, getContests, getProblems, getProblemBySlug, getStats, getRanklist, getMyAcceptedProblemIds,
   type Announcement, type Contest, type ProblemSummary, type RankUser,
 } from '../../lib/api';
-
-const CONTEST_STATUS_META: Record<Contest['status'], { label: string; className: string; dot: string }> = {
-  UNDERWAY: {
-    label: 'Đang diễn ra',
-    className: 'bg-[var(--accent)]/10 text-[var(--accent-text)] border-[var(--accent)]/30',
-    dot: 'bg-[var(--accent)] animate-pulse',
-  },
-  NOT_STARTED: {
-    label: 'Sắp diễn ra',
-    className: 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border-[var(--border)]',
-    dot: 'bg-[var(--text-muted)]',
-  },
-  ENDED: {
-    label: 'Đã kết thúc',
-    className: 'bg-[var(--bg-tertiary)] text-[var(--text-muted)] border-[var(--border)]',
-    dot: 'bg-[var(--border)]',
-  },
-};
 
 const STATUS_PRIORITY: Record<Contest['status'], number> = {
   UNDERWAY: 0,
@@ -189,7 +172,7 @@ export default function Home() {
         <div className="lg:col-span-8 space-y-6">
           {/* Featured Problems Table with quick filter tabs */}
           <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] overflow-hidden">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-tertiary)]/50">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-2.5 border-b border-[var(--border)] bg-tertiary/50">
               <div className="flex items-center gap-2">
 
                 <h2 className="text-xs font-semibold text-[var(--text-primary)]">
@@ -257,7 +240,7 @@ export default function Home() {
                             <div className="flex items-center gap-2 flex-wrap">
                               <Link
                                 to={`/problems/${p.slug}`}
-                                className="font-medium text-[var(--text-primary)] hover:text-[#0969DA] dark:hover:text-[#58A6FF] transition-colors"
+                                className="font-medium text-[var(--text-primary)] hover:text-[var(--accent-text)] transition-colors"
                               >
                                 {p.title}
                               </Link>
@@ -300,7 +283,7 @@ export default function Home() {
 
           {/* Announcements & Quick Guide */}
           <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-tertiary)]/50">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)] bg-tertiary/50">
               <h2 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
                  Tin Tức &amp; Thông Báo
               </h2>
@@ -326,7 +309,7 @@ export default function Home() {
                         <span className="px-1.5 py-0.2 rounded text-[10px] font-mono border border-[var(--border)] bg-[var(--bg-tertiary)] text-[var(--text-muted)]">
                           {item.tag || 'HỆ THỐNG'}
                         </span>
-                        <span className="font-medium text-[var(--text-primary)] text-xs hover:text-[#0969DA] dark:hover:text-[#58A6FF] transition-colors">
+                        <span className="font-medium text-[var(--text-primary)] text-xs hover:text-[var(--accent-text)] transition-colors">
                           {item.title}
                         </span>
                       </div>
@@ -395,7 +378,7 @@ export default function Home() {
 
           {/* 2. Contests Preview */}
           <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-tertiary)]/50">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)] bg-tertiary/50">
               <h2 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
                  Cuộc Thi
               </h2>
@@ -421,7 +404,7 @@ export default function Home() {
                       className="group flex items-center gap-2.5 p-2.5 rounded-md bg-[var(--bg-primary)] border border-[var(--border)] transition-colors hover:bg-[var(--bg-tertiary)]"
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="truncate text-xs font-medium text-[var(--text-primary)] group-hover:text-[#0969DA] dark:group-hover:text-[#58A6FF] transition-colors flex items-center gap-1.5">
+                        <p className="truncate text-xs font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors flex items-center gap-1.5">
                           {c.title}
                           {!c.is_public && <MorphIcon icon={LockData} size={10} className="text-[var(--text-muted)] shrink-0" />}
                         </p>
@@ -450,7 +433,7 @@ export default function Home() {
 
           {/* 3. Top Ranklist Widget */}
           <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-tertiary)]/50">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)] bg-tertiary/50">
               <h2 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
                  Bảng Xếp Hạng
               </h2>
@@ -475,7 +458,7 @@ export default function Home() {
                       <span className="w-5 text-center shrink-0 text-[10px] text-[var(--text-muted)] font-mono">#{idx + 1}</span>
                       <span className="truncate text-xs">{u.username || 'user'}</span>
                     </span>
-                    <span className="text-[11px] font-semibold text-[var(--accent-text)] bg-[var(--accent)]/10 px-2 py-0.2 rounded border border-[var(--accent)]/30 shrink-0">
+                    <span className="text-[11px] font-semibold text-[var(--accent-text)] bg-accent/10 px-2 py-0.2 rounded border border-accent/30 shrink-0">
                       {u.accepted_number} AC
                     </span>
                   </div>

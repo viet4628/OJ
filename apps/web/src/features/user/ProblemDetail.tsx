@@ -19,7 +19,6 @@ import {
   getProblemRank,
   supabase,
   type Problem,
-  type Submission,
 } from '../../lib/api';
 import {
   getStarterCode,
@@ -470,10 +469,10 @@ export default function ProblemDetail({ user, onOpenAuth, contest, contestProble
   const difficultyLabel = problem?.difficulty === 'Easy' ? 'DỄ' : problem?.difficulty === 'Medium' ? 'VỪA' : 'KHÓ';
   const difficultyColor =
     problem?.difficulty === 'Easy'
-      ? 'bg-[var(--accent)]/10 text-[var(--accent-text)] border-[var(--accent)]/30'
+      ? 'bg-accent/10 text-[var(--accent-text)] border-accent/30'
       : problem?.difficulty === 'Medium'
-      ? 'bg-amber-500/10 text-[#9A6700] dark:text-[#D29922] border-amber-500/20'
-      : 'bg-red-500/10 text-[#CF222E] dark:text-[#F85149] border-red-500/20';
+      ? 'bg-warning/10 text-warning border-warning/20'
+      : 'bg-danger/10 text-danger border-danger/20';
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-[var(--bg-primary)] text-[var(--text-primary)]">
@@ -531,7 +530,7 @@ export default function ProblemDetail({ user, onOpenAuth, contest, contestProble
               icon={isDark ? SunData : MoonData}
               size={14}
               spring="snappy"
-              className={isDark ? 'text-amber-400' : 'text-slate-700'}
+              className="text-[var(--text-secondary)]"
             />
           </button>
 
@@ -600,7 +599,7 @@ export default function ProblemDetail({ user, onOpenAuth, contest, contestProble
             document.body.style.cursor = 'col-resize';
           }}
           onDoubleClick={() => setLeftWidthPercent(42)}
-          className="group relative w-2 shrink-0 cursor-col-resize select-none bg-[var(--bg-secondary)] hover:bg-[var(--accent)]/20 transition-colors flex items-center justify-center"
+          className="group relative w-2 shrink-0 cursor-col-resize select-none bg-[var(--bg-secondary)] hover:bg-accent/20 transition-colors flex items-center justify-center"
           title="Kéo để chỉnh độ rộng · Double-click để khôi phục mặc định (42%)"
         >
           <div
@@ -647,7 +646,7 @@ export default function ProblemDetail({ user, onOpenAuth, contest, contestProble
                   className="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-primary)] text-[11px] font-mono text-[var(--text-secondary)] shadow-xs"
                   title={`Khôi phục từ bài nộp #${loadedSubInfo.id.slice(0, 8)} (${loadedSubInfo.status})`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full ${loadedSubInfo.status === 'ACCEPTED' ? 'bg-[var(--accent)]' : 'bg-amber-500'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full ${loadedSubInfo.status === 'ACCEPTED' ? 'bg-[var(--accent)]' : 'bg-warning'}`} />
                   <span>Code bài nộp ({loadedSubInfo.status === 'ACCEPTED' ? 'AC' : loadedSubInfo.status})</span>
                 </span>
               )}
@@ -755,7 +754,7 @@ export default function ProblemDetail({ user, onOpenAuth, contest, contestProble
               className={`absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full transition-colors duration-150 ${
                 isVertResizing
                   ? 'bg-[var(--accent)]'
-                  : 'bg-transparent group-hover:bg-[var(--accent)]/40'
+                  : 'bg-transparent group-hover:bg-accent/40'
               }`}
             />
           </div>

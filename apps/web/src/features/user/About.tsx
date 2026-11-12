@@ -56,22 +56,22 @@ export default function About() {
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-1">
-            <div className="flex items-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-400">
+          <div className="p-4 rounded-xl bg-accent/10 border border-accent/20 space-y-1">
+            <div className="flex items-center gap-1.5 font-bold text-[var(--accent-text)]">
                ACCEPTED (AC - Đã Chấp Nhận)
             </div>
             <p className="text-[var(--text-secondary)]">Mã nguồn chạy chính xác 100% đối với tất cả các testcase mẫu và testcase ẩn.</p>
           </div>
 
-          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 space-y-1">
-            <div className="flex items-center gap-1.5 font-bold text-red-700 dark:text-red-400">
+          <div className="p-4 rounded-xl bg-danger/10 border border-danger/20 space-y-1">
+            <div className="flex items-center gap-1.5 font-bold text-danger">
                WRONG ANSWER (WA - Kết Quả Sai)
             </div>
             <p className="text-[var(--text-secondary)]">Kết quả đầu ra của chương trình không trùng khớp với đáp án tiêu chuẩn.</p>
           </div>
 
-          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-1">
-            <div className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-400">
+          <div className="p-4 rounded-xl bg-warning/10 border border-warning/20 space-y-1">
+            <div className="flex items-center gap-1.5 font-bold text-warning">
                TIME LIMIT EXCEEDED (TLE - Quá Thời Gian)
             </div>
             <p className="text-[var(--text-secondary)]">Thời gian thực thi của chương trình vượt quá giới hạn bài toán quy định .</p>

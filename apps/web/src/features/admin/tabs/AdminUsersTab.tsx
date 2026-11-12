@@ -9,7 +9,6 @@ import {
   getUserPermissions,
   setUserPermissions,
   PERMISSION_DEFS,
-  DEFAULT_TEACHER_PERMS,
   type Profile,
 } from '../../../lib/api';
 
@@ -160,12 +159,12 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
       </div>
 
       {notice && (
-        <div className="flex items-start gap-2 p-2.5 rounded-md bg-[var(--accent)]/10 border border-[var(--accent)]/30 text-xs text-[var(--accent-text)] font-medium">
+        <div className="flex items-start gap-2 p-2.5 rounded-md bg-accent/10 border border-accent/30 text-xs text-[var(--accent-text)] font-medium">
            {notice}
         </div>
       )}
       {error && (
-        <div className="p-2.5 rounded-md bg-red-500/10 border border-red-500/20 text-xs text-[var(--danger)] font-medium">
+        <div className="p-2.5 rounded-md bg-danger/10 border border-danger/20 text-xs text-[var(--danger)] font-medium">
           {error}
         </div>
       )}
@@ -207,7 +206,7 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
                         p.role === 'admin'
                           ? 'bg-[var(--bg-tertiary)] text-[var(--text-primary)] border-[var(--border)]'
                           : p.role === 'teacher'
-                          ? 'bg-[var(--accent)]/10 text-[var(--accent-text)] border-[var(--accent)]/30'
+                          ? 'bg-accent/10 text-[var(--accent-text)] border-accent/30'
                           : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border-[var(--border)]'
                       }`}
                     >
@@ -249,7 +248,7 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
                             disabled={busyUserId === p.id}
                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium border transition-colors cursor-pointer disabled:opacity-50 ${
                               p.role === 'teacher'
-                                ? 'bg-red-500/10 text-[var(--danger)] border-red-500/20 hover:bg-red-500/20'
+                                ? 'bg-danger/10 text-[var(--danger)] border-danger/20 hover:bg-danger/20'
                                 : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] border-[var(--border)] hover:bg-[var(--bg-tertiary)]'
                             }`}
                           >
@@ -339,7 +338,7 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
             )}
 
             {permError && (
-              <div className="p-2 rounded-md bg-red-500/10 border border-red-500/20 text-[var(--danger)] text-[11px] font-medium">{permError}</div>
+              <div className="p-2 rounded-md bg-danger/10 border border-danger/20 text-[var(--danger)] text-[11px] font-medium">{permError}</div>
             )}
 
             <div className="flex items-center justify-end gap-2 pt-2.5 border-t border-[var(--border)]">

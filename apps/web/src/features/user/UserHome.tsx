@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import MorphIcon from '../../components/MorphIcon';
+import VerdictBadge from '../../components/VerdictBadge';
 import { BookOpen as BookOpenData, FileCode2 as FileCode2Data, History as HistoryData, Loader2 as Loader2Data, Edit3 as Edit3Data } from 'lucide';
 import {
   getUserProfile,
@@ -20,17 +21,8 @@ const LANG_COLORS: Record<string, { bg: string; label: string }> = {
 
 const DIFF_LABEL: Record<string, { label: string; text: string }> = {
   Easy: { label: 'Dễ', text: 'text-[var(--accent-text)]' },
-  Medium: { label: 'Vừa', text: 'text-[#9A6700] dark:text-[#D29922]' },
-  Hard: { label: 'Khó', text: 'text-[#CF222E] dark:text-[#F85149]' },
-};
-
-const STATUS_META: Record<string, { label: string; cls: string }> = {
-  ACCEPTED: { label: 'AC', cls: 'text-[var(--accent-text)] bg-[var(--accent)]/10 border-[var(--accent)]/30' },
-  WRONG_ANSWER: { label: 'WA', cls: 'text-[#CF222E] dark:text-[#F85149] bg-red-500/10 border-red-500/20' },
-  TIME_LIMIT_EXCEEDED: { label: 'TLE', cls: 'text-[#9A6700] dark:text-[#D29922] bg-amber-500/10 border-amber-500/20' },
-  MEMORY_LIMIT_EXCEEDED: { label: 'MLE', cls: 'text-[#8250DF] bg-purple-500/10 border-purple-500/20' },
-  COMPILE_ERROR: { label: 'CE', cls: 'text-[#CF222E] dark:text-[#F85149] bg-red-500/10 border-red-500/20' },
-  RUNTIME_ERROR: { label: 'RE', cls: 'text-[#BC4C00] bg-orange-500/10 border-orange-500/20' },
+  Medium: { label: 'Vừa', text: 'text-warning' },
+  Hard: { label: 'Khó', text: 'text-danger' },
 };
 
 interface UserHomeProps {
@@ -339,7 +331,7 @@ export default function UserHome({ currentUser }: UserHomeProps) {
                                 <Link
                                   to={`/problems/${prob.slug}?sub=${prob.submissionId}`}
                                   state={{ code: prob.code, language: prob.language, submissionId: prob.submissionId }}
-                                  className="text-xs font-semibold text-[#0969DA] dark:text-[#58A6FF] hover:underline flex items-center gap-1.5 break-all"
+                                  className="text-xs font-semibold text-[var(--accent-text)] hover:underline flex items-center gap-1.5 break-all"
                                 >
                                   <MorphIcon icon={FileCode2Data} size={14} className="shrink-0 text-[var(--text-muted)]" />
                                   <span>{prob.title}</span>
@@ -432,17 +424,14 @@ export default function UserHome({ currentUser }: UserHomeProps) {
                   ) : (
                     <div className="rounded-md border border-[var(--border)] bg-[var(--bg-secondary)] divide-y divide-[var(--border)]">
                       {subs.slice(0, 5).map((sub) => {
-                        const statusMeta = STATUS_META[sub.status] || { label: sub.status, cls: 'text-[var(--text-muted)]' };
                         return (
                           <div key={sub.id} className="p-3.5 flex items-center justify-between gap-3 text-xs">
                             <div className="flex items-center gap-2.5 min-w-0">
-                              <span className={`shrink-0 px-1.5 py-0.2 rounded text-[10px] font-mono border font-semibold ${statusMeta.cls}`}>
-                                {statusMeta.label}
-                              </span>
+                              <VerdictBadge status={sub.status} />
                               <Link
                                 to={`/problems/${sub.problems?.slug || ''}?sub=${sub.id}`}
                                 state={{ code: sub.code, language: sub.language, submissionId: sub.id }}
-                                className="font-medium text-[var(--text-primary)] hover:text-[#0969DA] dark:hover:text-[#58A6FF] truncate"
+                                className="font-medium text-[var(--text-primary)] hover:text-[var(--accent-text)] truncate"
                               >
                                 {sub.problems?.title || 'Bài tập'}
                               </Link>
@@ -477,7 +466,7 @@ export default function UserHome({ currentUser }: UserHomeProps) {
                       placeholder="Tìm bài tập đã giải..."
                       value={searchSolved}
                       onChange={(e) => setSearchSolved(e.target.value)}
-                      className="w-full pl-8 pr-2.5 py-1.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#0969DA] dark:focus:border-[#58A6FF]"
+                      className="w-full pl-8 pr-2.5 py-1.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]"
                     />
                   </div>
 
@@ -514,7 +503,7 @@ export default function UserHome({ currentUser }: UserHomeProps) {
                               <Link
                                 to={`/problems/${prob.slug}?sub=${prob.submissionId}`}
                                 state={{ code: prob.code, language: prob.language, submissionId: prob.submissionId }}
-                                className="text-sm font-semibold text-[#0969DA] dark:text-[#58A6FF] hover:underline"
+                                className="text-sm font-semibold text-[var(--accent-text)] hover:underline"
                               >
                                 {prob.title}
                               </Link>
@@ -577,7 +566,6 @@ export default function UserHome({ currentUser }: UserHomeProps) {
                         </thead>
                         <tbody className="divide-y divide-[var(--border)] font-mono text-[11px]">
                           {subs.map((sub) => {
-                            const statusMeta = STATUS_META[sub.status] || { label: sub.status, cls: 'text-[var(--text-muted)]' };
                             return (
                               <tr key={sub.id} className="hover:bg-[var(--bg-primary)] transition-colors">
                                 <td className="px-4 py-2.5 text-[var(--text-muted)] whitespace-nowrap">
@@ -592,15 +580,13 @@ export default function UserHome({ currentUser }: UserHomeProps) {
                                   <Link
                                     to={`/problems/${sub.problems?.slug || ''}?sub=${sub.id}`}
                                     state={{ code: sub.code, language: sub.language, submissionId: sub.id }}
-                                    className="hover:text-[#0969DA] dark:hover:text-[#58A6FF] transition-colors"
+                                    className="hover:text-[var(--accent-text)] transition-colors"
                                   >
                                     {sub.problems?.title || 'Bài tập'}
                                   </Link>
                                 </td>
                                 <td className="px-4 py-2.5">
-                                  <span className={`inline-block px-1.5 py-0.2 rounded border font-semibold ${statusMeta.cls}`}>
-                                    {statusMeta.label}
-                                  </span>
+                                  <VerdictBadge status={sub.status} />
                                 </td>
                                 <td className="px-4 py-2.5 text-[var(--text-secondary)]">
                                   {sub.time_used_ms}ms · {sub.memory_used_mb}MB

@@ -561,7 +561,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
                 <span
                   className={`text-[10px] font-medium font-mono px-2 py-0.2 rounded-full border ${
                     problemForm.is_public
-                      ? 'bg-[var(--accent)]/10 text-[var(--accent-text)] border-[var(--accent)]/30'
+                      ? 'bg-accent/10 text-[var(--accent-text)] border-accent/30'
                       : 'bg-[var(--bg-tertiary)] text-[var(--text-muted)] border-[var(--border)]'
                   }`}
                 >
@@ -586,7 +586,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
               type="button"
               onClick={handleSaveProblem}
               disabled={isSaving}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer shadow-xs border border-[var(--border)]/20"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer shadow-xs border border-line/20"
             >
               {isSaving ? <MorphIcon icon={RefreshCwData} size={16} className="animate-spin" /> : <MorphIcon icon={CheckData} size={16} />}
               {isSaving ? 'Đang lưu...' : editingId ? 'Lưu thay đổi' : 'Tạo bài tập'}
@@ -595,7 +595,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
         </div>
 
         {saveError && (
-          <div className="p-3 rounded-md bg-red-500/10 border border-red-500/20 text-[var(--danger)] text-xs font-medium flex items-center gap-2">
+          <div className="p-3 rounded-md bg-danger/10 border border-danger/20 text-[var(--danger)] text-xs font-medium flex items-center gap-2">
 
             <span>{saveError}</span>
           </div>
@@ -616,7 +616,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
               onClick={() => setStudioTab(tab.id as any)}
               className={`px-3.5 py-2 text-xs font-medium border-b-2 transition-colors -mb-px flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                 studioTab === tab.id
-                  ? 'border-[#fd8c73] dark:border-[#f78166] text-[var(--text-primary)] font-semibold'
+                  ? 'border-accent text-[var(--text-primary)] font-semibold'
                   : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border)]'
               }`}
             >
@@ -654,7 +654,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
           <div className="space-y-4">
             {/* GitHub Box: Basic Settings */}
             <div className="border border-[var(--border)] rounded-md bg-[var(--bg-secondary)] overflow-hidden shadow-xs">
-              <div className="bg-[var(--bg-tertiary)]/75 px-4 py-2.5 border-b border-[var(--border)]">
+              <div className="bg-tertiary/75 px-4 py-2.5 border-b border-[var(--border)]">
                 <h2 className="text-xs font-semibold text-[var(--text-primary)]">
                   Cấu hình cơ bản & Giới hạn tài nguyên
                 </h2>
@@ -845,7 +845,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
         {/* TAB 2: SAMPLE TESTCASES */}
         {studioTab === 'samples' && (
           <div className="border border-[var(--border)] rounded-md bg-[var(--bg-secondary)] overflow-hidden shadow-xs">
-            <div className="bg-[var(--bg-tertiary)]/75 px-4 py-2.5 border-b border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="bg-tertiary/75 px-4 py-2.5 border-b border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h3 className="text-xs font-semibold text-[var(--text-primary)]">
                   Danh sách ví dụ mẫu
@@ -898,7 +898,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
                       <button
                         type="button"
                         onClick={() => handleRemoveSample(idx)}
-                        className="p-1 rounded text-[var(--danger)] hover:bg-red-500/10 transition-colors cursor-pointer"
+                        className="p-1 rounded text-[var(--danger)] hover:bg-danger/10 transition-colors cursor-pointer"
                         title="Xóa ví dụ này"
                       >
                         <MorphIcon icon={Trash2Data} size={14} />
@@ -951,7 +951,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
           <div className="space-y-4">
             {/* Box: ZIP Import */}
             <div className="border border-[var(--border)] rounded-md bg-[var(--bg-secondary)] overflow-hidden shadow-xs">
-              <div className="bg-[var(--bg-tertiary)]/75 px-4 py-2.5 border-b border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="bg-tertiary/75 px-4 py-2.5 border-b border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <h3 className="text-xs font-semibold text-[var(--text-primary)]">
                     Nhập & Xuất bộ testcase
@@ -1014,7 +1014,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
               )}
 
               {/* Manual Add inside box */}
-              <div className="p-4 space-y-3 bg-[var(--bg-primary)]/40 border-b border-[var(--border)]">
+              <div className="p-4 space-y-3 bg-canvas/40 border-b border-[var(--border)]">
                 <span className="block text-xs font-semibold text-[var(--text-primary)]">
                   Thêm testcase thủ công
                 </span>
@@ -1097,7 +1097,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
                         }
                       }}
                       disabled={stagedTestcases.length === 0}
-                      className="px-2.5 py-1 rounded-md text-[var(--danger)] hover:bg-red-500/10 text-xs font-medium transition-colors cursor-pointer disabled:opacity-50"
+                      className="px-2.5 py-1 rounded-md text-[var(--danger)] hover:bg-danger/10 text-xs font-medium transition-colors cursor-pointer disabled:opacity-50"
                     >
                       Xóa tất cả
                     </button>
@@ -1116,7 +1116,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
                 ) : (
                   <div className="border border-[var(--border)] rounded-md overflow-hidden">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-[var(--bg-tertiary)]/75 text-[var(--text-muted)] font-medium text-[11px] border-b border-[var(--border)]">
+                      <thead className="bg-tertiary/75 text-[var(--text-muted)] font-medium text-[11px] border-b border-[var(--border)]">
                         <tr>
                           <th className="px-3 py-2">STT</th>
                           <th className="px-3 py-2">Loại</th>
@@ -1128,7 +1128,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
                       </thead>
                       <tbody className="divide-y divide-[var(--border)] bg-[var(--bg-secondary)]">
                         {stagedTestcases.map((tc, idx) => (
-                          <tr key={tc.id || idx} className="hover:bg-[var(--bg-tertiary)]/40 transition-colors">
+                          <tr key={tc.id || idx} className="hover:bg-tertiary/40 transition-colors">
                             <td className="px-3 py-2 font-mono text-[var(--text-secondary)]">
                               #{idx + 1}
                             </td>
@@ -1144,7 +1144,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
                                 }}
                                 className={`px-2 py-0.2 rounded-full text-[10px] font-mono border transition-colors cursor-pointer ${
                                   tc.is_sample
-                                    ? 'bg-[var(--accent)]/10 text-[var(--accent-text)] border-[var(--accent)]/30'
+                                    ? 'bg-accent/10 text-[var(--accent-text)] border-accent/30'
                                     : 'bg-[var(--bg-primary)] text-[var(--text-muted)] border-[var(--border)]'
                                 }`}
                               >
@@ -1180,7 +1180,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
                                 onClick={() => {
                                   setStagedTestcases((prev) => prev.filter((_, i) => i !== idx));
                                 }}
-                                className="p-1 rounded text-[var(--danger)] hover:bg-red-500/10 transition-colors cursor-pointer"
+                                className="p-1 rounded text-[var(--danger)] hover:bg-danger/10 transition-colors cursor-pointer"
                                 title="Xóa testcase"
                               >
                                 <MorphIcon icon={Trash2Data} size={14} />
@@ -1200,7 +1200,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
         {/* TAB 4: EDITORIAL */}
         {studioTab === 'editorial' && (
           <div className="border border-[var(--border)] rounded-md bg-[var(--bg-secondary)] overflow-hidden shadow-xs">
-            <div className="bg-[var(--bg-tertiary)]/75 px-4 py-2.5 border-b border-[var(--border)]">
+            <div className="bg-tertiary/75 px-4 py-2.5 border-b border-[var(--border)]">
               <h3 className="text-xs font-semibold text-[var(--text-primary)]">
                 Lời giải mẫu & Ghi chú (Editorial)
               </h3>
@@ -1350,7 +1350,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
         <button
           type="button"
           onClick={startCreateNew}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold transition-colors cursor-pointer w-fit shadow-xs border border-[var(--border)]/20"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold transition-colors cursor-pointer w-fit shadow-xs border border-line/20"
         >
           <MorphIcon icon={PlusData} size={14} /> Soạn bài mới
         </button>
@@ -1360,8 +1360,8 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
         <div
           className={`p-3 rounded-md text-xs font-medium flex items-center justify-between border ${
             notice.type === 'success'
-              ? 'bg-[var(--accent)]/10 text-[var(--accent-text)] border-[var(--accent)]/20'
-              : 'bg-red-500/10 text-[var(--danger)] border-red-500/20'
+              ? 'bg-accent/10 text-[var(--accent-text)] border-accent/20'
+              : 'bg-danger/10 text-[var(--danger)] border-danger/20'
           }`}
         >
           <span>{notice.text}</span>
@@ -1396,7 +1396,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
                 className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors cursor-pointer ${
                   isSel
                     ? 'bg-[var(--bg-secondary)] text-[var(--text-primary)] border-[var(--border)] font-semibold shadow-xs'
-                    : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border-[var(--border)] hover:bg-[var(--border)]/60'
+                    : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border-[var(--border)] hover:bg-line/60'
                 }`}
               >
                 {label}
@@ -1408,7 +1408,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
 
       {/* GitHub Box Table */}
       <div className="border border-[var(--border)] rounded-md bg-[var(--bg-secondary)] overflow-hidden shadow-xs">
-        <div className="bg-[var(--bg-tertiary)]/75 px-4 py-2.5 border-b border-[var(--border)] flex items-center justify-between text-xs font-medium text-[var(--text-secondary)]">
+        <div className="bg-tertiary/75 px-4 py-2.5 border-b border-[var(--border)] flex items-center justify-between text-xs font-medium text-[var(--text-secondary)]">
           <span>{filteredProblems.length} bài tập</span>
         </div>
 
@@ -1436,14 +1436,14 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
               return (
                 <div
                   key={p.id}
-                  className="px-4 py-3 hover:bg-[var(--bg-tertiary)]/40 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  className="px-4 py-3 hover:bg-tertiary/40 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                 >
                   <div className="min-w-0 space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <button
                         type="button"
                         onClick={() => startEdit(p, 'statement')}
-                        className="font-semibold text-xs text-[var(--text-primary)] hover:text-[#0969da] dark:hover:text-[#58a6ff] transition-colors cursor-pointer text-left"
+                        className="font-semibold text-xs text-[var(--text-primary)] hover:text-[var(--accent-text)] transition-colors cursor-pointer text-left"
                       >
                         {p.title}
                       </button>
@@ -1457,8 +1457,8 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
                       <span
                         className={`text-[10px] px-2 py-0.2 rounded-full font-mono ${
                           p.is_public
-                            ? 'bg-[var(--accent)]/10 text-[var(--accent-text)] border border-[var(--accent)]/30'
-                            : 'bg-zinc-500/10 text-[var(--text-muted)] border border-zinc-500/20'
+                            ? 'bg-accent/10 text-[var(--accent-text)] border border-accent/30'
+                            : 'bg-tertiary text-[var(--text-muted)] border border-[var(--border)]'
                         }`}
                       >
                         {p.is_public ? 'public' : 'private'}
@@ -1475,7 +1475,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
                       <button
                         type="button"
                         onClick={() => startEdit(p, 'testcases')}
-                        className="text-[var(--text-secondary)] hover:text-[#0969da] dark:hover:text-[#58a6ff] hover:underline cursor-pointer"
+                        className="text-[var(--text-secondary)] hover:text-[var(--accent-text)] hover:underline cursor-pointer"
                       >
                         {count > 0 ? `${count} tests` : 'chưa có test'}
                       </button>
@@ -1515,7 +1515,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
                     <button
                       type="button"
                       onClick={() => handleDeleteProblem(p.id, p.title)}
-                      className="p-1.5 rounded-md text-[var(--danger)] hover:bg-red-500/10 transition-colors cursor-pointer"
+                      className="p-1.5 rounded-md text-[var(--danger)] hover:bg-danger/10 transition-colors cursor-pointer"
                       title="Xóa bài tập"
                     >
                       <MorphIcon icon={Trash2Data} size={14} />

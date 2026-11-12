@@ -1,18 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import MorphIcon from '../../components/MorphIcon';
+import { CONTEST_STATUS_META } from '../../components/contestStatus';
 import { ArrowRight as ArrowRightData, Calendar as CalendarData, ChevronRight as ChevronRightData, X as XData } from 'lucide';
 import { getAnnouncements, getContests, type Announcement, type Contest } from '../../lib/api';
 
 interface LandingProps {
   onOpenAuth: () => void;
 }
-
-const CONTEST_STATUS_META: Record<Contest['status'], { label: string; className: string; dot: string }> = {
-  UNDERWAY: { label: 'Đang diễn ra', className: 'border-[var(--accent)] text-[var(--accent-text)] bg-[var(--accent)]/10', dot: 'bg-[var(--accent)]' },
-  NOT_STARTED: { label: 'Sắp diễn ra', className: 'border-[var(--border)] text-[var(--text-secondary)] bg-[var(--bg-tertiary)]', dot: 'bg-[var(--text-muted)]' },
-  ENDED: { label: 'Đã kết thúc', className: 'border-[var(--border)] text-[var(--text-muted)] bg-[var(--bg-tertiary)]', dot: 'bg-[var(--border)]' },
-};
 
 const FEATURES = [
   {

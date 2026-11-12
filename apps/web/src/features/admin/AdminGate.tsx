@@ -99,7 +99,7 @@ export default function AdminGate() {
           </div>
 
           {error && (
-            <div className="p-2.5 rounded-md bg-red-500/10 border border-red-500/20 text-xs text-[var(--danger)] font-medium animate-fade-in">
+            <div className="p-2.5 rounded-md bg-danger/10 border border-danger/20 text-xs text-[var(--danger)] font-medium animate-fade-in">
               {error}
             </div>
           )}

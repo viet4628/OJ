@@ -8,6 +8,7 @@ import {
   type Contest, type ContestProblemRow, type ContestRankRow,
 } from '../../lib/api';
 import Markdown from '../../components/Markdown';
+import { CONTEST_STATUS_META } from '../../components/contestStatus';
 
 type Tab = 'overview' | 'problems' | 'rank';
 
@@ -148,31 +149,14 @@ export default function ContestDetail() {
     );
   }
 
-  const STATUS_MAP: Record<Contest['status'], { label: string; cls: string; dot: string }> = {
-    UNDERWAY: {
-      label: 'Đang diễn ra',
-      cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-      dot: 'bg-emerald-500 animate-pulse',
-    },
-    NOT_STARTED: {
-      label: 'Chưa bắt đầu',
-      cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-      dot: 'bg-amber-500',
-    },
-    ENDED: {
-      label: 'Đã kết thúc',
-      cls: 'bg-[var(--bg-tertiary)] text-[var(--text-muted)] border-[var(--border)]',
-      dot: 'bg-[var(--text-muted)]',
-    },
-  };
-  const STATUS_META = STATUS_MAP[status as Contest['status']];
+  const STATUS_META = CONTEST_STATUS_META[status as Contest['status']];
 
   const tbBtn = (t: Tab, text: string) => (
     <button
       onClick={() => setTab(t)}
       className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
         tab === t
-          ? 'bg-[var(--accent)]/10 text-[var(--accent-text)] border border-[var(--accent)]/20'
+          ? 'bg-accent/10 text-[var(--accent-text)] border border-accent/20'
           : 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] border border-transparent'
       }`}
     >
@@ -202,10 +186,10 @@ export default function ContestDetail() {
             ← Quay lại danh sách kỳ thi
           </Link>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[11px] font-bold ${STATUS_META.cls}`}>
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[11px] font-bold ${STATUS_META.className}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${STATUS_META.dot}`} /> {STATUS_META.label}
             </span>
-            <span className="px-2.5 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent-text)] border border-[var(--accent)]/20 font-bold text-[11px]">
+            <span className="px-2.5 py-0.5 rounded-full bg-accent/10 text-[var(--accent-text)] border border-accent/20 font-bold text-[11px]">
               Thể thức {contest.rule_type}
             </span>
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-secondary)] text-[11px] font-medium">
@@ -360,11 +344,11 @@ export default function ContestDetail() {
             </div>
 
             {contest.description && contest.description.trim().length > 0 ? (
-              <div className="p-4 rounded-xl bg-[var(--bg-secondary)]/40 border border-[var(--border)] text-sm leading-relaxed text-[var(--text-primary)]">
+              <div className="p-4 rounded-xl bg-surface/40 border border-[var(--border)] text-sm leading-relaxed text-[var(--text-primary)]">
                 <Markdown content={contest.description} />
               </div>
             ) : (
-              <div className="p-6 rounded-xl bg-[var(--bg-secondary)]/30 border border-[var(--border)] text-center text-xs text-[var(--text-muted)] italic">
+              <div className="p-6 rounded-xl bg-surface/30 border border-[var(--border)] text-center text-xs text-[var(--text-muted)] italic">
                 Ban tổ chức chưa cung cấp thêm phần mô tả chi tiết cho kỳ thi này. Bạn có thể xem ngay danh sách các bài tập ở tab &ldquo;Bài Tập&rdquo;.
               </div>
             )}
@@ -429,7 +413,7 @@ export default function ContestDetail() {
                Bài Tập Trong Kỳ Thi
             </h2>
             {status === 'NOT_STARTED' && (
-              <span className="text-[11px] text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1">
+              <span className="text-[11px] text-[var(--text-secondary)] bg-tertiary border border-[var(--border)] px-2.5 py-1 rounded-lg font-bold flex items-center gap-1">
                  Đề mở khi bắt đầu (vẫn xem được thông tin)
               </span>
             )}
@@ -444,9 +428,9 @@ export default function ContestDetail() {
                   <li key={row.problem_id}>
                     <Link
                       to={`/contests/${contest.id}/problems/${row.problem_id}`}
-                      className="flex items-center gap-4 px-5 py-4 hover:bg-[var(--bg-secondary)]/60 transition-colors group"
+                      className="flex items-center gap-4 px-5 py-4 hover:bg-surface/60 transition-colors group"
                     >
-                      <span className="w-8 h-8 shrink-0 rounded-lg bg-[var(--accent)]/10 text-[var(--accent-text)] border border-[var(--accent)]/20 font-black text-xs flex items-center justify-center">
+                      <span className="w-8 h-8 shrink-0 rounded-lg bg-accent/10 text-[var(--accent-text)] border border-accent/20 font-black text-xs flex items-center justify-center">
                         {idx + 1}
                       </span>
                       <div className="flex-1 min-w-0">
@@ -459,8 +443,8 @@ export default function ContestDetail() {
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
                         {st === 'AC' && <span className="flex items-center gap-1 text-[var(--accent-text)] font-black text-[11px]"><CheckCircle2 className="w-4 h-4" /> AC</span>}
-                        {st === 'PENDING' && <span className="flex items-center gap-1 text-blue-600 font-bold text-[11px]"><Loader2 className="w-3.5 h-3.5 animate-spin" /> ĐANG CHẤM</span>}
-                        {st === 'WA' && <span className="flex items-center gap-1 text-red-500 font-bold text-[11px]"><XCircle className="w-4 h-4" /> SAI / CHƯA AC</span>}
+                        {st === 'PENDING' && <span className="flex items-center gap-1 text-[var(--text-secondary)] font-bold text-[11px]"><Loader2 className="w-3.5 h-3.5 animate-spin" /> ĐANG CHẤM</span>}
+                        {st === 'WA' && <span className="flex items-center gap-1 text-danger font-bold text-[11px]"><XCircle className="w-4 h-4" /> SAI / CHƯA AC</span>}
                         <ChevronRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-text)] transition-colors" />
                       </div>
                     </Link>
@@ -526,10 +510,10 @@ export default function ContestDetail() {
                               {info.is_ac ? (
                                 <span className="inline-flex flex-col items-center gap-0.5">
                                   <span className="text-[var(--accent-text)] font-black">{fmtSeconds(info.time_seconds || 0)}</span>
-                                  {info.error_count ? <span className="text-red-500 text-[10px] font-bold">-{info.error_count}</span> : null}
+                                  {info.error_count ? <span className="text-danger text-[10px] font-bold">-{info.error_count}</span> : null}
                                 </span>
                               ) : (
-                                <span className="text-red-400 font-bold">{info.submission_count}</span>
+                                <span className="text-danger font-bold">{info.submission_count}</span>
                               )}
                             </td>
                           );
@@ -537,7 +521,7 @@ export default function ContestDetail() {
                         return (
                           <td key={pp.problem_id} className="px-2 py-3 text-center">
                             {info && info.submission_count ? (
-                              <span className={`font-black ${(info.score || 0) > 0 ? 'text-[var(--accent-text)]' : 'text-red-400'}`}>
+                              <span className={`font-black ${(info.score || 0) > 0 ? 'text-[var(--accent-text)]' : 'text-danger'}`}>
                                 {info.score || 0}
                               </span>
                             ) : (

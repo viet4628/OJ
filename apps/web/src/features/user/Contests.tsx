@@ -3,12 +3,7 @@ import { Link } from 'react-router-dom';
 import MorphIcon from '../../components/MorphIcon';
 import { Calendar as CalendarData, Clock as ClockData, Loader2 as Loader2Data, Lock as LockData, ChevronRight as ChevronRightData } from 'lucide';
 import { getContests, type Contest } from '../../lib/api';
-
-const STATUS_META: Record<Contest['status'], { label: string; className: string; dot: string }> = {
-  UNDERWAY: { label: 'Đang diễn ra', className: 'bg-[var(--accent)]/10 text-[var(--accent-text)] border-[var(--accent)]/30', dot: 'bg-[var(--accent)] animate-pulse' },
-  NOT_STARTED: { label: 'Sắp diễn ra', className: 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border-[var(--border)]', dot: 'bg-[var(--text-muted)]' },
-  ENDED: { label: 'Đã kết thúc', className: 'bg-[var(--bg-tertiary)] text-[var(--text-muted)] border-[var(--border)]', dot: 'bg-[var(--border)]' },
-};
+import { CONTEST_STATUS_META } from '../../components/contestStatus';
 
 export default function Contests() {
   const [contests, setContests] = useState<Contest[]>([]);
@@ -65,7 +60,7 @@ export default function Contests() {
           <select
             value={ruleFilter}
             onChange={(e) => setRuleFilter(e.target.value)}
-            className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-2.5 py-1 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#0969da] cursor-pointer"
+            className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-2.5 py-1 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] cursor-pointer"
           >
             <option value="ALL">Tất cả thể thức</option>
             <option value="ACM">ACM</option>
@@ -75,7 +70,7 @@ export default function Contests() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-2.5 py-1 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#0969da] cursor-pointer"
+            className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-2.5 py-1 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] cursor-pointer"
           >
             <option value="ALL">Tất cả trạng thái</option>
             <option value="UNDERWAY">Đang diễn ra</option>
@@ -90,7 +85,7 @@ export default function Contests() {
               placeholder="Tìm kỳ thi..."
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
-              className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md pl-8 pr-2.5 py-1 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#0969da] w-36 transition-colors"
+              className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md pl-8 pr-2.5 py-1 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] w-36 transition-colors"
             />
           </div>
         </div>
@@ -109,13 +104,13 @@ export default function Contests() {
         ) : (
           <ol className="divide-y divide-[var(--border)]">
             {filteredContests.map((c) => {
-              const meta = STATUS_META[c.status];
+              const meta = CONTEST_STATUS_META[c.status];
               return (
                 <li key={c.id} className="p-4 flex flex-wrap items-center gap-3 hover:bg-[var(--bg-primary)] transition-colors">
 
 
                   <Link to={`/contests/${c.id}`} className="flex-1 min-w-0 block">
-                    <p className="text-xs font-medium text-[var(--text-primary)] flex items-center gap-1.5 hover:text-[#0969DA] dark:hover:text-[#58A6FF] transition-colors">
+                    <p className="text-xs font-medium text-[var(--text-primary)] flex items-center gap-1.5 hover:text-[var(--accent-text)] transition-colors">
                       <span className="truncate">{c.title}</span>
                       {!c.is_public && (
                         <MorphIcon icon={LockData} size={12} className="text-[var(--text-muted)] shrink-0" />

@@ -65,7 +65,7 @@ export default function ResetPassword() {
 
         {phase === 'invalid' && (
           <div className="space-y-4">
-            <div className="flex items-start gap-2 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-semibold">
+            <div className="flex items-start gap-2 p-3 rounded-xl bg-danger/10 border border-danger/30 text-xs text-danger font-semibold">
 
               Liên kết không hợp lệ hoặc đã hết hạn. Hãy yêu cầu gửi lại email đặt lại mật khẩu.
             </div>
@@ -77,7 +77,7 @@ export default function ResetPassword() {
 
         {phase === 'done' && (
           <div className="space-y-4">
-            <div className="flex items-start gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-semibold">
+            <div className="flex items-start gap-2 p-3 rounded-xl bg-accent/10 border border-accent/30 text-xs text-[var(--accent-text)] font-semibold">
 
               Đã đổi mật khẩu thành công! Giờ bạn có thể đăng nhập bằng mật khẩu mới.
             </div>
@@ -122,7 +122,7 @@ export default function ResetPassword() {
             </div>
 
             {error && (
-              <div className="flex items-start gap-2 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-semibold animate-fade-in">
+              <div className="flex items-start gap-2 p-3 rounded-xl bg-danger/10 border border-danger/30 text-xs text-danger font-semibold animate-fade-in">
                  {error}
               </div>
             )}

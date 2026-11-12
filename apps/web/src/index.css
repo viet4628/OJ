@@ -40,6 +40,16 @@
   --warning: #9A6700;
   --info: #0969DA;
   --success: #1A7F37;
+
+  /* RGB channels of the tokens above, for Tailwind opacity (bg-accent/10).
+     Tailwind v3 drops `bg-[var(--x)]/10` silently, so these are required. */
+  --bg-primary-rgb: 246 248 250;
+  --bg-secondary-rgb: 255 255 255;
+  --bg-tertiary-rgb: 243 244 246;
+  --border-rgb: 208 215 222;
+  --accent-rgb: 31 136 61;
+  --danger-rgb: 207 34 46;
+  --warning-rgb: 154 103 0;
 }
 
 .dark {
@@ -75,6 +85,14 @@
   --warning: #D29922;
   --info: #58A6FF;
   --success: #3FB950;
+
+  --bg-primary-rgb: 13 17 23;
+  --bg-secondary-rgb: 22 27 34;
+  --bg-tertiary-rgb: 33 38 45;
+  --border-rgb: 48 54 61;
+  --accent-rgb: 35 134 54;
+  --danger-rgb: 248 81 73;
+  --warning-rgb: 210 153 34;
 }
 
 html,

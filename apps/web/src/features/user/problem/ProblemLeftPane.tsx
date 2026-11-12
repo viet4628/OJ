@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import MorphIcon from '../../../components/MorphIcon';
+import VerdictBadge from '../../../components/VerdictBadge';
 import { Copy as CopyData, Check as CheckData } from 'lucide';
 import { type SidebarTab } from '../../../components/Sidebar';
 import Markdown from '../../../components/Markdown';
@@ -45,28 +46,6 @@ export default function ProblemLeftPane({
   const formatWhen = (iso: string) => {
     const d = new Date(iso);
     return d.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-  };
-
-  const statusBadge = (status: string) => {
-    if (status === 'ACCEPTED') {
-      return <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold text-[var(--accent-text)] bg-[var(--accent)]/10 border border-[var(--accent)]/30">AC</span>;
-    }
-    if (status === 'WRONG_ANSWER') {
-      return <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold text-[#CF222E] dark:text-[#F85149] bg-red-500/10 border border-red-500/20">WA</span>;
-    }
-    if (status === 'COMPILE_ERROR') {
-      return <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold text-[#CF222E] dark:text-[#F85149] bg-red-500/10 border border-red-500/20">CE</span>;
-    }
-    if (status === 'RUNTIME_ERROR') {
-      return <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold text-[#BC4C00] bg-orange-500/10 border border-orange-500/20">RE</span>;
-    }
-    if (status === 'TIME_LIMIT_EXCEEDED') {
-      return <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold text-[#9A6700] dark:text-[#D29922] bg-amber-500/10 border border-amber-500/20">TLE</span>;
-    }
-    if (status === 'MEMORY_LIMIT_EXCEEDED') {
-      return <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold text-[#8250DF] bg-purple-500/10 border border-purple-500/20">MLE</span>;
-    }
-    return <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold text-[var(--text-secondary)] border border-[var(--border)]">{status}</span>;
   };
 
   const descHasInput = problem?.description?.toLowerCase().includes('dữ liệu vào') || problem?.description?.toLowerCase().includes('input format');
@@ -153,7 +132,7 @@ export default function ProblemLeftPane({
         ) : !problem ? (
           <div className="py-16 text-center text-[var(--text-secondary)]">
             Không tìm thấy bài tập "{slug}".
-            <Link to="/problems" className="text-[#0969DA] dark:text-[#58A6FF] hover:underline font-semibold block mt-2">
+            <Link to="/problems" className="text-[var(--accent-text)] hover:underline font-semibold block mt-2">
               ← Về danh sách bài tập
             </Link>
           </div>
@@ -326,7 +305,7 @@ export default function ProblemLeftPane({
                           <td className="p-2.5 font-medium text-[var(--text-primary)] truncate max-w-[90px]">
                             {sub.profiles?.full_name || sub.profiles?.email?.split('@')[0] || 'user'}
                           </td>
-                          <td className="p-2.5">{statusBadge(sub.status)}</td>
+                          <td className="p-2.5"><VerdictBadge status={sub.status} /></td>
                           <td className="p-2.5 text-[var(--text-secondary)]">{sub.time_used_ms}ms</td>
                           <td className="p-2.5 text-right">
                             {sub.code && onSelectSubmission ? (

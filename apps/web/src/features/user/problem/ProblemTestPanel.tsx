@@ -100,7 +100,7 @@ export default function ProblemTestPanel({
                 onClick={() => setActiveTestTab(-1)}
                 className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded transition-colors cursor-pointer font-medium ${
                   activeTestTab === -1
-                    ? 'bg-[var(--bg-primary)] text-[var(--accent-text)] border border-[var(--accent)]/30 font-semibold shadow-xs'
+                    ? 'bg-[var(--bg-primary)] text-[var(--accent-text)] border border-accent/30 font-semibold shadow-xs'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
                 }`}
               >
@@ -109,7 +109,7 @@ export default function ProblemTestPanel({
               {activeTestTab === -1 && customInput.trim() !== '' && (
                 <button
                   onClick={() => setCustomInput('')}
-                  className="flex items-center p-0.5 rounded text-[var(--text-muted)] hover:text-red-500 transition-colors cursor-pointer"
+                  className="flex items-center p-0.5 rounded text-[var(--text-muted)] hover:text-danger transition-colors cursor-pointer"
                   title="Xóa dữ liệu test tự tạo"
                 >
                   <X className="w-3 h-3" />
@@ -170,7 +170,7 @@ export default function ProblemTestPanel({
             ) : null}
 
             {submissionError && (
-              <div className="p-2 rounded border border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400 font-semibold text-[11px]">
+              <div className="p-2 rounded border border-danger/20 bg-danger/10 text-danger font-semibold text-[11px]">
                 {submissionError}
                 {!user && (
                   <>
@@ -208,11 +208,11 @@ export default function ProblemTestPanel({
                   </span>
                   {activeTestTab !== -1 && activeSample?.expected && (
                     normOutput(runOutput) === normOutput(activeSample.expected) ? (
-                      <span className="text-[10px] px-1.5 py-0.2 rounded border font-semibold text-[var(--accent-text)] bg-[var(--accent)]/10 border-[var(--accent)]/30">
+                      <span className="text-[10px] px-1.5 py-0.2 rounded border font-semibold text-[var(--accent-text)] bg-accent/10 border-accent/30">
                         KHỚP ĐÁP ÁN
                       </span>
                     ) : (
-                      <span className="text-[10px] px-1.5 py-0.2 rounded border font-semibold text-[#CF222E] dark:text-[#F85149] bg-red-500/10 border-red-500/20">
+                      <span className="text-[10px] px-1.5 py-0.2 rounded border font-semibold text-danger bg-danger/10 border-danger/20">
                         SAI ĐÁP ÁN
                       </span>
                     )
@@ -228,7 +228,7 @@ export default function ProblemTestPanel({
               <div ref={resultRef} className="space-y-2">
                 <div className="flex items-center justify-between p-2 rounded-md border border-[var(--border)] bg-[var(--bg-secondary)]">
                   <div className="flex items-center gap-1.5 text-xs font-semibold">
-                    {(submissionResult.status === 'PENDING' || submissionResult.status === 'JUDGING') && <RefreshCw className="w-4 h-4 animate-spin text-blue-500" />}
+                    {(submissionResult.status === 'PENDING' || submissionResult.status === 'JUDGING') && <RefreshCw className="w-4 h-4 animate-spin text-[var(--text-secondary)]" />}
                     <span className="text-[var(--text-primary)]">
                       {submissionResult.status === 'PENDING' || submissionResult.status === 'JUDGING'
                         ? 'Đang chấm bài...'
@@ -244,7 +244,7 @@ export default function ProblemTestPanel({
                 </div>
 
                 {submissionResult.errorLog && (
-                  <pre className="p-2 rounded bg-[#1e1e1e] text-red-300 font-mono text-[11px] overflow-x-auto whitespace-pre-wrap max-h-24">
+                  <pre className="p-2 rounded bg-[#1e1e1e] text-danger font-mono text-[11px] overflow-x-auto whitespace-pre-wrap max-h-24">
                     {submissionResult.errorLog}
                   </pre>
                 )}
@@ -260,9 +260,9 @@ export default function ProblemTestPanel({
                         {t.status === 'ACCEPTED' ? (
                           <span className="text-[var(--accent-text)]">AC ({t.timeMs}ms)</span>
                         ) : t.status === 'PENDING' || t.status === 'JUDGING' ? (
-                          <span className="text-blue-500">Đang chấm...</span>
+                          <span className="text-[var(--text-secondary)]">Đang chấm...</span>
                         ) : (
-                          <span className="text-red-500">{t.status}</span>
+                          <span className="text-danger">{t.status}</span>
                         )}
                       </span>
                     </div>
@@ -282,7 +282,7 @@ export default function ProblemTestPanel({
               systemStatus === 'ready'
                 ? 'bg-[var(--accent)]'
                 : systemStatus === 'judging'
-                ? 'bg-amber-500 animate-pulse'
+                ? 'bg-[var(--text-muted)] animate-pulse'
                 : 'bg-[var(--accent)]'
             }`}
           />

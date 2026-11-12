@@ -107,14 +107,14 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
         </div>
 
         {error && (
-          <div className="flex items-start gap-2 p-2.5 rounded-md bg-red-500/10 border border-red-500/20 text-xs text-[var(--danger)] font-medium" role="alert">
+          <div className="flex items-start gap-2 p-2.5 rounded-md bg-danger/10 border border-danger/20 text-xs text-[var(--danger)] font-medium" role="alert">
 
             <span>{error}</span>
           </div>
         )}
 
         {notice && (
-          <div className="flex items-start gap-2 p-2.5 rounded-md bg-[var(--accent)]/10 border border-[var(--accent)]/30 text-xs text-[var(--accent-text)] font-medium" role="status">
+          <div className="flex items-start gap-2 p-2.5 rounded-md bg-accent/10 border border-accent/30 text-xs text-[var(--accent-text)] font-medium" role="status">
 
             <span>{notice}</span>
           </div>
@@ -133,7 +133,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
                   placeholder="viet4628"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md pl-8 pr-2.5 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#0969da] focus:ring-1 focus:ring-[#0969da] transition-colors"
+                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md pl-8 pr-2.5 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-accent transition-colors"
                 />
               </div>
             </div>
@@ -150,7 +150,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
                 placeholder="user@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md pl-8 pr-2.5 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#0969da] focus:ring-1 focus:ring-[#0969da] transition-colors"
+                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md pl-8 pr-2.5 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-accent transition-colors"
               />
             </div>
           </div>
@@ -166,7 +166,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md pl-8 pr-2.5 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#0969da] focus:ring-1 focus:ring-[#0969da] transition-colors"
+                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md pl-8 pr-2.5 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-accent transition-colors"
                 />
               </div>
               {mode === 'login' && (

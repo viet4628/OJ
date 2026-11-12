@@ -1,7 +1,7 @@
 const styles = {
   Easy: 'bg-[var(--accent-light)] text-[var(--accent-text)]',
-  Medium: 'bg-[#9A6700]/10 text-[#9A6700] dark:bg-[#D29922]/10 dark:text-[#D29922]',
-  Hard: 'bg-[#CF222E]/10 text-[#CF222E] dark:bg-[#F85149]/10 dark:text-[#F85149]',
+  Medium: 'bg-warning/10 text-warning',
+  Hard: 'bg-danger/10 text-danger',
 };
 
 export const difficultyLabels = { Easy: 'Dễ', Medium: 'Trung bình', Hard: 'Khó' };

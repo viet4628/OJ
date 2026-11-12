@@ -8,25 +8,20 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      // Semantic colors backed by the CSS tokens in src/index.css, so light/dark
+      // follow the theme and opacity modifiers work (bg-accent/10, border-line/30).
       colors: {
-        background: "#0b0f19",
-        surface: "#111827",
-        "surface-light": "#1e293b",
-        primary: "#3b82f6",
-        "primary-glow": "#60a5fa",
-        accent: "#06b6d4",
-        success: "#10b981",
-        warning: "#f59e0b",
-        danger: "#ef4444",
+        canvas: "rgb(var(--bg-primary-rgb) / <alpha-value>)",
+        surface: "rgb(var(--bg-secondary-rgb) / <alpha-value>)",
+        tertiary: "rgb(var(--bg-tertiary-rgb) / <alpha-value>)",
+        line: "rgb(var(--border-rgb) / <alpha-value>)",
+        accent: "rgb(var(--accent-rgb) / <alpha-value>)",
+        danger: "rgb(var(--danger-rgb) / <alpha-value>)",
+        warning: "rgb(var(--warning-rgb) / <alpha-value>)",
       },
       fontFamily: {
         sans: ["Inter", "sans-serif"],
         mono: ["Consolas", "Fira Code", "JetBrains Mono", "monospace"],
-      },
-      boxShadow: {
-        glow: "0 0 25px rgba(59, 130, 246, 0.25)",
-        "glow-cyan": "0 0 25px rgba(6, 182, 212, 0.25)",
-        "glow-purple": "0 0 25px rgba(147, 51, 234, 0.25)",
       },
     },
   },

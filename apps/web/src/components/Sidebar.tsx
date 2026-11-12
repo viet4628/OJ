@@ -33,7 +33,7 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               className={`
                 relative w-8 h-8 flex items-center justify-center rounded-md transition-colors cursor-pointer
                 ${isActive
-                  ? 'text-[var(--accent-text)] bg-[var(--accent)]/10 font-semibold'
+                  ? 'text-[var(--accent-text)] bg-accent/10 font-semibold'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
                 }
               `}
