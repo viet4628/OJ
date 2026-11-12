@@ -230,7 +230,9 @@ export default function ProblemTestPanel({
                   <div className="flex items-center gap-1.5 text-xs font-semibold">
                     {(submissionResult.status === 'PENDING' || submissionResult.status === 'JUDGING') && <RefreshCw className="w-4 h-4 animate-spin text-[var(--text-secondary)]" />}
                     <span className="text-[var(--text-primary)]">
-                      {submissionResult.status === 'PENDING' || submissionResult.status === 'JUDGING'
+                      {submissionResult.status === 'PENDING' && submissionResult.queuePosition
+                        ? `Đang xếp hàng (vị trí ${submissionResult.queuePosition})`
+                        : submissionResult.status === 'PENDING' || submissionResult.status === 'JUDGING'
                         ? 'Đang chấm bài...'
                         : `Kết quả: ${submissionResult.status}`}
                     </span>

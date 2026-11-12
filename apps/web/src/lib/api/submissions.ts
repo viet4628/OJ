@@ -70,7 +70,18 @@ export async function getSubmission(submissionId: string, signal?: AbortSignal):
   return data as Submission;
 }
 
-export function waitForSubmission(submissionId: string, signal: AbortSignal): Promise<Submission | null> {
+/** 1-based position of the caller's own PENDING submission, or null once it is being judged. */
+export async function getQueuePosition(submissionId: string, signal?: AbortSignal): Promise<number | null> {
+  const { data, error } = await supabase.rpc('get_queue_position', { p_submission_id: submissionId })
+    .abortSignal(signal ?? AbortSignal.timeout(10000));
+  return !error && typeof data === 'number' ? data : null;
+}
+
+export function waitForSubmission(
+  submissionId: string,
+  signal: AbortSignal,
+  onProgress?: (row: Submission, queuePosition: number | null) => void,
+): Promise<Submission | null> {
   if (signal.aborted) return Promise.resolve(null);
   return new Promise(resolve => {
     let timer: ReturnType<typeof setTimeout>;
@@ -97,6 +108,10 @@ export function waitForSubmission(submissionId: string, signal: AbortSignal): Pr
         const row = await getSubmission(submissionId, AbortSignal.any([request.signal, AbortSignal.timeout(10000)]));
         if (finished) return;
         if (row && !['PENDING', 'JUDGING'].includes(row.status)) return finish(row);
+        if (row && onProgress) {
+          const position = row.status === 'PENDING' ? await getQueuePosition(submissionId, request.signal) : null;
+          if (!finished) onProgress(row, position);
+        }
         if (performance.now() - started >= 15 * 60_000) return finish(null);
       } finally {
         checking = false;

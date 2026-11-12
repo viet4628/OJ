@@ -365,11 +365,11 @@ export default function ProblemDetail({ user, onOpenAuth, contest, contestProble
     };
   }, [problem?.id]);
 
-  const pollSubmission = (submissionId: string) => {
+  const pollSubmission = (submissionId: string, onProgress?: Parameters<typeof waitForSubmission>[2]) => {
     pollController.current?.abort();
     const controller = new AbortController();
     pollController.current = controller;
-    return waitForSubmission(submissionId, controller.signal);
+    return waitForSubmission(submissionId, controller.signal, onProgress);
   };
 
   const handleRun = async () => {
@@ -428,7 +428,9 @@ export default function ProblemDetail({ user, onOpenAuth, contest, contestProble
       return;
     }
 
-    const sub = await pollSubmission(res.id);
+    const sub = await pollSubmission(res.id, (row, queuePosition) => {
+      if (mountedRef.current) setSubmissionResult((prev: any) => prev && ({ ...prev, status: row.status, queuePosition }));
+    });
     if (!mountedRef.current) return;
     if (sub) {
       setHistorySubs(prev => [sub, ...prev.filter(row => row.id !== sub.id)].slice(0, 100));

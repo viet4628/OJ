@@ -994,3 +994,24 @@ test('Bài chấm quá 30 giây tiếp tục được theo dõi và ngừng poll
   await page.clock.fastForward(60000);
   expect(polls).toBe(stoppedAt);
 });
+
+test('Bài đang chờ hiện vị trí trong hàng đợi, rồi chuyển sang đang chấm', async ({ page }) => {
+  await teacherWorkspace(page);
+  let status = 'PENDING';
+  await page.route('**/rest/v1/rpc/get_queue_position', route => route.fulfill({ json: 3 }));
+  await page.route('**/rest/v1/submissions?**', route => {
+    if (route.request().method() === 'POST') return route.fulfill({ json: { id: 'queued-job' } });
+    if (new URL(route.request().url()).searchParams.get('id') !== 'eq.queued-job') return route.fulfill({ json: [] });
+    return route.fulfill({ json: { id: 'queued-job', problem_id: problem.id, user_id: teacherId, language: 'cpp',
+      status, details: [], score: 0, time_used_ms: 0, memory_used_mb: 0 } });
+  });
+  await page.goto(`/problems/${problem.slug}`);
+  await expect(page.locator('.monaco-editor textarea').first()).toBeAttached();
+  await page.clock.install();
+  await page.getByRole('button', { name: 'Nộp bài', exact: true }).click();
+  await page.clock.fastForward(1000);
+  await expect(page.getByText('Đang xếp hàng (vị trí 3)')).toBeVisible();
+  status = 'JUDGING';
+  await page.clock.fastForward(6000);
+  await expect(page.getByText('Đang xếp hàng (vị trí 3)')).toHaveCount(0);
+});

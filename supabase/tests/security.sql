@@ -58,6 +58,8 @@ INSERT INTO submissions(user_id,problem_id,language,code) SELECT auth.uid(),id,'
 INSERT INTO submissions(user_id,problem_id,language,code) SELECT auth.uid(),id,'python','print(0)' FROM problems WHERE slug='two-sum';
 SELECT pg_temp.expect_error($q$INSERT INTO submissions(user_id,problem_id,language,code)
  SELECT auth.uid(),id,'cpp','int main(){}' FROM problems WHERE slug='two-sum'$q$, 'pending queue quota');
+SELECT pg_temp.assert_true((SELECT get_queue_position(id) >= 1 FROM submissions WHERE user_id=auth.uid() AND status='PENDING' ORDER BY created_at DESC LIMIT 1), 'owner sees own queue position');
+SELECT set_config('test.pending_id', (SELECT id::text FROM submissions WHERE user_id=auth.uid() AND status='PENDING' ORDER BY created_at DESC LIMIT 1), false);
 
 SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000002',false);
 SELECT pg_temp.assert_true(has_user_permission('testcases.manage'), 'teacher has testcase permission');
@@ -91,6 +93,7 @@ SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001'
 SELECT pg_temp.expect_error($q$UPDATE problems SET starter_codes='{"cpp":"tampered"}' WHERE slug='starter-code-test'$q$, 'student problem update denied');
 SELECT pg_temp.assert_true((SELECT starter_codes->>'cpp' = '// public template' FROM problems WHERE slug='starter-code-test'), 'student cannot change templates');
 SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000004',false);
+SELECT pg_temp.assert_true(get_queue_position(current_setting('test.pending_id')::uuid) IS NULL, 'queue position hidden from other users');
 SELECT pg_temp.assert_true((SELECT count(*)=0 FROM classrooms), 'outsider classroom hidden');
 SELECT pg_temp.assert_true((SELECT count(*)=0 FROM classroom_members), 'outsider members hidden');
 SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000003',false);

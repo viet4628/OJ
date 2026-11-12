@@ -112,7 +112,7 @@ Quy ước đặt tên: T0 và T1 là việc đã nằm trong P0–P2 hiện có
 
 Quy tắc vận hành: **concurrency không được vượt số CPU của engine** (engine `cpus: 2`, worker `WORKER_CONCURRENCY: 2`). Từ 13/11 TLE quyết định theo CPU và wall-time có biên 1,5s, nhưng tranh CPU vẫn làm chậm thời gian chờ; muốn tăng concurrency thì tăng `cpus` của engine tương ứng. Chưa đo đỉnh RAM khi 2 lượt compile chạy cùng lúc so với `mem_limit: 3g` của engine.
 
-Còn lại: T4 (vị trí xếp hàng cho người dùng), T5 (campaign 5/10/20 người + soak 24h; chạy lại baseline vì cách đo thời gian/bộ nhớ đã đổi ngày 13/11). T3 đã xong ngày 13/11. Chưa sửa `updated_at` cho testcase vì chưa dùng cache bundle.
+Còn lại: T5 (campaign 5/10/20 người + soak 24h; chạy lại baseline vì cách đo thời gian/bộ nhớ đã đổi ngày 13/11). T3 và T4 (vị trí xếp hàng: RPC `get_queue_position`, migration `20261113_queue_position.sql`) đã xong ngày 13/11. Chưa sửa `updated_at` cho testcase vì chưa dùng cache bundle.
 
 ### Đợt sửa độ đúng chấm và bảo mật dữ liệu (13/11/2026)
 
