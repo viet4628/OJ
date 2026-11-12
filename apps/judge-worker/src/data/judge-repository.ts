@@ -124,10 +124,9 @@ export class JudgeRepository {
   }
 }
 
+// Literal "\n" text is data (e.g. string problems), never a line break.
 function normalizeNewlines(content: string): string {
-  const real = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-  if (real.includes('\n')) return real;
-  return real.replace(/\\r\\n/g, '\n').replace(/\\r/g, '\n').replace(/\\n/g, '\n');
+  return content.replace(/\r\n?/g, '\n');
 }
 
 /** Transport faults worth one retry; data errors are final. */

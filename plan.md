@@ -68,7 +68,7 @@ Bản cuối đã qua lượt ngắn15 bài/5 người, 10 testcase Storage64KiB
 - Hạn chế tải Storage song song theo ngân sách RAM từ P1; không `Promise.all` toàn bộ bộ test lớn. Ưu tiên cache đĩa có giới hạn nếu buffer gây đỉnh RAM cao.
 - Phạm vi dự kiến: `judging/engine-judge.ts`, `engine/cases-provider.ts`, `data/judge-repository.ts`; schema/migration chỉ khi cần version bundle. Nếu sửa truy vấn, grep toàn bộ đường ghi liên quan trước.
 - Hoàn tất: cùng bộ tải có thời gian chuẩn bị test giảm rõ ràng và p95 tổng không hồi quy; sửa đề/test/blob dùng ngay phiên bản mới; RAM/disk không vượt ngân sách; weighted verdict, trial score và testcase secrecy giữ nguyên.
-- Kiểm chứng: `npm --prefix apps/judge-worker test`, `npm run test:pilot`; thêm `npm run test:db` nếu có migration; benchmark lại đúng workload P1. Nếu sửa Rust, chạy `cargo test` tại `engine/rsjudge` và cập nhật patch tái lập.
+- Kiểm chứng: `npm --prefix apps/judge-worker test`, `npm run test:pilot`; thêm `npm run test:db` nếu có migration; benchmark lại đúng workload P1. Nếu sửa Rust, chạy `cargo test --workspace --locked` tại `engine/rsjudge` và cập nhật patch tái lập.
 
 ### P3 — Giảm tải DB và frontend
 

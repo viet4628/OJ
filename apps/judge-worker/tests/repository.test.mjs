@@ -16,7 +16,9 @@ test('DB requests abort when stalled and the next poll can recover', async () =>
   const db = createClient(`http://127.0.0.1:${server.address().port}`, 'test-key', {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const repo = new JudgeRepository(db, 50);
+  // Short enough to prove the stall aborts (< 1s guard), long enough for the
+  // recovery request on a loaded CI machine.
+  const repo = new JudgeRepository(db, 300);
   let timer;
   try {
     await Promise.race([
@@ -164,4 +166,12 @@ test('worker health detects stale polls and recovers after the real DB request t
     server.closeAllConnections();
     await new Promise(resolve => server.close(resolve));
   }
+});
+
+test('testcase text keeps literal backslash sequences and only normalizes CRLF', async () => {
+  const db = createClient('http://127.0.0.1:9', 'test-key', { auth: { persistSession: false, autoRefreshToken: false } });
+  const repo = new JudgeRepository(db, 50);
+  const content = await repo.resolveTestcaseContent({ id: 't', problem_id: 'p', input_path: 'inline', output_path: 'inline',
+    input_content: 'a\\nb', output_content: 'x\r\ny\rz', score: 1, is_sample: false });
+  assert.deepEqual(content, { inputContent: 'a\\nb', outputContent: 'x\ny\nz' });
 });

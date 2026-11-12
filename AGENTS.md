@@ -28,7 +28,7 @@ CodeJudge VN is an automated distributed Online Judge platform. Start with `READ
 | **Worker Dev Server** | `npm --prefix apps/judge-worker run dev` | Runs worker daemon with `tsx` |
 | **Worker Build** | `npm --prefix apps/judge-worker run build` | Compiles TypeScript daemon (`tsc`) |
 | **Worker Smoke Tests**| `npm --prefix apps/judge-worker run smoke` | Verifies local sandbox (AC/WA/TLE/output-cap/bwrap) |
-| **Engine Tests** | `cd engine/rsjudge && cargo test` | Runs Rust unit & integration test suites (Submit/SelfTest) |
+| **Engine Tests** | `cd engine/rsjudge && cargo test --workspace --locked` | Runs all Rust crates (pipeline, comparer, gRPC Submit/SelfTest); plain `cargo test` covers only the root crate |
 | **E2E Tests** | `npm --prefix e2e test` | Runs Playwright tests across user and admin portals |
 | **Validate AG Kit** | `python3 .agents/scripts/validate_kit.py .agents` | Validates `.agents` kit integrity and frontmatter |
 
