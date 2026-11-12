@@ -53,7 +53,10 @@ Owner đã áp dụng các migration bằng SQL Editor và báo thành công; RE
 
 Tiếp tục theo [plan](../plan.md), triển khai theo [runbook](pilot-runbook.md). Đã giữ bằng chứng đo lường; ảnh/video/kết quả Playwright có thể sinh lại và được dọn bằng `npm run clean`.
 
-## Siết cô lập sandbox ngày 13/11/2026
+## Sửa hồi quy TLE ở limit tròn giây (13/11/2026)
+
+Sau khi áp migration, `smoke-staging.mjs` (limit 1000ms) báo vòng lặp vô hạn ra RUNTIME_ERROR. Nguyên nhân: bản sửa limit lẻ giây đặt `RLIMIT_CPU` = ceil(limit) = 1s, kernel kill ở ~0,99s CPU (< limit) và wall-time mới có biên 1,5s nên không còn che lỗi. Sửa: `RLIMIT_CPU` = ceil(limit) + 1s. Test `infinite_loop_at_a_whole_second_limit_is_tle` (1000/2000ms) fail trên code cũ, pass trên code mới; Rust 48 test, `test:pilot`, staging smoke và `verify-verdicts.mjs` 7/7 PASS. Truy vấn staging: 0 bài RUNTIME_ERROR trong 24h, không cần chấm lại. Staging đã chạy cả hai migration 13/11 (hàm `can_manage_problem` có, ghi trực tiếp bị từ chối; `staging-contest-ownership`, `staging-starter-codes` PASS).
+
 
 | Bằng chứng | Kết quả |
 |---|---|

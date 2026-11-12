@@ -1859,10 +1859,10 @@ index e3fec44..69ea3c2 100644
  pub mod request;
 diff --git a/crates/rsjudge-judger/src/judger/pipeline.rs b/crates/rsjudge-judger/src/judger/pipeline.rs
 new file mode 100644
-index 0000000..efc574a
+index 0000000..2d4b366
 --- /dev/null
 +++ b/crates/rsjudge-judger/src/judger/pipeline.rs
-@@ -0,0 +1,892 @@
+@@ -0,0 +1,911 @@
 +// SPDX-License-Identifier: Apache-2.0
 +
 +//! The judging pipeline: prepare source, compile, run with resource limits,
@@ -2403,10 +2403,13 @@ index 0000000..efc574a
 +    clean_env(&mut cmd);
 +
 +    let fsize = NonZeroU64::new(OUTPUT_LIMIT_BYTES as u64);
-+    // `RLIMIT_CPU` has second granularity: round up so a fractional limit
-+    // (e.g. 1500ms) never kills a program inside its budget. The exact limit
-+    // is enforced below from the measured CPU time.
-+    let cpu_secs = u64::try_from(time_limit.as_millis().div_ceil(1000)).unwrap_or(u64::MAX).max(1);
++    // `RLIMIT_CPU` has second granularity and must stay strictly above the
++    // limit: rounded up it never kills a program inside its budget (1500ms
++    // must not become 1s), and the extra second makes a killed program's
++    // measured CPU time reach the limit (a 1s rlimit fires at ~0.99s, which
++    // would read as RUNTIME_ERROR instead of TLE). TLE is decided below from
++    // the measured CPU time.
++    let cpu_secs = u64::try_from(time_limit.as_millis().div_ceil(1000)).unwrap_or(u64::MAX).saturating_add(1);
 +    let (cpu, mem) = if def.disable_rlimit_as() {
 +        (Some(Duration::from_secs(cpu_secs)), None)
 +    } else {
@@ -2573,6 +2576,22 @@ index 0000000..efc574a
 +            .unwrap();
 +        assert!(matches!(verdict_of(&outcome, None), JudgeResult::Accepted), "{outcome:?}");
 +        assert!(outcome.cpu_time >= Duration::from_millis(1100), "{outcome:?}");
++    }
++
++    #[tokio::test]
++    async fn infinite_loop_at_a_whole_second_limit_is_tle() {
++        // 1000ms is the default limit; the CPU rlimit must not fire below it.
++        let def = cpp_def();
++        let prepared = prepare_source("C++", &def, b"int main(){volatile int x=1; while(x){}}", None)
++            .await
++            .unwrap();
++        assert!(compile(&prepared, &def).await.unwrap().success());
++        for limit_ms in [1000, 2000] {
++            let outcome = run_once(&prepared, &def, b"", Duration::from_millis(limit_ms), None)
++                .await
++                .unwrap();
++            assert!(matches!(verdict_of(&outcome, None), JudgeResult::TimeLimitExceeded), "{limit_ms}ms: {outcome:?}");
++        }
 +    }
 +
 +    #[tokio::test]
