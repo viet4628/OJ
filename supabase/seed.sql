@@ -142,3 +142,17 @@ SELECT 'problems' AS table_name, COUNT(*) AS rows FROM public.problems
 UNION ALL SELECT 'testcases', COUNT(*) FROM public.testcases
 UNION ALL SELECT 'contests', COUNT(*) FROM public.contests
 UNION ALL SELECT 'announcements', COUNT(*) FROM public.announcements;
+-- Lộ trình luyện tập mẫu (demo/local). Chạy lại an toàn.
+INSERT INTO public.learning_tracks (slug, title, description, sort_order, is_public, created_by) VALUES
+  ('nhap-mon-lap-trinh', 'Nhập môn lập trình', 'Đọc dữ liệu, vòng lặp và xử lý số cơ bản. Phù hợp người mới bắt đầu.', 1, true, NULL),
+  ('mang-va-chuoi', 'Mảng và chuỗi', 'Duyệt mảng, hai con trỏ và xử lý chuỗi.', 2, true, NULL),
+  ('toan-hoc', 'Toán học', 'Số nguyên tố, chữ số và các bài toán số học.', 3, true, NULL)
+ON CONFLICT (slug) DO NOTHING;
+INSERT INTO public.learning_track_problems (track_id, problem_id, sort_order)
+SELECT t.id, p.id, x.ord
+FROM (VALUES ('nhap-mon-lap-trinh', 'sum-of-digits', 0), ('nhap-mon-lap-trinh', 'two-sum', 1),
+             ('mang-va-chuoi', 'two-sum', 0), ('mang-va-chuoi', 'valid-palindrome', 1), ('mang-va-chuoi', 'max-subarray', 2),
+             ('toan-hoc', 'sum-of-digits', 0), ('toan-hoc', 'prime-count', 1)) AS x(track, problem, ord)
+JOIN public.learning_tracks t ON t.slug = x.track
+JOIN public.problems p ON p.slug = x.problem
+ON CONFLICT (track_id, problem_id) DO NOTHING;

@@ -7,8 +7,9 @@ import AdminProblemsTab from '../admin/tabs/AdminProblemsTab';
 import AdminContestsTab from '../admin/tabs/AdminContestsTab';
 import AdminAnnouncementsTab from '../admin/tabs/AdminAnnouncementsTab';
 import TeacherClassroomsTab from './tabs/TeacherClassroomsTab';
+import LearningTracksTab from './tabs/LearningTracksTab';
 
-type TeacherTab = 'classrooms' | 'problems' | 'contests' | 'announcements';
+type TeacherTab = 'classrooms' | 'problems' | 'tracks' | 'contests' | 'announcements';
 
 interface TeacherPortalProps {
   user: AppUser | null;
@@ -51,6 +52,7 @@ export default function TeacherPortal({ user, onOpenAuth }: TeacherPortalProps) 
       case 'classrooms':
         return true;
       case 'problems':
+      case 'tracks':
         return can('problems.manage');
       case 'contests':
         return can('contests.manage');
@@ -161,6 +163,7 @@ export default function TeacherPortal({ user, onOpenAuth }: TeacherPortalProps) 
                 Bài Tập
               </p>
               {menuBtn('problems', 'Danh Sách Bài Tập', activeTab === 'problems' && problemMode === 'list')}
+              {menuBtn('tracks', 'Lộ Trình Luyện Tập')}
             </>
           )}
 
@@ -217,6 +220,7 @@ export default function TeacherPortal({ user, onOpenAuth }: TeacherPortalProps) 
             isAdmin={user.role === 'admin'}
           />
         )}
+        {activeTab === 'tracks' && can('problems.manage') && <LearningTracksTab userId={user.id} isAdmin={user.role === 'admin'} />}
         {activeTab === 'contests' && can('contests.manage') && <AdminContestsTab userId={user.id} isAdmin={user.role === 'admin'} />}
         {activeTab === 'announcements' && can('announcements.manage') && <AdminAnnouncementsTab />}
       </div>

@@ -7,6 +7,7 @@ const Home = lazy(() => import('./features/user/Home'));
 import Landing from './features/user/Landing';
 const Problems = lazy(() => import('./features/user/Problems'));
 const Learning = lazy(() => import('./features/user/Learning'));
+const TrackDetail = lazy(() => import('./features/user/TrackDetail'));
 const ProblemDetail = lazy(() => import('./features/user/ProblemDetail'));
 const Submissions = lazy(() => import('./features/user/Submissions'));
 const Ranklist = lazy(() => import('./features/user/Ranklist'));
@@ -158,6 +159,7 @@ export default function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/problems" element={<Problems />} />
                 <Route path="/learn" element={<Learning />} />
+                <Route path="/learn/:slug" element={<TrackDetail />} />
                 <Route path="/submissions" element={<Submissions user={user} />} />
                 <Route path="/ranklist" element={<Ranklist />} />
                 <Route path="/about" element={<About />} />

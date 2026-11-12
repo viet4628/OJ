@@ -7,3 +7,4 @@ export * from './announcements';
 export * from './users';
 export * from './classrooms';
 export * from './auth';
+export * from './tracks';

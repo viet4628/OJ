@@ -1017,3 +1017,20 @@ test('Bài đang chờ hiện vị trí trong hàng đợi, rồi chuyển sang 
   await page.clock.fastForward(6000);
   await expect(page.getByText('Đang xếp hàng (vị trí 3)')).toHaveCount(0);
 });
+
+test('Giáo viên tạo lộ trình: slug tự sinh, chọn bài theo thứ tự và lưu qua RPC', async ({ page }) => {
+  await teacherWorkspace(page);
+  let saved: any = null;
+  await page.route('**/rest/v1/rpc/save_learning_track', route => { saved = route.request().postDataJSON(); return route.fulfill({ json: 'new-track' }); });
+  await page.route('**/rest/v1/learning_tracks?**', route => route.fulfill({ json: [] }));
+  await page.getByRole('button', { name: 'Lộ Trình Luyện Tập', exact: true }).click();
+  await page.getByRole('button', { name: 'Tạo lộ trình', exact: true }).click();
+  await page.getByLabel('Tên lộ trình').fill('Nhập môn lập trình');
+  await expect(page.getByLabel('Đường dẫn (slug)')).toHaveValue('nhap-mon-lap-trinh');
+  await page.getByRole('checkbox', { name: problem.title }).check();
+  await page.getByLabel('Công khai cho học sinh').check();
+  await page.getByRole('button', { name: 'Lưu lộ trình', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Đã lưu lộ trình' })).toContainText('"Nhập môn lập trình"');
+  expect(saved).toEqual({ p_track_id: null, p_problem_ids: [problem.id],
+    p_track: { slug: 'nhap-mon-lap-trinh', title: 'Nhập môn lập trình', description: '', sort_order: 0, is_public: true } });
+});

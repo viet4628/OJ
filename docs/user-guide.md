@@ -52,6 +52,10 @@ Nén các cặp file rồi bấm **Tải lên ZIP**. Mỗi file tối đa 1 MiB;
 
 Code đọc stdin (`cin`, `input()`) và ghi stdout (`cout`, `print()`); tên file ZIP phục vụ ghép cặp. Test ZIP mặc định là test ẩn; sau nhập kiểm tra điểm và bấm lưu. Nút **Tải về ZIP** xuất bộ test hiện tại theo cặp `input00.txt`/`output00.txt`.
 
+## Giáo viên: lộ trình luyện tập
+
+Trong Không gian giáo viên, mục **Lộ Trình Luyện Tập** gom bài thành chủ đề có thứ tự (ví dụ Nhập môn lập trình, Sắp xếp). Mỗi lộ trình có tên, đường dẫn, mô tả, thứ tự hiển thị và trạng thái công khai/nháp. Chỉ thêm được đề công khai hoặc đề do mình tạo; đề riêng tư vẫn ẩn với học sinh dù nằm trong lộ trình công khai. Học sinh mở **Luyện theo chủ đề** (`/learn`) để xem tiến độ từng lộ trình và làm bài tiếp theo; phần luyện theo nhãn vẫn giữ bên dưới. Giáo viên quản lý lộ trình mình tạo, admin quản lý tất cả. Migration: `supabase/migrations/20261113_learning_tracks.sql`.
+
 ## Giáo viên: lớp học
 
 Tạo lớp, nhập tên và mã mời tùy chọn. Mã trùng có thông báo để sửa; tạo thành công mở chi tiết lớp, sao chép mã mời rồi giao bài đầu tiên. Học sinh dùng mã để tham gia. Chọn bài chưa giao, đặt hạn nộp tương lai khi cần. Theo dõi danh sách thành viên, tiến độ/điểm và tải CSV trong lớp; kiểm tra trạng thái lỗi tải thay vì hiểu là lớp trống.

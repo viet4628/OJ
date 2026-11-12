@@ -16,6 +16,7 @@ import { createZip, downloadBlob, parseZip, pairTestcases } from '../../../lib/z
 import Markdown from '../../../components/Markdown';
 import { STARTER_CODES, SUPPORTED_LANGUAGES, type SupportedLanguage } from '../../../constants/languages';
 import { useEscapeKey } from '../../../lib/useEscapeKey';
+import { slugifyVietnamese } from '../../../lib/slug';
 
 const RichTextEditor = lazy(() => import('../../../components/RichTextEditor'));
 const ProblemStatementEditor = lazy(() => import('../../../components/RichTextEditor').then(module => ({ default: module.ProblemStatementEditor })));
@@ -90,17 +91,6 @@ interface AdminProblemsTabProps {
   /** Teachers manage only problems they created; admins manage all. */
   userId: string;
   isAdmin?: boolean;
-}
-
-function slugifyVietnamese(str: string): string {
-  return str
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[đĐ]/g, 'd')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-');
 }
 
 export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin = false }: AdminProblemsTabProps) {

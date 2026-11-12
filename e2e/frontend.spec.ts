@@ -254,3 +254,25 @@ test('Trang đầu tải độc lập với editor và portal, ghi số đo trì
     ...metrics, note: 'Short synthetic interaction sample, not field INP or a before/after LCP comparison.',
   }, null, 2));
 });
+
+test('Học sinh theo lộ trình: thẻ tiến độ, trang lộ trình và bài tiếp theo', async ({ page }) => {
+  const track = { id: 'track-1', slug: 'nhap-mon-lap-trinh', title: 'Nhập môn lập trình', description: 'Bắt đầu từ đây',
+    sort_order: 1, is_public: true, created_by: null,
+    learning_track_problems: [{ sort_order: 0, problems: { id: problem.id, slug: problem.slug, title: problem.title, difficulty: problem.difficulty } },
+      { sort_order: 1, problems: null }] };
+  await page.route('**/rest/v1/learning_tracks?**', route => {
+    const object = route.request().headers().accept?.includes('vnd.pgrst.object');
+    return route.fulfill({ json: object ? track : [track] });
+  });
+  await page.goto('/learn');
+  await expect(page.getByRole('heading', { name: 'Lộ trình', exact: true })).toBeVisible();
+  const card = page.getByRole('link', { name: /Nhập môn lập trình/ });
+  await expect(card).toContainText('0/1 bài');
+  await expect(card).toContainText(`Tiếp theo: ${problem.title}`);
+  await card.click();
+  await expect(page).toHaveURL('/learn/nhap-mon-lap-trinh');
+  await expect(page.getByRole('heading', { name: 'Nhập môn lập trình' })).toBeVisible();
+  await expect(page.getByRole('progressbar', { name: 'Tiến độ Nhập môn lập trình' })).toHaveAttribute('aria-valuenow', '0');
+  await page.getByRole('link', { name: `Làm bài tiếp theo: ${problem.title}` }).click();
+  await expect(page).toHaveURL(`/problems/${problem.slug}`);
+});
