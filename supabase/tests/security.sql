@@ -62,7 +62,7 @@ SELECT pg_temp.expect_error($q$INSERT INTO submissions(user_id,problem_id,langua
 SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000002',false);
 SELECT pg_temp.assert_true(has_user_permission('testcases.manage'), 'teacher has testcase permission');
 SELECT pg_temp.assert_true(NOT has_user_permission('users.manage') AND NOT has_user_permission('announcements.manage'), 'teacher defaults minimal');
-SELECT pg_temp.assert_true((SELECT count(*)>0 FROM testcases), 'teacher can manage testcase');
+SELECT pg_temp.assert_true((SELECT count(*)=0 FROM testcases), 'teacher cannot read testcases of problems they did not create');
 SELECT pg_temp.expect_error($q$INSERT INTO testcases(problem_id,input_path,output_path,input_content,output_content)
  VALUES ('10000000-0000-0000-0000-000000000001','inline','inline','1','1')$q$, 'testcase insert must use save_problem_bundle');
 SELECT pg_temp.expect_error($q$UPDATE testcases SET output_content='forged'$q$, 'testcase edit must use save_problem_bundle');
@@ -73,6 +73,7 @@ SELECT save_problem_bundle(NULL,
  '{"slug":"starter-code-test","title":"Starter","description":"Public statement","difficulty":"Easy","time_limit_ms":1000,"memory_limit_mb":256,"is_public":true,"starter_codes":{"cpp":"// public template"}}',
  '[{"input_content":"1","output_content":"1","score":100,"is_sample":false}]', 'Private reference explanation');
 SELECT pg_temp.assert_true((SELECT starter_codes->>'cpp' = '// public template' FROM problems WHERE slug='starter-code-test'), 'bundle persists public starter code');
+SELECT pg_temp.assert_true((SELECT count(*)=1 FROM testcases t JOIN problems p ON p.id=t.problem_id WHERE p.slug='starter-code-test'), 'teacher reads testcases of own problem');
 SELECT save_problem_bundle((SELECT id FROM problems WHERE slug='starter-code-test'),
  '{"slug":"starter-code-test","title":"Starter","description":"Public statement","difficulty":"Easy","time_limit_ms":1000,"memory_limit_mb":256,"is_public":true}',
  '[{"input_content":"1","output_content":"1","score":100,"is_sample":false}]', 'Private reference explanation');

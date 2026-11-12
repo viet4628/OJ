@@ -38,6 +38,6 @@ Sau nâng cấp, xác nhận REST/RPC, quyền anon/student/teacher/admin và ch
 
 ## Quyền và pipeline
 
-RLS/RPC là lớp quyết định cuối cùng, kể cả client gọi REST trực tiếp. Giáo viên có quyền quản lý đề/test/contest và xem bài nộp mặc định; admin bypass theo quy tắc hiện có. Demote giáo viên xóa quyền được cấp. Contest còn kiểm tra người tạo, không chỉ quyền `contests.manage` toàn cục.
+RLS/RPC là lớp quyết định cuối cùng, kể cả client gọi REST trực tiếp. Giáo viên có quyền quản lý đề/test/contest và xem bài nộp mặc định; admin bypass theo quy tắc hiện có. Demote giáo viên xóa quyền được cấp. Contest và đề còn kiểm tra người tạo (`can_manage_contest`, `can_manage_problem`), không chỉ quyền toàn cục; testcase ẩn chỉ chủ đề và admin đọc được.
 
 Service role chỉ dùng server-side. `claim_submission` nguyên tử từ PENDING sang JUDGING; bài chạy thử có `is_run=true`, không cộng rank/lịch sử chính thức. Membership/deadline, thời gian contest, quota và tính toàn vẹn verdict đều kiểm tra ở DB. Chi tiết ownership/legacy owner: [contest ownership](contest-ownership.md).

@@ -86,6 +86,9 @@ const POPULAR_TAGS = [
 interface AdminProblemsTabProps {
   mode: 'list' | 'create';
   onModeChange: (m: 'list' | 'create') => void;
+  /** Teachers manage only problems they created; admins manage all. */
+  userId: string;
+  isAdmin?: boolean;
 }
 
 function slugifyVietnamese(str: string): string {
@@ -99,7 +102,7 @@ function slugifyVietnamese(str: string): string {
     .replace(/\s+/g, '-');
 }
 
-export default function AdminProblemsTab({ mode, onModeChange }: AdminProblemsTabProps) {
+export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin = false }: AdminProblemsTabProps) {
   const [problems, setProblems] = useState<Problem[]>([]);
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -167,8 +170,8 @@ export default function AdminProblemsTab({ mode, onModeChange }: AdminProblemsTa
   const fetchProblems = async () => {
     setLoading(true);
     try {
-      const data = await getAllProblems();
-      setProblems(data);
+      const data = await getAllProblems(isAdmin ? undefined : userId);
+      setProblems(data.filter((p) => isAdmin || p.created_by === userId));
       const { data: tcRows } = await supabase.from('testcases').select('problem_id');
       if (tcRows) {
         const counts: Record<string, number> = {};
@@ -186,7 +189,7 @@ export default function AdminProblemsTab({ mode, onModeChange }: AdminProblemsTa
 
   useEffect(() => {
     fetchProblems();
-  }, []);
+  }, [userId, isAdmin]);
 
   const handleTitleChange = (val: string) => {
     setProblemForm((prev) => ({

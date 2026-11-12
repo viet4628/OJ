@@ -1334,7 +1334,7 @@ CREATE OR REPLACE FUNCTION public.get_problem_editorial(p_problem_id UUID)
 RETURNS TEXT LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public AS $$
 BEGIN
   IF auth.uid() IS NULL THEN RETURN NULL; END IF;
-  IF NOT public.has_user_permission('problems.manage') AND (
+  IF NOT public.can_manage_problem(p_problem_id) AND (
     NOT public.can_read_problem(p_problem_id)
     OR NOT EXISTS (SELECT 1 FROM public.submissions WHERE user_id = auth.uid() AND problem_id = p_problem_id AND status = 'ACCEPTED' AND NOT is_run)
     OR EXISTS (SELECT 1 FROM public.contest_problems cp JOIN public.contests c ON c.id = cp.contest_id
@@ -1379,6 +1379,7 @@ BEGIN
   IF p_problem_id IS NOT NULL THEN
     PERFORM 1 FROM public.problems WHERE id = p_problem_id FOR UPDATE;
     IF NOT FOUND THEN RAISE EXCEPTION 'Bài tập không tồn tại'; END IF;
+    IF NOT public.can_manage_problem(p_problem_id) THEN RAISE EXCEPTION 'Bạn chỉ sửa được đề do mình tạo'; END IF;
     IF EXISTS (SELECT 1 FROM public.submissions WHERE problem_id = p_problem_id AND status IN ('PENDING','JUDGING')) THEN
       RAISE EXCEPTION 'Hãy đợi các bài đang chấm hoàn tất trước khi sửa đề';
     END IF;
@@ -1568,7 +1569,7 @@ BEGIN
   IF NEW.is_validation AND NOT NEW.is_run THEN RAISE EXCEPTION 'Kiểm định phải được đánh dấu chạy thử'; END IF;
   IF NEW.is_run THEN
     IF NEW.is_validation THEN
-      IF NOT public.has_user_permission('problems.manage') OR NOT public.has_user_permission('testcases.manage') OR NEW.details <> '[]'::jsonb THEN
+      IF NOT public.can_manage_problem(NEW.problem_id) OR NOT public.has_user_permission('testcases.manage') OR NEW.details <> '[]'::jsonb THEN
         RAISE EXCEPTION 'Kiểm định không hợp lệ';
       END IF;
     ELSIF jsonb_typeof(NEW.details) IS DISTINCT FROM 'object'
@@ -1867,6 +1868,20 @@ RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS
   END;
 $$;
 
+-- Problem ownership mirrors contests: teachers manage (read testcases, edit,
+-- validate, delete) only problems they created; admins manage all, including
+-- legacy problems without a creator.
+CREATE OR REPLACE FUNCTION public.can_manage_problem(p_problem_id UUID)
+RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT public.has_user_permission('problems.manage') AND EXISTS (
+    SELECT 1 FROM public.problems p WHERE p.id=p_problem_id AND (
+      p.created_by=auth.uid() OR EXISTS(SELECT 1 FROM public.profiles WHERE id=auth.uid() AND role='admin')
+    )
+  );
+$$;
+REVOKE ALL ON FUNCTION public.can_manage_problem(UUID) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.can_manage_problem(UUID) TO anon, authenticated, service_role;
+
 CREATE OR REPLACE FUNCTION public.is_classroom_member(p_classroom_id UUID)
 RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   SELECT public.is_active_user(auth.uid()) AND EXISTS (SELECT 1 FROM public.classroom_members
@@ -1899,7 +1914,7 @@ $$;
 CREATE OR REPLACE FUNCTION public.can_read_problem(p_problem_id UUID)
 RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   SELECT (auth.uid() IS NULL OR public.is_active_user(auth.uid())) AND EXISTS (SELECT 1 FROM public.problems p WHERE p.id = p_problem_id AND (
-    p.is_public OR public.has_user_permission('problems.manage')
+    p.is_public OR public.can_manage_problem(p.id)
     OR EXISTS (SELECT 1 FROM public.contest_problems cp JOIN public.contests c ON c.id = cp.contest_id
       WHERE cp.problem_id = p.id AND public.can_enter_contest(c.id) AND now() >= c.start_time)
     OR EXISTS (SELECT 1 FROM public.classroom_problems cp JOIN public.classrooms c ON c.id = cp.classroom_id
@@ -1953,7 +1968,7 @@ CREATE TABLE IF NOT EXISTS public.problem_validations (
 );
 ALTER TABLE public.problem_validations ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Staff view validation" ON public.problem_validations;
-CREATE POLICY "Staff view validation" ON public.problem_validations FOR SELECT USING(public.has_user_permission('problems.manage'));
+CREATE POLICY "Staff view validation" ON public.problem_validations FOR SELECT USING(public.can_manage_problem(problem_id));
 REVOKE ALL ON public.problem_validations FROM anon, authenticated;
 GRANT SELECT ON public.problem_validations TO authenticated;
 GRANT ALL ON public.problem_validations TO service_role;
@@ -1962,7 +1977,7 @@ CREATE OR REPLACE FUNCTION public.validate_problem_solution(p_problem_id UUID, p
 RETURNS UUID LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE v_id UUID;
 BEGIN
-  IF auth.uid() IS NULL OR NOT public.has_user_permission('problems.manage') OR NOT public.has_user_permission('testcases.manage') THEN
+  IF auth.uid() IS NULL OR NOT public.can_manage_problem(p_problem_id) OR NOT public.has_user_permission('testcases.manage') THEN
     RAISE EXCEPTION 'Bạn không có quyền kiểm định lời giải';
   END IF;
   PERFORM 1 FROM public.problems WHERE id=p_problem_id FOR UPDATE;
@@ -2010,7 +2025,8 @@ CREATE POLICY "Contest owners delete" ON public.contests FOR DELETE USING(public
 
 DROP POLICY IF EXISTS "Teachers and admins can manage contest problems" ON public.contest_problems;
 CREATE POLICY "Teachers and admins can manage contest problems" ON public.contest_problems FOR ALL
-  USING(public.can_manage_contest(contest_id)) WITH CHECK(public.can_manage_contest(contest_id));
+  USING(public.can_manage_contest(contest_id)) WITH CHECK(public.can_manage_contest(contest_id) AND EXISTS(
+    SELECT 1 FROM public.problems p WHERE p.id=problem_id AND (p.is_public OR public.can_manage_problem(p.id))));
 DROP POLICY IF EXISTS "Contest problems viewable with contest" ON public.contest_problems;
 CREATE POLICY "Contest problems viewable with contest" ON public.contest_problems FOR SELECT USING (
   public.can_manage_contest(contest_id) OR EXISTS (
@@ -2083,16 +2099,11 @@ BEGIN
   IF auth.uid() IS NOT NULL AND EXISTS (
     SELECT 1 FROM public.contest_problems WHERE problem_id=p_problem_id AND NOT public.can_manage_contest(contest_id)
   ) THEN RAISE EXCEPTION 'Không thể xóa đề đang được dùng trong kỳ thi bạn không quản lý'; END IF;
-  -- Kiểm tra quyền: admin, quyền problems.manage, hoặc chính người tạo bài
-  SELECT (
-    auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin')
-    OR public.has_user_permission('problems.manage')
-    OR created_by = auth.uid()
-  ) INTO v_allowed
-  FROM public.problems WHERE id = p_problem_id;
+  -- Kiểm tra quyền: admin hoặc người tạo bài có quyền problems.manage
+  v_allowed := public.can_manage_problem(p_problem_id);
 
   IF v_allowed IS NOT TRUE THEN
-    RAISE EXCEPTION 'Bạn không có quyền xóa bài tập này (cần quyền problems.manage hoặc là người tạo bài)';
+    RAISE EXCEPTION 'Bạn chỉ xóa được bài tập do mình tạo';
   END IF;
 
   -- Xóa sạch các bảng liên quan để tránh lỗi khóa ngoại
@@ -2365,6 +2376,25 @@ DO $$ BEGIN
 END $$;
 REVOKE INSERT, UPDATE, DELETE ON public.testcases FROM anon, authenticated;
 REVOKE INSERT, UPDATE ON public.problems FROM anon, authenticated;
+
+-- Hidden testcases, reference explanations and deletion follow problem ownership.
+DROP POLICY IF EXISTS "Testcases accessible by admins and teachers" ON public.testcases;
+DROP POLICY IF EXISTS "Testcases readable by problem managers" ON public.testcases;
+CREATE POLICY "Testcases readable by problem managers" ON public.testcases FOR SELECT
+  USING (public.has_user_permission('testcases.manage') AND public.can_manage_problem(problem_id));
+DROP POLICY IF EXISTS "Staff manage editorials" ON public.problem_editorials;
+CREATE POLICY "Staff manage editorials" ON public.problem_editorials FOR ALL
+  USING (public.can_manage_problem(problem_id)) WITH CHECK (public.can_manage_problem(problem_id));
+DROP POLICY IF EXISTS "Teachers and admins can delete problems" ON public.problems;
+CREATE POLICY "Teachers and admins can delete problems" ON public.problems FOR DELETE
+  USING (public.can_manage_problem(id));
+DROP POLICY IF EXISTS "Teachers and admins can manage classroom problems" ON public.classroom_problems;
+CREATE POLICY "Teachers and admins can manage classroom problems" ON public.classroom_problems FOR ALL
+  USING (auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin')
+    OR EXISTS (SELECT 1 FROM public.classrooms c WHERE c.id = classroom_problems.classroom_id AND c.teacher_id = auth.uid()))
+  WITH CHECK ((auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin')
+    OR EXISTS (SELECT 1 FROM public.classrooms c WHERE c.id = classroom_problems.classroom_id AND c.teacher_id = auth.uid()))
+    AND EXISTS (SELECT 1 FROM public.problems p WHERE p.id = problem_id AND (p.is_public OR public.can_manage_problem(p.id))));
 
 NOTIFY pgrst, 'reload schema';
 COMMIT;

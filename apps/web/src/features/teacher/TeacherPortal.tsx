@@ -213,6 +213,8 @@ export default function TeacherPortal({ user, onOpenAuth }: TeacherPortalProps) 
           <AdminProblemsTab
             mode={problemMode}
             onModeChange={(m) => setProblemMode(m)}
+            userId={user.id}
+            isAdmin={user.role === 'admin'}
           />
         )}
         {activeTab === 'contests' && can('contests.manage') && <AdminContestsTab userId={user.id} isAdmin={user.role === 'admin'} />}

@@ -12,6 +12,7 @@ export interface Problem {
   difficulty: 'Easy' | 'Medium' | 'Hard';
   tags: string[];
   is_public: boolean;
+  created_by?: string | null;
   created_at: string;
 }
 

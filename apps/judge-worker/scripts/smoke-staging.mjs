@@ -106,6 +106,8 @@ try {
     console.log('PASS staging authenticated Realtime subscription and INSERT delivery');
   } finally { await student.removeChannel(channel); }
   must(await admin.from('profiles').update({ role: 'teacher' }).eq('id', user.id));
+  // Teachers validate only problems they own.
+  must(await admin.from('problems').update({ created_by: user.id }).eq('id', problem.id));
   const validationId = must(await student.rpc('validate_problem_solution', { p_problem_id: problem.id, p_language: 'cpp', p_code: ab }));
   const validationResult = await result(validationId);
   assert.equal(validationResult.status, 'ACCEPTED');

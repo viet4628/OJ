@@ -80,7 +80,7 @@ try {
     INSERT INTO auth.users(id,email) VALUES ('00000000-0000-0000-0000-000000000001','local@test.local'),('00000000-0000-0000-0000-000000000002','engine@test.local'),('00000000-0000-0000-0000-000000000003','teacher@test.local'),('00000000-0000-0000-0000-000000000004','admin@test.local');
     UPDATE profiles SET role='teacher' WHERE id='00000000-0000-0000-0000-000000000003';
     UPDATE profiles SET role='admin' WHERE id='00000000-0000-0000-0000-000000000004';
-    INSERT INTO problems(id,slug,title,description,time_limit_ms) VALUES ('10000000-0000-0000-0000-000000000001','pilot-ab','A+B','Add two integers',400);
+    INSERT INTO problems(id,slug,title,description,time_limit_ms,created_by) VALUES ('10000000-0000-0000-0000-000000000001','pilot-ab','A+B','Add two integers',400,'00000000-0000-0000-0000-000000000003');
     INSERT INTO testcases(problem_id,input_path,output_path,input_content,output_content,score) VALUES
       ('10000000-0000-0000-0000-000000000001','inline','inline','3 4','7',20),
       ('10000000-0000-0000-0000-000000000001','inline','inline','-2 10','8',80);

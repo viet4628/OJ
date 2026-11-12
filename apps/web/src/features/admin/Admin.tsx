@@ -189,6 +189,8 @@ export default function Admin({ userId }: AdminProps) {
           <AdminProblemsTab
             mode={problemMode}
             onModeChange={handleProblemModeChange}
+            userId={myUserId!}
+            isAdmin
           />
         )}
         {activeTab === 'contests' && <AdminContestsTab userId={myUserId!} isAdmin />}

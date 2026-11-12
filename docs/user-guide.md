@@ -20,6 +20,8 @@ Trong contest, đăng ký/chờ duyệt nếu được yêu cầu. Workspace có
 
 ## Giáo viên: soạn đề
 
+Mỗi giáo viên chỉ thấy và sửa đề do mình tạo trong ngân hàng đề; testcase ẩn và lời giải tham khảo chỉ chủ đề và admin xem được. Muốn dùng đề của người khác trong lớp/contest thì đề đó phải công khai. Chi tiết: [quyền theo người tạo](contest-ownership.md).
+
 1. Trong **Danh sách bài tập**, chọn **Soạn bài mới** hoặc sửa bài đã có. Nhập tên/slug, độ khó, thời gian, bộ nhớ, chủ đề và phạm vi công khai.
 2. Khung nội dung chia sẵn **Mô tả đề bài**, **Dữ liệu vào**, **Dữ liệu ra**, **Ràng buộc**. Một toolbar chung định dạng phần đang chọn: tiêu đề, đậm/nghiêng, chỉ số trên/dưới, danh sách, trích dẫn, mã, bảng, công thức và hoàn tác/làm lại.
 3. Bôi đen chữ rồi bấm **x²** hoặc **x₂** để đặt chỉ số. Với biểu thức toán, bấm **Σ**, chọn mẫu/sửa giá trị và xem trước; bấm công thức đã có để sửa.

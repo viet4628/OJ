@@ -5,8 +5,17 @@
 - Giáo viên/người có `contests.manage` quản lý contest có `created_by` bằng ID tài khoản của mình. Super admin vẫn quản lý toàn hệ thống theo RBAC của dự án.
 - Tạo contest ghi người tạo từ phiên đăng nhập; DB cũng có default `auth.uid()`. Không thể giả mạo chủ khi tạo hoặc tự chuyển/gỡ chủ bằng update. Admin có thể chuyển chủ khi đã xác định đúng tài khoản.
 - Quy tắc áp dụng cho sửa/xóa contest, thêm/bớt/sắp bài và điểm OI, duyệt đăng ký, chấm lại bài nộp trong contest và quyền xem rank chưa freeze. `problems.manage` không được dùng để chấm lại contest người khác.
-- Xóa đề bằng REST hoặc `delete_problem` bị chặn nếu đề đang được dùng trong contest không thuộc quyền quản lý, tránh xóa gián tiếp danh sách bài bằng cascade. Quyền sửa nội dung ngân hàng đề vẫn theo RBAC hiện có.
+- Xóa đề bằng REST hoặc `delete_problem` bị chặn nếu đề đang được dùng trong contest không thuộc quyền quản lý, tránh xóa gián tiếp danh sách bài bằng cascade. Đề cũng theo người tạo, xem mục dưới.
 - Người khác vẫn xem/tham gia contest công khai hoặc contest đã được duyệt theo quy tắc học sinh; quyền `contests.manage` toàn cục không còn cho vào contest riêng tư của người khác.
+
+## Đề và testcase theo người tạo (13/11/2026)
+
+- `can_manage_problem(id)`: có `problems.manage` và là người tạo đề (`created_by`), hoặc là admin. Chỉ người này đọc testcase ẩn (cần thêm `testcases.manage`), đọc/sửa lời giải tham khảo, xem kiểm định, lưu đề (`save_problem_bundle`), kiểm định lời giải và xóa đề.
+- Đề riêng tư chỉ người quản lý đề đọc được, ngoài học sinh của contest/lớp có đề đó. Đề công khai ai cũng đọc đề bài, nhưng testcase ẩn vẫn chỉ chủ đề và admin đọc.
+- Chỉ gắn được đề công khai hoặc đề mình quản lý vào contest/lớp của mình; chặn cách gắn đề riêng của người khác vào contest mình rồi đọc qua quyền thí sinh. Liên kết cũ đã có không bị xóa.
+- Tab "Danh Sách Bài Tập" của giáo viên query `created_by=<mình>` và lọc lại phía client; admin thấy mọi đề.
+- Đề cũ `created_by IS NULL` (seed, tạo bằng service role) chỉ admin quản lý. Không tự gán chủ; admin xác minh rồi cập nhật `created_by`.
+- Migration: `supabase/migrations/20261113_problem_ownership.sql` (chạy sau `20261113_problem_write_path.sql`). Kiểm tra: `supabase/tests/problem-ownership.sql`.
 
 ## Giao diện và API
 

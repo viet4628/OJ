@@ -6,7 +6,7 @@ const user = { id: teacherId, email: 'teacher@test.local', role: 'authenticated'
 const jwt = `${Buffer.from('{"alg":"HS256"}').toString('base64url')}.${Buffer.from(JSON.stringify({ sub: teacherId, role: 'authenticated', exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url')}.test`;
 
 async function teacherWorkspace(page: import('@playwright/test').Page, options: { conflict?: boolean; autoConflict?: boolean; listError?: boolean; pending?: Promise<void>; assigned?: boolean; registration?: boolean; tiedRanks?: boolean; admin?: boolean; blocked?: boolean; validated?: boolean } = {}) {
-  const state = { posts: [] as Record<string, string>[], classroom: null as any, assignments: [] as any[], savedProblem: { ...problem } as Record<string, any>, editorial: 'Lời giải đã lưu', starterCodes: {} as Record<string, string>, registration: 'PENDING', suspended: false };
+  const state = { posts: [] as Record<string, string>[], classroom: null as any, assignments: [] as any[], savedProblem: { ...problem, created_by: teacherId } as Record<string, any>, editorial: 'Lời giải đã lưu', starterCodes: {} as Record<string, string>, registration: 'PENDING', suspended: false };
   if (options.assigned) {
     state.classroom = { id: '20000000-0000-0000-0000-000000000001', name: 'Lớp có bài', code: 'LOP11A', teacher_id: teacherId, is_archived: false, teacher: { full_name: 'Teacher' } };
     state.assignments = [{ classroom_id: state.classroom.id, problem_id: problem.id, problem, deadline: null }];
@@ -333,6 +333,40 @@ test('Giáo viên chỉ quản lý contest do mình tạo, kể cả khi API tr�
   await expect(page.getByRole('row').filter({ hasText: 'Contest cũ chưa có chủ' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Chỉnh sửa kỳ thi', exact: true })).toHaveCount(1);
   expect(ownerFilter).toBe(`eq.${teacherId}`);
+});
+
+test('Giáo viên chỉ quản lý đề do mình tạo, kể cả khi API trả đề công khai của người khác', async ({ page }) => {
+  await teacherWorkspace(page);
+  let ownerFilter = '';
+  await page.route('**/rest/v1/problems?**', route => {
+    ownerFilter = new URL(route.request().url()).searchParams.get('created_by') || '';
+    return route.fulfill({ json: [
+      { ...problem, id: 'my-problem', slug: 'my-problem', title: 'Đề của tôi', created_by: teacherId },
+      { ...problem, id: 'their-problem', slug: 'their-problem', title: 'Đề của giáo viên khác', created_by: 'other-teacher' },
+      { ...problem, id: 'legacy-problem', slug: 'legacy-problem', title: 'Đề cũ chưa có chủ', created_by: null },
+    ] });
+  });
+  await page.getByRole('button', { name: 'Danh Sách Bài Tập', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Đề của tôi', exact: true })).toBeVisible();
+  await expect(page.getByText('Đề của giáo viên khác')).toHaveCount(0);
+  await expect(page.getByText('Đề cũ chưa có chủ')).toHaveCount(0);
+  expect(ownerFilter).toBe(`eq.${teacherId}`);
+});
+
+test('Admin quản lý được đề người khác và đề cũ chưa có chủ', async ({ page }) => {
+  await teacherWorkspace(page, { admin: true });
+  let ownerFilter: string | null = null;
+  await page.route('**/rest/v1/problems?**', route => {
+    ownerFilter = new URL(route.request().url()).searchParams.get('created_by');
+    return route.fulfill({ json: [
+      { ...problem, id: 'their-problem', slug: 'their-problem', title: 'Đề của giáo viên khác', created_by: 'other-teacher' },
+      { ...problem, id: 'legacy-problem', slug: 'legacy-problem', title: 'Đề cũ chưa có chủ', created_by: null },
+    ] });
+  });
+  await page.goto('/admin/problems');
+  await expect(page.getByRole('button', { name: 'Đề của giáo viên khác', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Đề cũ chưa có chủ', exact: true })).toBeVisible();
+  expect(ownerFilter).toBeNull();
 });
 
 test('Admin quản lý được contest người khác và contest cũ chưa có chủ', async ({ page }) => {

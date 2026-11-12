@@ -168,11 +168,14 @@ export async function getMyAttemptedProblemIds(): Promise<string[]> {
   if (error) return [];
   return [...new Set((data || []).map((s) => s.problem_id as string))];
 }
-export async function getAllProblems(): Promise<Problem[]> {
-  const { data, error } = await supabase
+/** All readable problems, or only those created by `ownerId` (problem management). */
+export async function getAllProblems(ownerId?: string): Promise<Problem[]> {
+  let query = supabase
     .from('problems')
     .select('*')
     .order('created_at', { ascending: false });
+  if (ownerId) query = query.eq('created_by', ownerId);
+  const { data, error } = await query;
   if (error) throw error;
   return (data || []) as Problem[];
 }

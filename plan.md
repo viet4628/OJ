@@ -127,7 +127,7 @@ Từ đợt rà soát DB và engine. Mỗi việc một commit, kiểm chứng t
 | T3 — trần hàng đợi | Tối đa 20 bài trong RAM; phần dư vẫn PENDING trong DB và quay lại qua poll theo `created_at` |
 | Kiểm thử | Worker test chạy trong một tiến trình (lỗi IPC của trình chạy test khi máy tải nặng); lệnh test engine là `cargo test --workspace` |
 
-Chờ quyết định: quyền giáo viên trên đề/testcase hiện không giới hạn theo người tạo (mọi giáo viên đọc/sửa được testcase ẩn của nhau).
+Quyền đề/testcase theo người tạo (`can_manage_problem`, như contest): giáo viên chỉ đọc testcase ẩn, sửa, kiểm định, xóa đề mình tạo; admin quản lý tất cả; đề cũ không có người tạo chỉ admin quản lý (staging: 7/7 đề). **Cần chạy `supabase/migrations/20261113_problem_ownership.sql` sau migration write-path.** Chi tiết: [docs/contest-ownership.md](docs/contest-ownership.md).
 
 ### Số đo hiện tại và mục tiêu
 
