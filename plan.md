@@ -32,7 +32,9 @@ Lượt health thụ động trước chỉ có 20 mẫu trong khoảng 5 phút;
 
 Lập ngày 25/10/2026; đang triển khai theo phê duyệt. Thực hiện theo thứ tự dưới đây, bổ sung cho các phase pilot hiện có. Giữ một worker/DB, atomic claim, testcase private và sandbox. Không tăng timeout health để che lỗi, không thêm dependency hoặc queue service.
 
-Tiến độ: đã triển khai timeout/đo thời gian và đối chiếu verdict sau lỗi ghi vào worker; đã áp migration phân trang/rank trên staging; web đã tách route, phân trang và theo dõi bài chấm lâu. Rank SQL local 100k submissions giảm khoảng6 lần trong lượt so cùng dữ liệu, kết quả ACM/OI/freeze khớp. Bundle chính giảm khoảng55%. Các gate tải/health dài đang kiểm chứng, chưa đạt capacity hoặc soak24h. Chưa thêm cache archive: số đo đóng gói23–57ms nhỏ hơn nhiều so với tải Storage2–7s; chưa có lý do tăng độ phức tạp cache/version ở bước này.
+Tiến độ: đã triển khai timeout/đo thời gian và đối chiếu verdict sau lỗi ghi vào worker; đã áp migration phân trang/rank trên staging; web đã tách route, phân trang và theo dõi bài chấm lâu. Rank SQL local 100k submissions nhanh hơn khoảng5,7 lần trong lượt so cùng dữ liệu, kết quả ACM/OI/freeze khớp. Bundle chính giảm khoảng55%. Health30 phút đạt; chiến dịch tải dừng lỗi ở mức5 người vòng1 với SYSTEM_ERROR và health mất, nên các vòng tải còn lại và soak24h chưa chạy. Không có kết luận capacity. Chưa thêm cache archive xuyên job: cần tín hiệu version/invalidation đáng tin cậy cho cả blob Storage trước khi bỏ lượt đọc; giữ nhánh hoãn cache đã cho phép trong P2. Median đóng gói25ms nhỏ hơn nhiều so với tải Storage2,68s; cache phần nén đơn thuần ít giá trị, còn cache bỏ lượt tải cần một thay đổi version riêng.
+
+Bản cuối đã qua lượt ngắn15 bài/5 người, 10 testcase Storage64KiB, C++/Python/Rust và TLE: 0 lỗi, p95 hoàn tất40,57s; không so tỷ lệ tăng tốc với lượt trước bị lỗi mạng/restart. Chiến dịch nền đã bắt đầu health30 phút → hai vòng5/10/20 người, mỗi mức10 phút → soak24h nếu mọi bước đạt. `scripts/run-performance-campaign.sh` và heartbeat theo dõi15 phút giữ kết quả tại `docs/reports/performance-campaign-*`; xem bằng chứng và giới hạn mới nhất trong `docs/verification.md`.
 
 ### Cơ sở và mục tiêu đo
 
@@ -84,6 +86,8 @@ Tiến độ: đã triển khai timeout/đo thời gian và đối chiếu verdi
 - Hoàn tất: không mất verdict/claim trùng/bài treo; không có SYSTEM_ERROR do hạ tầng; queue không tăng vô hạn ở tải công bố; RAM/disk không tăng không giới hạn; recovery sau restart đạt. Ghi p95 theo nhóm bài và chọn tải vận hành có biên dự phòng từ số đo thực tế.
 - Chỉ cân nhắc concurrency giới hạn trong một daemon khi tối ưu chi phí mỗi bài vẫn không đạt nhu cầu. Điều kiện trước: sandbox/accounting toàn cây process theo job, ngân sách CPU/RAM và kiểm chứng isolation/drain/recovery. Giữ tuần tự cho tới khi các điều kiện này đạt; nhiều worker/DB là thiết kế riêng.
 - Kiểm chứng: `npm run test:pilot`, load/soak staging, `node scripts/health.mjs`; cập nhật `docs/verification.md` và `docs/pilot-runbook.md` bằng kết quả đã chạy.
+
+Trạng thái lần chạy 25/10/2026: health30 phút PASS, nhưng vòng `load-5-round-1` thất bại sau khi ghi nhận SYSTEM_ERROR, 237 lỗi health và bốn lần chờ bài chấm quá hạn; cleanup fixture báo lỗi. Runner đã thoát với exit1. Không tiếp tục các stage sau hoặc soak. Trước lần chạy lại cần chẩn đoán sự cố worker/engine và xác minh fixture còn sót theo runbook; không tăng timeout health hoặc bỏ sandbox.
 
 Mỗi bước triển khai thành diff riêng, so với baseline cùng workload. Nếu kết quả không cải thiện hoặc sai verdict/quyền, rollback bước đó; không gộp nâng dependency, thiết kế queue mới hoặc refactor diện rộng vào đợt tối ưu.
 

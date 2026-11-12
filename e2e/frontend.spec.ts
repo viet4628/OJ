@@ -219,3 +219,38 @@ test('Ranklist sắp xếp và phân trang tại DB thay vì tải cả danh sá
   await expect.poll(() => queries.at(-1)?.get('order')).toBe('total_score.desc,user_id.asc');
   await expect(page.getByRole('cell', { name: 'U User 0', exact: true })).toBeVisible();
 });
+
+test('Trang đầu tải độc lập với editor và portal, ghi số đo trình duyệt', async ({ page }) => {
+  const { writeFile } = await import('node:fs/promises');
+  await page.route(/https:\/\/fonts\.(googleapis|gstatic)\.com\//, route => route.abort());
+  const session = await page.context().newCDPSession(page);
+  await session.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  await session.send('Network.enable');
+  await session.send('Network.emulateNetworkConditions', { offline: false, latency: 150, downloadThroughput: 200000, uploadThroughput: 100000 });
+  await page.addInitScript(() => {
+    (window as any).startupMetrics = { lcpMs: null, interactionEventMaxMs: 0 };
+    new PerformanceObserver(list => {
+      const entries = list.getEntries();
+      (window as any).startupMetrics.lcpMs = entries.at(-1)?.startTime;
+    }).observe({ type: 'largest-contentful-paint', buffered: true });
+    new PerformanceObserver(list => {
+      for (const entry of list.getEntries()) if ((entry as any).interactionId) {
+        (window as any).startupMetrics.interactionEventMaxMs = Math.max((window as any).startupMetrics.interactionEventMaxMs, entry.duration);
+      }
+    }).observe({ type: 'event', buffered: true, durationThreshold: 16 } as PerformanceObserverInit);
+  });
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'Nền tảng luyện tập lập trình thi đấu trực tuyến.', exact: true })).toBeVisible();
+  const assets = await page.evaluate(() => performance.getEntriesByType('resource').map(entry => entry.name));
+  expect(assets.some(name => /LocalCodeEditor|RichTextEditor|TeacherPortal|ProblemDetail/.test(name))).toBe(false);
+  await page.getByRole('button', { name: 'Đăng Nhập', exact: true }).first().click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.keyboard.press('Escape');
+  const metrics = await page.evaluate(() => (window as any).startupMetrics);
+  expect(metrics.lcpMs).toBeGreaterThan(0);
+  await writeFile(new URL('../docs/reports/frontend-browser-performance-20261025.json', import.meta.url), JSON.stringify({
+    at: new Date().toISOString(), environment: 'Playwright Chromium, production preview, API fixture, external fonts blocked; preview transport may differ from hosting',
+    cpuThrottle: 4, network: { latencyMs: 150, downloadBytesPerSecond: 200000, uploadBytesPerSecond: 100000 },
+    ...metrics, note: 'Short synthetic interaction sample, not field INP or a before/after LCP comparison.',
+  }, null, 2));
+});

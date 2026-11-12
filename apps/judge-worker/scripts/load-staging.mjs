@@ -50,7 +50,7 @@ const code = {
 const tleCode = { cpp: 'int main(){for(;;){}}', python: 'while True: pass', rust: 'fn main(){loop{std::hint::spin_loop();}}' };
 let problem, cleanupFailed = false, stopped = false, stopReason = null, started = 0, finished = 0, timer, sampling;
 let nextJob = 0, growthSince = 0, previousPending = 0;
-let workerStartedAt, loadStartedAt;
+let workerStartedAt, loadStartedAt, workerMode;
 const stop = reason => { stopped = true; stopReason ||= reason; };
 process.on('SIGTERM', () => stop('SIGTERM'));
 process.on('SIGINT', () => stop('SIGINT'));
@@ -62,6 +62,7 @@ async function sample() {
     Object.assign(snapshot, { ok: response.ok && h.ready === true, ...h });
     if (workerStartedAt && h.startedAt && h.startedAt !== workerStartedAt) stop('worker restarted');
     workerStartedAt = h.startedAt;
+    workerMode = h.mode;
   } catch { snapshot.error = 'Health unavailable'; }
   health.push(snapshot);
   if (started && !snapshot.ok) stop('health');
@@ -79,7 +80,7 @@ async function sample() {
     if (containers.some(row => parseFloat(row.MemPerc) > 80)) stop('memory >80%');
     if (diskAvailableBytes < 2 * 1024 ** 3) stop('disk available <2GiB');
     if (started && pending.count > previousPending) growthSince ||= Date.now();
-    else if (pending.count < previousPending || pending.count === 0) growthSince = 0;
+    else growthSince = 0;
     if (growthSince && Date.now() - growthSince >= 120000) stop('queue growth >=120s');
     previousPending = pending.count;
   } catch { resources.push({ at: new Date().toISOString(), error: 'Resource/queue measurement unavailable' }); }
@@ -131,6 +132,7 @@ try {
       try {
         const { id } = must(await client.from('submissions').insert({ user_id: accounts[index], problem_id: problem.id,
           language, code: expected === 'ACCEPTED' ? code[language] : tleCode[language] }).select('id').single());
+        entry.submissionId = id;
         for (;;) {
           const row = must(await client.from('submissions').select('status,score,created_at,judging_started_at').eq('id', id).single());
           if (!['PENDING', 'JUDGING'].includes(row.status)) {
@@ -154,6 +156,21 @@ finally {
   finished ||= started ? performance.now() : 0;
   clearInterval(timer);
   await sampling;
+  let executionAudit = { available: false };
+  if (loadStartedAt && workerMode === 'engine') {
+    try {
+      const { stdout } = await run('docker', ['logs', '--since', loadStartedAt, 'online-judge-worker-1'], { timeout: 30000, maxBuffer: 64 * 1024 ** 2 });
+      const counts = new Map();
+      for (const line of stdout.split('\n')) {
+        if (!line.startsWith('[EngineTiming] ')) continue;
+        const { submissionId } = JSON.parse(line.slice('[EngineTiming] '.length));
+        counts.set(submissionId, (counts.get(submissionId) || 0) + 1);
+      }
+      const ids = results.map(row => row.submissionId).filter(Boolean);
+      executionAudit = { available: true, submitted: ids.length, uniqueSubmitted: new Set(ids).size,
+        duplicateExecutionIds: ids.filter(id => counts.get(id) > 1), missingExecutionIds: ids.filter(id => !counts.has(id)) };
+    } catch { executionAudit = { available: false, reason: 'Engine execution logs unavailable' }; }
+  }
   // Do not delete a fixture or account while the judge may still be executing it.
   let canClean = true;
   if (problem) {
@@ -180,11 +197,13 @@ finally {
     elapsedSeconds, p50QueueMs: percentile('queueMs', .5), p95QueueMs: percentile('queueMs', .95), p99QueueMs: percentile('queueMs', .99),
     p50FinishMs: percentile('finishMs', .5), p95FinishMs: percentile('finishMs', .95), p99FinishMs: percentile('finishMs', .99),
     throughputPerSecond: elapsedSeconds ? results.length / elapsedSeconds : 0, healthFailures: health.filter(row => !row.ok).length,
-    cleanupFailed, stopped, stopReason, fixtureId: cleanupFailed ? problem?.id : undefined, groups,
+    cleanupFailed, stopped, stopReason, fixtureId: cleanupFailed ? problem?.id : undefined, groups, executionAudit,
     workload: { languages, cases, storage: values.storage, inputBytes, tleEvery, duration, jobTimeout, model: 'closed-loop; one outstanding job per user' },
     runtime: { node: process.version, platform: process.platform, arch: process.arch,
       cpu: cpus()[0]?.model, cpuCount: cpus().length, hostMemoryBytes: totalmem() }, results, health, resources };
   await writeFile(values.output, JSON.stringify(report, null, 2), { mode: 0o600 });
   console.log(JSON.stringify({ ...report, results: undefined, health: undefined, resources: undefined }));
-  if (cleanupFailed || stopped || !results.length || report.failures || report.healthFailures) process.exitCode = 1;
+  if (cleanupFailed || stopped || !results.length || report.failures || report.healthFailures
+    || (workerMode === 'engine' && (!executionAudit.available || executionAudit.uniqueSubmitted !== executionAudit.submitted
+      || executionAudit.duplicateExecutionIds.length || executionAudit.missingExecutionIds.length))) process.exitCode = 1;
 }

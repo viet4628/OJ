@@ -51,6 +51,10 @@ Các cờ: `--languages cpp,python,rust`, `--cases 1..100`, `--storage`, `--inpu
 
 Script ngừng tạo bài khi health lỗi, worker đổi `startedAt`, có SYSTEM_ERROR, RAM container >80%, ổ còn <2GiB hoặc queue tăng kéo dài120s. Các bài đã gửi tiếp tục được chờ; không xóa fixture/tài khoản nếu DB còn PENDING/JUDGING. Nếu `cleanupFailed=true`, dùng fixture ID trong báo cáo để xử lý sau khi xác nhận không còn job đang chạy. File `<output>.progress.json` cập nhật khi lấy mẫu, `<output>.results.jsonl` ghi từng kết quả; `<output>` là báo cáo cuối. Giữ file của mỗi lượt riêng để không trộn kết quả. Không dùng health pass đơn lẻ thay bằng chứng 24 giờ.
 
+Mỗi kết quả mới có `submissionId`; khi dùng engine, báo cáo đối chiếu các ID này với `[EngineTiming]` trong log worker để phát hiện lượt thực thi thiếu/trùng. Không lấy được log, ID không duy nhất hoặc đối chiếu không khớp thì lượt test không đạt. Đối chiếu này bổ sung cho test atomic claim; không thay thế audit toàn bộ sandbox.
+
+`bash scripts/run-performance-campaign.sh` chạy tuần tự health30 phút, hai vòng5/10/20 người (10 phút/mức), rồi soak24h/5 người với workload Storage ở trên. Script dùng `flock` để ngăn hai campaign, cập nhật `performance-campaign-<UTC>.status.json` khi đổi stage và dừng ngay khi một stage lỗi. SIGTERM tới PID trong status được chuyển tới load script để ngừng nhận bài và cleanup. Không chạy load/smoke riêng trong các stage tải. Có thể chạy qua phiên terminal bền vững; nếu tách nền phải giữ log và xác nhận PID còn sống. Soak vẫn cần máy chạy đủ thời gian; status running không phải kết quả đạt.
+
 `benchmark-db.mjs` chỉ dùng PostgreSQL15 tạm, 100 tài khoản/10 bài và 10k/100k submissions tổng hợp; không đọc `.env`. Nó so kết quả ACM/OI/freeze với định nghĩa rank trước tối ưu trong schema rồi lưu execution plan. Số đo SQL local không phải độ trễ API qua mạng. Chỉ cân nhắc thêm index sau khi execution plan chứng minh cần.
 
 ## Trình tự staging platform
