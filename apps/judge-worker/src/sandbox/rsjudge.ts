@@ -168,21 +168,20 @@ export class SandboxEngine {
     const hasTime = await this.timeAvailable();
     const hasTimeout = await this.timeoutAvailable();
     const jobDir = path.dirname(executableOrScriptPath);
-    // Báo cáo usage nằm trong thư mục bài (ghi được trong sandbox) vì usage của
-    // chương trình phải đo bên trong namespace: wait4 ở ngoài chỉ thấy bwrap.
-    const statFile = path.join(jobDir, '.usage-report');
+    // GNU time chạy NGOÀI sandbox, báo cáo nằm cạnh (không bind vào) thư mục bài
+    // nên chương trình không sửa được. `--as-pid-1` cho chương trình là con trực
+    // tiếp của bwrap, nhờ đó usage của nó đi lên tới time qua wait4.
+    const statFile = `${jobDir}.usage`;
     const startedAt = Date.now();
 
     const argv: string[] = [];
     if (hasTimeout)
       argv.push('timeout', '--signal=KILL', String((timeLimitMs + 1500) / 1000));
-    argv.push(this.bwrapPath, ...(await this.bwrapArgs(jobDir)));
+    if (hasTime) argv.push('/usr/bin/time', '-f', '%U %S %M', '-o', statFile);
+    argv.push(this.bwrapPath, ...(await this.bwrapArgs(jobDir)), '--as-pid-1');
     // Apply limits inside the namespace; pass argv as positional arguments.
     const addressLimitKb = language === 'java' ? 4 * 1024 * 1024 : memoryLimitMb * 1024;
-    const inner = hasTime
-      ? ['/usr/bin/time', '-f', '%U %S %M', '-o', statFile, ...toolArgs]
-      : toolArgs;
-    argv.push('/bin/sh', '-c', `ulimit -t ${Math.max(1, Math.ceil(timeLimitMs / 1000))} && ulimit -v ${addressLimitKb} && ulimit -f 1024 && exec "$@"`, 'sandbox', ...inner);
+    argv.push('/bin/sh', '-c', `ulimit -t ${Math.max(1, Math.ceil(timeLimitMs / 1000))} && ulimit -v ${addressLimitKb} && ulimit -f 1024 && exec "$@"`, 'sandbox', ...toolArgs);
 
     const stdoutSink = { text: '', truncated: false };
     const stderrSink = { text: '', truncated: false };

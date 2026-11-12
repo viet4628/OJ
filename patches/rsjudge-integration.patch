@@ -1859,10 +1859,10 @@ index e3fec44..69ea3c2 100644
  pub mod request;
 diff --git a/crates/rsjudge-judger/src/judger/pipeline.rs b/crates/rsjudge-judger/src/judger/pipeline.rs
 new file mode 100644
-index 0000000..9f2e6ae
+index 0000000..3f3b16e
 --- /dev/null
 +++ b/crates/rsjudge-judger/src/judger/pipeline.rs
-@@ -0,0 +1,821 @@
+@@ -0,0 +1,868 @@
 +// SPDX-License-Identifier: Apache-2.0
 +
 +//! The judging pipeline: prepare source, compile, run with resource limits,
@@ -2092,8 +2092,16 @@ index 0000000..9f2e6ae
 +
 +// Only the submission directory is writable; testcase archives and service
 +// credentials are never mounted. Missing/blocked bwrap fails closed.
-+fn sandbox_command(workdir: &Path) -> tokio::process::Command {
-+    let mut cmd = tokio::process::Command::new("/usr/bin/bwrap");
++// `wrapper` (e.g. a usage meter) runs outside the sandbox and starts bwrap.
++fn sandbox_command(workdir: &Path, wrapper: &[String]) -> tokio::process::Command {
++    let mut cmd = match wrapper.split_first() {
++        Some((program, args)) => {
++            let mut cmd = tokio::process::Command::new(program);
++            cmd.args(args).arg("/usr/bin/bwrap");
++            cmd
++        }
++        None => tokio::process::Command::new("/usr/bin/bwrap"),
++    };
 +    cmd.args(["--unshare-all", "--die-with-parent", "--new-session", "--cap-drop", "ALL",
 +        "--ro-bind", "/usr", "/usr", "--dev", "/dev", "--proc", "/proc",
 +        "--tmpfs", "/tmp", "--bind"])
@@ -2291,7 +2299,7 @@ index 0000000..9f2e6ae
 +
 +    let rendered = render_template(cmd_tpl, &resolve_flags(def, None), &prepared.src_path, &prepared.out_path, prepared.workdir.path());
 +
-+    let mut cmd = sandbox_command(prepared.workdir.path());
++    let mut cmd = sandbox_command(prepared.workdir.path(), &[]);
 +    cmd.arg("/bin/sh").arg("-c").arg(&rendered).current_dir(prepared.workdir.path());
 +    cmd.stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped());
 +    clean_env(&mut cmd);
@@ -2359,14 +2367,14 @@ index 0000000..9f2e6ae
 +        Some(argv) => argv.clone(),
 +        None => vec![prepared.out_path.to_string_lossy().into_owned()],
 +    };
-+    // `wait4` on the sandbox only reports the sandbox's own usage: the user
-+    // program lives in a PID namespace, so its CPU time and peak RSS are lost.
-+    // GNU time inside the sandbox measures the program itself.
-+    let report = prepared.workdir.path().join(USAGE_REPORT);
-+    let argv = usage_argv(&report, &user_argv);
-+
-+    let mut cmd = sandbox_command(prepared.workdir.path());
-+    cmd.args(&argv).current_dir(prepared.workdir.path());
++    // GNU time runs OUTSIDE the sandbox and writes next to (not inside) the
++    // bound workdir, so the program cannot forge its usage. `--as-pid-1` makes
++    // the program bwrap's direct child, so its CPU time and peak RSS reach time
++    // through wait4. A meter forked from this daemon would instead report the
++    // daemon's pre-exec RSS (~15MB) as the program's peak.
++    let report = usage_report_path(prepared.workdir.path());
++    let mut cmd = sandbox_command(prepared.workdir.path(), &usage_wrapper(&report));
++    cmd.arg("--as-pid-1").args(&user_argv).current_dir(prepared.workdir.path());
 +    cmd.stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped());
 +    clean_env(&mut cmd);
 +
@@ -2398,11 +2406,11 @@ index 0000000..9f2e6ae
 +        let _ = stdin.write_all(&input).await;
 +    }));
 +
-+    let mut outcome = wait_with_captures(child, started_at)
-+        .await
-+        .map_err(|e| PipelineError(format!("{e}")))?;
-+    // A killed program may not leave a report behind; keep the sandbox usage then.
-+    if let Some((cpu_time, ram_kb)) = parse_usage_report(&report).await {
++    let waited = wait_with_captures(child, started_at).await;
++    let usage = read_usage_report(&report).await;
++    let mut outcome = waited.map_err(|e| PipelineError(format!("{e}")))?;
++    // A killed meter leaves no report: TLE keeps the wall-time fallback.
++    if let Some((cpu_time, ram_kb)) = usage {
 +        outcome.cpu_time = cpu_time;
 +        outcome.ram_kb = ram_kb;
 +    }
@@ -2411,31 +2419,27 @@ index 0000000..9f2e6ae
 +    Ok(outcome)
 +}
 +
-+/// Report file written by the usage wrapper inside the sandbox.
-+const USAGE_REPORT: &str = ".usage-report";
-+/// GNU time, present in the judge image and reachable through the read-only `/usr` bind.
++/// GNU time, outside the sandbox; part of the judge image.
 +const TIME_BIN: &str = "/usr/bin/time";
 +
-+/// Wrap the user command so it reports its own CPU time and peak RSS.
-+fn usage_argv(report: &Path, user_argv: &[String]) -> Vec<String> {
-+    let mut argv = vec![
-+        TIME_BIN.to_owned(),
-+        "-f".to_owned(),
-+        "%U %S %M".to_owned(),
-+        "-o".to_owned(),
-+        report.to_string_lossy().into_owned(),
-+    ];
-+    argv.extend(user_argv.iter().cloned());
-+    argv
++/// Report path beside the workdir: never bound into the sandbox.
++fn usage_report_path(workdir: &Path) -> PathBuf {
++    let mut name = workdir.as_os_str().to_owned();
++    name.push(".usage");
++    PathBuf::from(name)
 +}
 +
-+/// Parse the wrapper report into (CPU time, peak RSS in KiB).
-+async fn parse_usage_report(report: &Path) -> Option<(Duration, u64)> {
-+    let text = tokio::fs::read_to_string(report).await.ok()?;
-+    let line = text
-+        .lines()
-+        .map(str::trim)
-+        .find(|line| line.split_whitespace().count() == 3)?;
++fn usage_wrapper(report: &Path) -> Vec<String> {
++    vec![TIME_BIN.to_owned(), "-f".to_owned(), "%U %S %M".to_owned(), "-o".to_owned(),
++        report.to_string_lossy().into_owned()]
++}
++
++/// Read and remove the report: (CPU time, peak RSS in KiB). The usage line is
++/// the last one; GNU time may first note a non-zero exit or a signal.
++async fn read_usage_report(report: &Path) -> Option<(Duration, u64)> {
++    let text = tokio::fs::read_to_string(report).await.ok();
++    let _ = tokio::fs::remove_file(report).await;
++    let line = text?.lines().map(str::trim).filter(|l| l.split_whitespace().count() == 3).last()?.to_owned();
 +    let mut parts = line.split_whitespace();
 +    let user: f64 = parts.next()?.parse().ok()?;
 +    let system: f64 = parts.next()?.parse().ok()?;
@@ -2662,8 +2666,7 @@ index 0000000..9f2e6ae
 +        )
 +        .await
 +        .unwrap();
-+        // The sandbox hides the program behind a PID namespace, so the usage
-+        // must come from the wrapper inside the sandbox.
++        // The program runs as the sandbox's PID 1, so the meter sees its usage.
 +        assert!(
 +            outcome.cpu_time >= Duration::from_millis(300),
 +            "cpu time must measure the program itself: {:?}",
@@ -2671,6 +2674,50 @@ index 0000000..9f2e6ae
 +        );
 +        assert!(outcome.ram_kb > 0, "peak RSS must be reported");
 +        assert_eq!(outcome.exit_code, 0);
++    }
++
++    #[tokio::test]
++    async fn peak_memory_excludes_the_judge_process() {
++        // A tiny program must not inherit this daemon's RSS (16MB limits exist).
++        let def = cpp_def();
++        let prepared = prepare_source("C++", &def, b"int main(){}", None).await.unwrap();
++        assert!(compile(&prepared, &def).await.unwrap().success());
++        let outcome = run_once(&prepared, &def, b"", Duration::from_secs(2), Some(16 * 1024 * 1024))
++            .await
++            .unwrap();
++        assert!(outcome.ram_kb > 0 && outcome.ram_kb < 8 * 1024, "{outcome:?}");
++        assert!(matches!(verdict_of(&outcome, Some(16 * 1024 * 1024)), JudgeResult::Accepted));
++    }
++
++    #[tokio::test]
++    async fn usage_cannot_be_forged_from_inside_the_sandbox() {
++        // The old wrapper read a report file the program could overwrite.
++        let def = cpp_def();
++        let src = br#"#include <cstdio>
++#include <ctime>
++#include <unistd.h>
++int main(){volatile unsigned long x=0; while((double)clock()/CLOCKS_PER_SEC<1.2) x++;
++unlink(".usage-report"); FILE*f=fopen(".usage-report","w"); if(f){fputs("0.00 0.00 1000\n",f); fclose(f);}}"#;
++        let prepared = prepare_source("C++", &def, src, None).await.unwrap();
++        assert!(compile(&prepared, &def).await.unwrap().success());
++        let outcome = run_once(&prepared, &def, b"", Duration::from_secs(3), None).await.unwrap();
++        assert!(outcome.cpu_time >= Duration::from_millis(1100), "{outcome:?}");
++    }
++
++    #[tokio::test]
++    async fn crashes_of_the_pid_1_program_are_runtime_errors() {
++        // PID 1 ignores self-sent default signals; crashes must still fail.
++        let def = cpp_def();
++        for src in [
++            "#include <cstdlib>\nint main(){std::abort();}",
++            "int main(){volatile int *p = 0; *p = 1;}",
++            "#include <stdexcept>\nint main(){throw std::runtime_error(\"x\");}",
++        ] {
++            let prepared = prepare_source("C++", &def, src.as_bytes(), None).await.unwrap();
++            assert!(compile(&prepared, &def).await.unwrap().success());
++            let outcome = run_once(&prepared, &def, b"", Duration::from_secs(2), None).await.unwrap();
++            assert!(matches!(verdict_of(&outcome, None), JudgeResult::RuntimeError), "{src}: {outcome:?}");
++        }
 +    }
 +
 +    #[tokio::test]

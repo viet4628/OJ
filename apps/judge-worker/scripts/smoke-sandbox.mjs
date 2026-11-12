@@ -183,6 +183,37 @@ await inTempDir(async (dir) => {
   const r = await runCase(engine, 'python', src, '', '');
   record('memory allocation is prevented', r.status !== 'ACCEPTED' && /MemoryError/.test(r.stderr), JSON.stringify(r));
 });
+// Usage comes from outside the sandbox: a forged report inside it is ignored.
+await inTempDir(async (dir) => {
+  const src = path.join(dir, 'forge.py');
+  await fs.writeFile(src, `import os, time
+t = time.process_time()
+while time.process_time() - t < 1.0: pass
+for name in (".usage-report", os.path.basename(os.getcwd()) + ".usage"):
+    try:
+        if os.path.exists(name): os.unlink(name)
+        open(name, "w").write("0.00 0.00 1000\\n")
+    except OSError:
+        pass`);
+  const r = await runCase(engine, 'python', src, '', '', 3000);
+  record('usage report cannot be forged', r.status === 'ACCEPTED' && r.timeMs >= 900, `status=${r.status} timeMs=${r.timeMs}`);
+});
+// RLIMIT_CPU is whole seconds: 1.2s CPU under a 1500ms limit is still AC.
+await inTempDir(async (dir) => {
+  const src = path.join(dir, 'spin.cpp');
+  const bin = path.join(dir, 'spin');
+  await fs.writeFile(src, '#include <ctime>\nint main(){volatile unsigned long x=0; while((double)clock()/CLOCKS_PER_SEC<1.2) x++;}');
+  const r = await runCase(engine, 'cpp', src, bin, '', 1500);
+  record('fractional time limit keeps its budget', r.status === 'ACCEPTED' && r.timeMs >= 1100, `status=${r.status} timeMs=${r.timeMs}`);
+});
+// The program is the sandbox's PID 1; a crash must still be a runtime error.
+await inTempDir(async (dir) => {
+  const src = path.join(dir, 'abort.cpp');
+  const bin = path.join(dir, 'abort');
+  await fs.writeFile(src, '#include <cstdlib>\nint main(){std::abort();}');
+  const r = await runCase(engine, 'cpp', src, bin, '', 2000);
+  record('abort as PID 1 -> RUNTIME_ERROR', r.status === 'RUNTIME_ERROR', `status=${r.status}`);
+});
 await inTempDir(async (dir) => {
   const unavailable = new SandboxEngine();
   unavailable.bwrapUsable = false;
