@@ -12,7 +12,8 @@ const admin = createClient(config.SUPABASE_URL, config.SUPABASE_SERVICE_ROLE_KEY
 const must = ({ data, error }) => { if (error) throw new Error(error.message); return data; };
 const suffix = `${Date.now()}-${randomBytes(3).toString('hex')}`;
 
-const timeLimitMs = 1000;
+// Fractional on purpose: RLIMIT_CPU is whole seconds, so 1500ms catches truncation.
+const timeLimitMs = 1500;
 const memoryLimitMb = 64;
 const problem = must(await admin.from('problems').insert({ slug: `verdict-${suffix}`, title: 'verdict fixture',
   description: 'disposable', is_public: false, time_limit_ms: timeLimitMs, memory_limit_mb: memoryLimitMb }).select('id').single());
@@ -24,6 +25,7 @@ const { user } = must(await admin.auth.admin.createUser({ email, password: rando
 
 const cases = [
   { name: 'AC', expected: 'ACCEPTED', code: '#include <cstdio>\nint main(){int a;scanf("%d",&a);printf("%d\\n",a*7);}' },
+  { name: 'AC-1.2s', expected: 'ACCEPTED', code: '#include <cstdio>\n#include <ctime>\nint main(){int a;scanf("%d",&a);volatile unsigned long x=0;while((double)clock()/CLOCKS_PER_SEC<1.2)x++;printf("%d\\n",a*7);}' },
   { name: 'WA', expected: 'WRONG_ANSWER', code: '#include <cstdio>\nint main(){int a;scanf("%d",&a);printf("%d\\n",a*7+1);}' },
   { name: 'TLE', expected: 'TIME_LIMIT_EXCEEDED', code: 'int main(){for(;;){}}' },
   { name: 'MLE', expected: 'MEMORY_LIMIT_EXCEEDED', code: '#include <cstdio>\n#include <vector>\nint main(){std::vector<char> b(400u*1024*1024,1);printf("%d\\n",(int)b[0]);}' },
@@ -52,7 +54,7 @@ try {
 }
 
 for (const r of results) {
-  console.log(`${r.ok ? 'PASS' : 'FAIL'}  ${r.name.padEnd(4)} expected=${r.expected.padEnd(22)} actual=${r.actual.padEnd(22)} time=${r.timeMs}ms mem=${r.memoryMb}MB${r.error ? ' err=' + String(r.error).slice(0, 120) : ''}`);
+  console.log(`${r.ok ? 'PASS' : 'FAIL'}  ${r.name.padEnd(7)} expected=${r.expected.padEnd(22)} actual=${r.actual.padEnd(22)} time=${r.timeMs}ms mem=${r.memoryMb}MB${r.error ? ' err=' + String(r.error).slice(0, 120) : ''}`);
 }
 const failed = results.filter(r => !r.ok).length;
 console.log(failed ? `${failed}/${results.length} verdict sai` : `OK: ${results.length}/${results.length} verdict đúng`);

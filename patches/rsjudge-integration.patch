@@ -1859,10 +1859,10 @@ index e3fec44..69ea3c2 100644
  pub mod request;
 diff --git a/crates/rsjudge-judger/src/judger/pipeline.rs b/crates/rsjudge-judger/src/judger/pipeline.rs
 new file mode 100644
-index 0000000..613fcdf
+index 0000000..9f2e6ae
 --- /dev/null
 +++ b/crates/rsjudge-judger/src/judger/pipeline.rs
-@@ -0,0 +1,768 @@
+@@ -0,0 +1,821 @@
 +// SPDX-License-Identifier: Apache-2.0
 +
 +//! The judging pipeline: prepare source, compile, run with resource limits,
@@ -1894,6 +1894,8 @@ index 0000000..613fcdf
 +const COMPILE_WALL_SECS: u64 = 120;
 +const COMPILE_MEM_BYTES: u64 = 2 * 1024 * 1024 * 1024;
 +const COMPILE_FSIZE_BYTES: u64 = 256 * 1024 * 1024;
++/// Extra wall time past the CPU limit (same margin as the worker's local sandbox).
++const WALL_GRACE: Duration = Duration::from_millis(1500);
 +
 +/// Error of the judging pipeline.
 +#[derive(Debug)]
@@ -2369,9 +2371,10 @@ index 0000000..613fcdf
 +    clean_env(&mut cmd);
 +
 +    let fsize = NonZeroU64::new(OUTPUT_LIMIT_BYTES as u64);
-+    // `RLIMIT_CPU` has second granularity inside the runner; a sub-second
-+    // value would truncate to 0 and kill the process immediately.
-+    let cpu_secs = time_limit.as_secs().max(1);
++    // `RLIMIT_CPU` has second granularity: round up so a fractional limit
++    // (e.g. 1500ms) never kills a program inside its budget. The exact limit
++    // is enforced below from the measured CPU time.
++    let cpu_secs = u64::try_from(time_limit.as_millis().div_ceil(1000)).unwrap_or(u64::MAX).max(1);
 +    let (cpu, mem) = if def.disable_rlimit_as() {
 +        (Some(Duration::from_secs(cpu_secs)), None)
 +    } else {
@@ -2380,7 +2383,9 @@ index 0000000..613fcdf
 +            memory_bytes.and_then(NonZeroU64::new),
 +        )
 +    };
-+    let limit = ResourceLimit::new(cpu, Some(time_limit), mem, fsize);
++    // The wall deadline only stops blocked/sleeping programs; CPU time decides
++    // TLE, so contention from parallel jobs cannot turn a fast program into TLE.
++    let limit = ResourceLimit::new(cpu, Some(time_limit + WALL_GRACE), mem, fsize);
 +
 +    let started_at = Instant::now();
 +    let mut child = cmd
@@ -2517,6 +2522,54 @@ index 0000000..613fcdf
 +            .unwrap();
 +        assert!(outcome.timed_out);
 +        assert!(matches!(verdict_of(&outcome, None), JudgeResult::TimeLimitExceeded));
++    }
++
++    /// A program spinning `secs` of CPU time, then exiting cleanly.
++    async fn cpu_spinner(secs: f64) -> PreparedSource {
++        let def = cpp_def();
++        let src = format!(
++            "#include <ctime>\nint main(){{volatile unsigned long x=0; while((double)clock()/CLOCKS_PER_SEC < {secs}) x++;}}"
++        );
++        let prepared = prepare_source("C++", &def, src.as_bytes(), None).await.unwrap();
++        let info = compile(&prepared, &def).await.unwrap();
++        assert!(info.success(), "{}", info.stderr);
++        prepared
++    }
++
++    #[tokio::test]
++    async fn fractional_time_limit_keeps_the_full_budget() {
++        // RLIMIT_CPU is whole seconds; 1500ms must not be truncated to 1s.
++        let prepared = cpu_spinner(1.2).await;
++        let outcome = run_once(&prepared, &cpp_def(), b"", Duration::from_millis(1500), None)
++            .await
++            .unwrap();
++        assert!(matches!(verdict_of(&outcome, None), JudgeResult::Accepted), "{outcome:?}");
++        assert!(outcome.cpu_time >= Duration::from_millis(1100), "{outcome:?}");
++    }
++
++    #[tokio::test]
++    async fn cpu_time_over_a_fractional_limit_is_tle() {
++        let prepared = cpu_spinner(1.7).await;
++        let outcome = run_once(&prepared, &cpp_def(), b"", Duration::from_millis(1500), None)
++            .await
++            .unwrap();
++        assert!(matches!(verdict_of(&outcome, None), JudgeResult::TimeLimitExceeded), "{outcome:?}");
++    }
++
++    #[tokio::test]
++    async fn blocked_program_is_stopped_by_the_wall_deadline() {
++        // A sleeping program uses no CPU; only the wall deadline can stop it.
++        let def = cpp_def();
++        let prepared = prepare_source("C++", &def, b"#include <unistd.h>\nint main(){sleep(30);}", None)
++            .await
++            .unwrap();
++        assert!(compile(&prepared, &def).await.unwrap().success());
++        let started = std::time::Instant::now();
++        let outcome = run_once(&prepared, &def, b"", Duration::from_millis(500), None)
++            .await
++            .unwrap();
++        assert!(matches!(verdict_of(&outcome, None), JudgeResult::TimeLimitExceeded), "{outcome:?}");
++        assert!(started.elapsed() < Duration::from_secs(5));
 +    }
 +
 +    #[tokio::test]
