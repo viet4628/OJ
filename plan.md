@@ -106,13 +106,28 @@ Quy ước đặt tên: T0 và T1 là việc đã nằm trong P0–P2 hiện có
 | T0 — baseline đo lặp được | Thêm `apps/judge-worker/scripts/worker-timings.mjs` (tổng hợp p50/p95 từ log worker). Baseline cũ: p50 queue 10,19s, p95 hoàn tất 23,67s, 0,71 bài/s |
 | T1.1 — tải Storage song song có ngân sách | Đọc testcase chạy 8 request/lần thay vì 2; thêm semaphore toàn cục 8 lượt tải Storage để nhiều job không làm quá tải bucket. `cases.loadMs` p95 6,43s → 2,56s |
 | T1.2 — cache bundle theo phiên bản | **Hoãn**: web luôn lưu testcase inline (`input_content`), nên `cases.loadMs` p50 = 0ms; cache chỉ thêm rủi ro trả verdict sai khi tín hiệu version không đáng tin cậy |
-| T2 — concurrency giới hạn | `WORKER_CONCURRENCY` (mặc định 2, cho phép 1..8). Hàng đợi drain song song, claim nguyên tử giữ nguyên. Lượt cuối: p50 queue 2,35s, p95 hoàn tất 4,33s, 2,68 bài/s, 0 lỗi; qua nhiều lượt p95 hoàn tất 4,3–10,1s và throughput 1,9–2,7 bài/s |
+| T2 — concurrency giới hạn | `WORKER_CONCURRENCY` (code mặc định 1, `docker-compose.yml` đặt 2; cho phép 1..8). Hàng đợi drain song song, claim nguyên tử giữ nguyên. Lượt cuối: p50 queue 2,35s, p95 hoàn tất 4,33s, 2,68 bài/s, 0 lỗi; qua nhiều lượt p95 hoàn tất 4,3–10,1s và throughput 1,9–2,7 bài/s |
 | Retry đường đọc | Một lần retry cho lỗi mạng tạm ở đọc problem/testcase/Storage; trước đó lỗi này thành SYSTEM_ERROR |
 | **Sửa lỗi đo thời gian/bộ nhớ** | `wait4` chỉ trả usage của bwrap (PID namespace) nên mọi bài đều ghi ~1ms/2MB. Bọc chương trình bằng GNU time trong sandbox (cả engine lẫn chấm local): bài 500ms CPU/100MB nay ghi đúng 550ms/103MB; verdict MLE nhận diện đúng |
 
-Quy tắc vận hành: **concurrency không được vượt số CPU của engine** (engine `cpus: 2`, worker `WORKER_CONCURRENCY: 2`). Runner giết theo wall-time, nên nếu nhiều job tranh CPU trên cùng số core, một chương trình sát thời gian có thể bị TLE giả. Muốn tăng concurrency thì phải tăng `cpus` của engine tương ứng.
+Quy tắc vận hành: **concurrency không được vượt số CPU của engine** (engine `cpus: 2`, worker `WORKER_CONCURRENCY: 2`). Từ 13/11 TLE quyết định theo CPU và wall-time có biên 1,5s, nhưng tranh CPU vẫn làm chậm thời gian chờ; muốn tăng concurrency thì tăng `cpus` của engine tương ứng. Chưa đo đỉnh RAM khi 2 lượt compile chạy cùng lúc so với `mem_limit: 3g` của engine.
 
-Còn lại: T3 (giới hạn hàng đợi trong RAM), T4 (vị trí xếu hàng cho người dùng), T5 (campaign 5/10/20 người + soak 24h). Chưa sửa `updated_at` cho testcase vì chưa dùng cache bundle.
+Còn lại: T4 (vị trí xếp hàng cho người dùng), T5 (campaign 5/10/20 người + soak 24h; chạy lại baseline vì cách đo thời gian/bộ nhớ đã đổi ngày 13/11). T3 đã xong ngày 13/11. Chưa sửa `updated_at` cho testcase vì chưa dùng cache bundle.
+
+### Đợt sửa độ đúng chấm và bảo mật dữ liệu (13/11/2026)
+
+Từ đợt rà soát DB và engine. Mỗi việc một commit, kiểm chứng trên test và staging.
+
+| Việc | Kết quả |
+|---|---|
+| Verdict với limit lẻ giây | `RLIMIT_CPU` từng làm tròn xuống (1500ms → 1s): bài 1,2s CPU bị RUNTIME_ERROR. Nay làm tròn lên, TLE quyết định theo CPU, wall-time cho thêm 1,5s. Staging không có đề limit lẻ giây > 1s nên không cần chấm lại |
+| Số đo không làm giả được | Báo cáo GNU time từng nằm trong thư mục ghi được của sandbox: bài nộp tự ghi 0ms/1MB. Nay GNU time chạy ngoài bwrap, chương trình là PID 1 (`--as-pid-1`) để usage đi lên qua wait4; RSS không còn cộng nhầm RSS của engine |
+| Đường ghi đề/testcase | CHECK giới hạn 10–30000ms/16–1024MB; `authenticated` không còn ghi trực tiếp `testcases` hay INSERT/UPDATE `problems`, mọi thay đổi qua `save_problem_bundle`. **Cần chạy `supabase/migrations/20261113_problem_write_path.sql` trên staging/production** |
+| Dữ liệu testcase | Bỏ heuristic đổi chuỗi `\n` theo nghĩa đen thành xuống dòng (0/40 testcase staging cần) |
+| T3 — trần hàng đợi | Tối đa 20 bài trong RAM; phần dư vẫn PENDING trong DB và quay lại qua poll theo `created_at` |
+| Kiểm thử | Worker test chạy trong một tiến trình (lỗi IPC của trình chạy test khi máy tải nặng); lệnh test engine là `cargo test --workspace` |
+
+Chờ quyết định: quyền giáo viên trên đề/testcase hiện không giới hạn theo người tạo (mọi giáo viên đọc/sửa được testcase ẩn của nhau).
 
 ### Số đo hiện tại và mục tiêu
 

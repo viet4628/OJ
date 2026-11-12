@@ -53,6 +53,17 @@ Owner đã áp dụng các migration bằng SQL Editor và báo thành công; RE
 
 Tiếp tục theo [plan](../plan.md), triển khai theo [runbook](pilot-runbook.md). Đã giữ bằng chứng đo lường; ảnh/video/kết quả Playwright có thể sinh lại và được dọn bằng `npm run clean`.
 
+## Đợt sửa độ đúng chấm và bảo mật dữ liệu ngày 13/11/2026
+
+| Bằng chứng | Kết quả |
+|---|---|
+| Tái hiện lỗi trước khi sửa | Test tạm trên engine: limit 1500ms, bài 1,2s CPU → RuntimeError (bị kill ở 0,99s); bài xoá rồi ghi lại `.usage-report` → ghi nhận 0ns/1000KB, Accepted. Smoke local trên code cũ: báo cáo giả cho `timeMs=1` |
+| Kiểm thử mã | Rust `cargo test --workspace` 46 test PASS (thêm limit lẻ giây, wall-time, chống giả usage, RSS < 8MB cho bài rỗng, crash khi là PID 1); worker 22/22; smoke sandbox 12 PASS/2 SKIP; `test:db` PASS (schema/migration chạy hai lần); e2e 68/68; `test:pilot` PASS |
+| Staging (`verify-verdicts.mjs`, limit 1500ms) | 6/6 verdict đúng: AC, AC 1,2s CPU (1190ms), WA, TLE (1920ms), MLE, RTE; bài thường báo 2MB |
+| Rà dữ liệu staging | 0 đề limit lẻ giây > 1s (không cần chấm lại); 0/40 testcase phụ thuộc chuỗi `\n` theo nghĩa đen |
+
+Giới hạn: migration `20261113_problem_write_path.sql` chưa áp lên staging (cần SQL Editor). Tiến trình con không được chương trình chờ (`wait`) không được tính CPU; thời gian sống của chúng bị chặn bởi wall-time `limit + 1,5s`. Accounting toàn cây process theo cgroup vẫn là việc của Phase 5 pilot.
+
 ## Đợt cải thiện hiệu năng và độ đúng chấm ngày 12/11/2026
 
 Đợt này chạy trên staging Supabase thật bằng `docker compose` (worker + rsjudge engine), cùng bộ tải 10 tài khoản/50 bài và bộ Storage 10 testcase/TLE. Ba việc đã đổi hành vi thật: (1) `WORKER_CONCURRENCY` cho phép chấm nhiều bài song song trong một daemon, claim nguyên tử giữ nguyên; (2) đọc testcase song song có ngân sách, kèm semaphore toàn cục 8 lượt tải Storage và một lần retry cho lỗi mạng tạm ở đường đọc; (3) sửa lỗi đo thời gian/bộ nhớ.
@@ -66,7 +77,7 @@ Tiếp tục theo [plan](../plan.md), triển khai theo [runbook](pilot-runbook.
 | Verdict qua API thật | `verify-verdicts.mjs`: AC/WA/TLE/MLE/RTE đều đúng. Chương trình 500ms CPU + 100MB trước khi sửa ghi 1ms/40MB, sau khi sửa ghi 550ms/103MB |
 | Kiểm thử mã | Worker 20/20 PASS (thêm test concurrency, retry đọc, trần tải Storage); Rust `cargo test -p rsjudge-judger` 17/17 PASS (thêm test đo CPU/RSS); `patches/rsjudge-integration.patch` áp sạch lên upstream `d33f85b` |
 
-Lỗi gốc đã tìm và sửa: `wait4` chỉ trả usage của tiến trình trực tiếp (bwrap), còn chương trình của học sinh nằm trong PID namespace khác nên CPU thật và RSS đỉnh đều mất — mọi bài đều bị ghi ~1ms/2MB và verdict MLE không nhận diện được. Nay đo bằng GNU time bên trong sandbox. Lỗi SYSTEM_ERROR rời rạc trong lúc tải là timeout đọc Storage khi nhiều job tải song song; đã thêm semaphore và retry đọc.
+Lỗi gốc đã tìm và sửa: `wait4` chỉ trả usage của tiến trình trực tiếp (bwrap), còn chương trình của học sinh nằm trong PID namespace khác nên CPU thật và RSS đỉnh đều mất — mọi bài đều bị ghi ~1ms/2MB và verdict MLE không nhận diện được. Nay đo bằng GNU time (từ 13/11 chạy ngoài sandbox, xem đợt 13/11). Lỗi SYSTEM_ERROR rời rạc trong lúc tải là timeout đọc Storage khi nhiều job tải song song; đã thêm semaphore và retry đọc.
 
 Giới hạn còn lại: concurrency mặc định 2 và không được vượt `cpus` của engine (2), nếu không chương trình sát thời gian có thể bị TLE giả; campaign 5/10/20 người và soak 24h chưa chạy lại; số đo trên cùng một host nên chưa phải capacity công bố.
 

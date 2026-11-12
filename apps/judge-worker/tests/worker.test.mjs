@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { setTimeout as delay } from 'node:timers/promises';
 import { readWorkerConfig } from '../dist/config.js';
-import { SubmissionQueue } from '../dist/submissions/submission-queue.js';
+import { MAX_PENDING, SubmissionQueue } from '../dist/submissions/submission-queue.js';
 import { SubmissionService } from '../dist/submissions/submission-service.js';
 import { WorkerApp } from '../dist/worker-app.js';
 
@@ -83,6 +83,23 @@ test('queue runs up to the configured number of jobs concurrently', async () => 
   gates.get('c')();
   await drained;
   assert.equal(queue.activeIds.size, 0);
+});
+
+test('queue keeps at most MAX_PENDING jobs in memory; overflow waits in the DB', async () => {
+  let release;
+  const blocked = new Promise(resolve => { release = resolve; });
+  const seen = [];
+  const queue = new SubmissionQueue(async row => { seen.push(row.id); await blocked; });
+  const drained = queue.enqueue(submission('running'));
+  for (let i = 0; i < MAX_PENDING + 5; i++) queue.enqueue(submission(`job-${i}`));
+  assert.equal(queue.queuedCount, MAX_PENDING);
+  release();
+  await drained;
+  assert.equal(seen.length, MAX_PENDING + 1, 'held jobs still run in order');
+  assert.deepEqual(seen.slice(0, 3), ['running', 'job-0', 'job-1']);
+  queue.enqueue(submission('job-24'));
+  await queue.waitForIdle();
+  assert.equal(seen.at(-1), 'job-24', 'a dropped job is accepted again by the next poll');
 });
 
 function serviceFixture() {

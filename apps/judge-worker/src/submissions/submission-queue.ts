@@ -1,5 +1,8 @@
 import type { Submission } from '../types.js';
 
+/** Jobs held in memory. Overflow stays PENDING in the DB and returns, oldest first, via polling. */
+export const MAX_PENDING = 20;
+
 export class SubmissionQueue {
   private readonly pending: Submission[] = [];
   private readonly processing = new Set<string>();
@@ -15,7 +18,10 @@ export class SubmissionQueue {
 
   enqueue(submission: Submission): Promise<void> {
     if (this.stopped || submission.status !== 'PENDING' || this.processing.has(submission.id)) return Promise.resolve();
-    if (!this.pending.some((item) => item.id === submission.id)) this.pending.push(submission);
+    if (!this.pending.some((item) => item.id === submission.id)) {
+      if (this.pending.length >= MAX_PENDING) return this.running ?? Promise.resolve();
+      this.pending.push(submission);
+    }
     // Wake the drain loop so a free slot is used without waiting for the running job.
     this.signal?.();
     this.signal = null;
