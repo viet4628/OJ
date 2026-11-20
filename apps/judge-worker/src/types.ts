@@ -45,6 +45,7 @@ export interface Testcase {
   output_content?: string | null;
   score: number;
   is_sample: boolean;
+  created_at?: string;
 }
 
 export interface TestcaseResult {

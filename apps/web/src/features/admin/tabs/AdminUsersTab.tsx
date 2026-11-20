@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react';
 import MorphIcon from '../../../components/MorphIcon';
-import { GraduationCap as GraduationCapData, KeyRound as KeyRoundData, X as XData, Save as SaveData } from 'lucide';
+import {
+  GraduationCap as GraduationCapData,
+  KeyRound as KeyRoundData,
+  X as XData,
+  Save as SaveData,
+  Search as SearchData,
+  FileText as FileTextData,
+} from 'lucide';
 import {
   getProfiles,
   setAccountSuspension,
@@ -25,6 +32,7 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
   const [error, setError] = useState<string | null>(null);
   const [busyUserId, setBusyUserId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [audit, setAudit] = useState<Awaited<ReturnType<typeof getAdminAuditLog>> | null>(null);
   const [auditPage, setAuditPage] = useState(0);
   const [auditBusy, setAuditBusy] = useState(false);
@@ -48,6 +56,7 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
   const [permLoading, setPermLoading] = useState(false);
   const [permSaving, setPermSaving] = useState(false);
   const [permError, setPermError] = useState<string | null>(null);
+  const [roleFilter, setRoleFilter] = useState<'ALL' | 'user' | 'teacher' | 'admin' | 'suspended'>('ALL');
 
   const fetchUsers = () => {
     let cancelled = false;
@@ -144,25 +153,44 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
     }
   };
 
-  const visibleProfiles = profiles;
+  const query = searchQuery.trim().toLowerCase();
+  const userCount = profiles.filter((p) => p.role === 'user' && !p.is_suspended).length;
+  const teacherCount = profiles.filter((p) => p.role === 'teacher' && !p.is_suspended).length;
+  const adminCount = profiles.filter((p) => p.role === 'admin' && !p.is_suspended).length;
+  const suspendedCount = profiles.filter((p) => p.is_suspended).length;
+
+  const visibleProfiles = profiles.filter((p) => {
+    if (roleFilter === 'suspended') {
+      if (!p.is_suspended) return false;
+    } else if (roleFilter !== 'ALL') {
+      if (p.role !== roleFilter || p.is_suspended) return false;
+    }
+    if (!query) return true;
+    return (
+      (p.full_name && p.full_name.toLowerCase().includes(query)) ||
+      (p.email && p.email.toLowerCase().includes(query))
+    );
+  });
 
   return (
     <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] p-4 space-y-4">
-      <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[var(--border)]">
         <div>
-          <h3 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
-             Quản Lý Người Dùng
-          </h3>
-          <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">
+            Quản Lý Người Dùng
+          </h2>
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5">
             Đổi vai trò Học Sinh ⇄ Giáo Viên, hoặc mở Phân Quyền để cấp quyền chi tiết.
           </p>
         </div>
-        <span className="text-[11px] text-[var(--text-muted)] font-mono">{profiles.length} người dùng</span>
+        <span className="text-xs text-[var(--text-muted)] font-mono self-start sm:self-auto">
+          {profiles.length} tài khoản
+        </span>
       </div>
 
       {notice && (
         <div className="flex items-start gap-2 p-2.5 rounded-md bg-accent/10 border border-accent/30 text-xs text-[var(--accent-text)] font-medium">
-           {notice}
+          {notice}
         </div>
       )}
       {error && (
@@ -170,6 +198,44 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
           {error}
         </div>
       )}
+
+      {/* Search and Role Filter Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div className="relative flex-1 max-w-sm">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--text-muted)]">
+            <MorphIcon icon={SearchData} size={13} />
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Tìm theo tên hoặc email người dùng..."
+            className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md pl-8 pr-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-colors"
+          />
+        </div>
+
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs">
+          {[
+            { id: 'ALL', label: `Tất cả (${profiles.length})` },
+            { id: 'user', label: `Học sinh (${userCount})` },
+            { id: 'teacher', label: `Giáo viên (${teacherCount})` },
+            { id: 'admin', label: `Admin (${adminCount})` },
+            { id: 'suspended', label: `Bị khóa (${suspendedCount})` },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setRoleFilter(tab.id as any)}
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors shrink-0 cursor-pointer ${
+                roleFilter === tab.id
+                  ? 'bg-[var(--accent)] text-white shadow-xs'
+                  : 'bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {loading ? (
         <div className="space-y-2">
@@ -192,13 +258,20 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
               {visibleProfiles.map((p) => (
                 <tr key={p.id} className="hover:bg-[var(--bg-primary)] transition-colors">
                   <td className="px-3 py-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-[var(--bg-tertiary)] border border-[var(--border)] flex items-center justify-center text-[10px] font-mono text-[var(--accent-text)] shrink-0">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-full bg-[var(--bg-tertiary)] border border-[var(--border)] flex items-center justify-center text-[11px] font-mono font-semibold text-[var(--accent-text)] shrink-0">
                         {(p.full_name || p.email || '?').charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <div className="font-medium text-[var(--text-primary)] truncate">{p.full_name || 'Chưa đặt tên'}</div>
-                        <div className="font-mono text-[10px] text-[var(--text-muted)] truncate">{p.email}</div>
+                        <div className="font-medium text-[var(--text-primary)] truncate flex items-center gap-1.5">
+                          <span>{p.full_name || 'Chưa đặt tên'}</span>
+                          {p.is_suspended && (
+                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-danger/10 text-[var(--danger)] border border-danger/20 font-mono">
+                              Khóa
+                            </span>
+                          )}
+                        </div>
+                        <div className="font-mono text-[11px] text-[var(--text-muted)] truncate">{p.email}</div>
                       </div>
                     </div>
                   </td>
@@ -212,19 +285,7 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
                           : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border-[var(--border)]'
                       }`}
                     >
-                      {p.role === 'admin' ? (
-                        <>
-                           ADMIN
-                        </>
-                      ) : p.role === 'teacher' ? (
-                        <>
-                           GIÁO VIÊN
-                        </>
-                      ) : (
-                        <>
-                           HỌC SINH
-                        </>
-                      )}
+                      {p.role === 'admin' ? 'ADMIN' : p.role === 'teacher' ? 'GIÁO VIÊN' : 'HỌC SINH'}
                     </span>
                   </td>
                   <td className="px-3 py-2 text-[var(--text-muted)] font-mono text-[11px]">
@@ -236,8 +297,17 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
                         <span className="text-[10px] text-[var(--text-muted)] font-mono">Quản DB</span>
                       ) : (
                         <>
-                          <button onClick={() => handleSuspension(p)} disabled={busyUserId === p.id || p.id === myUserId} className="px-2 py-0.5 rounded border border-[var(--border)] text-xs disabled:opacity-50">
-                            {p.is_suspended ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
+                          <button
+                            onClick={() => handleSuspension(p)}
+                            disabled={busyUserId === p.id || p.id === myUserId}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium border transition-colors cursor-pointer disabled:opacity-50 ${
+                              p.is_suspended
+                                ? 'bg-danger/10 text-[var(--danger)] border-danger/25 hover:bg-danger/20'
+                                : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] border-[var(--border)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]'
+                            }`}
+                            title={p.is_suspended ? 'Tài khoản đang bị khóa. Bấm để mở' : 'Khóa tài khoản'}
+                          >
+                            {p.is_suspended ? 'Mở khóa' : 'Khóa'}
                           </button>
                           <button
                             onClick={() => openPermModal(p)}
@@ -263,25 +333,93 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
                   </td>
                 </tr>
               ))}
+              {visibleProfiles.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="p-6 text-center text-xs text-[var(--text-muted)]">
+                    {searchQuery ? 'Không tìm thấy người dùng phù hợp.' : 'Chưa có người dùng nào.'}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       )}
 
-      {/* permission modal */}
-      <section className="space-y-3 border-t border-[var(--border)] pt-3">
-        <button disabled={auditBusy} onClick={() => loadAudit()} className="border border-[var(--border)] rounded px-3 py-1.5 text-xs disabled:opacity-50">Xem nhật ký quản trị</button>
-        {audit && <div className="overflow-x-auto"><table className="w-full text-xs"><thead><tr><th>Thời gian</th><th>Thao tác</th><th>Người thực hiện</th><th>Đối tượng</th><th>Lý do / kết quả trước</th></tr></thead><tbody>
-          {audit.map(row => <tr key={row.id} className="border-t border-[var(--border)]">
-            <td className="p-2 whitespace-nowrap">{new Date(row.created_at).toLocaleString('vi-VN')}</td>
-            <td className="p-2">{({ 'account.suspend': 'Khóa tài khoản', 'account.restore': 'Mở khóa', 'submission.rejudge': 'Chấm lại', 'profile.role': 'Đổi vai trò', 'permissions.change': 'Đổi quyền' } as Record<string, string>)[row.action] || 'Thao tác quản trị'}</td>
-            <td className="p-2 font-mono" title={row.actor_id || ''}>{row.actor_id?.slice(0, 8) || 'Hệ thống'}</td>
-            <td className="p-2 font-mono" title={row.target_id || ''}>{row.target_id?.slice(0, 8)}</td>
-            <td className="p-2">{String(row.payload.reason || row.payload.previous_status || '')}</td>
-          </tr>)}
-        </tbody></table>{audit.length === 0 && <p className="py-3 text-xs">Chưa có nhật ký.</p>}</div>}
-        {auditMore && <button disabled={auditBusy} onClick={() => loadAudit(auditPage + 1)} className="border border-[var(--border)] rounded px-3 py-1.5 text-xs">Tải thêm nhật ký</button>}
+      {/* Audit Log Section */}
+      <section className="space-y-3 border-t border-[var(--border)] pt-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MorphIcon icon={FileTextData} size={14} className="text-[var(--text-secondary)]" />
+            <h3 className="text-xs font-semibold text-[var(--text-primary)]">Nhật Ký Quản Trị (Audit Log)</h3>
+          </div>
+          <button
+            disabled={auditBusy}
+            onClick={() => loadAudit()}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {auditBusy ? 'Đang tải...' : audit ? 'Làm mới nhật ký' : 'Tải nhật ký quản trị'}
+          </button>
+        </div>
+
+        {audit && (
+          <div className="overflow-x-auto border border-[var(--border)] rounded-md">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-[var(--bg-primary)] text-[var(--text-secondary)] border-b border-[var(--border)] font-medium text-[11px]">
+                <tr>
+                  <th className="px-3 py-2">Thời Gian</th>
+                  <th className="px-3 py-2">Thao Tác</th>
+                  <th className="px-3 py-2">Người Thực Hiện</th>
+                  <th className="px-3 py-2">Đối Tượng</th>
+                  <th className="px-3 py-2">Chi Tiết / Lý Do</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--border)]">
+                {audit.map((row) => (
+                  <tr key={row.id} className="hover:bg-[var(--bg-primary)] transition-colors">
+                    <td className="px-3 py-2 whitespace-nowrap text-[var(--text-muted)] font-mono text-[11px]">
+                      {new Date(row.created_at).toLocaleString('vi-VN')}
+                    </td>
+                    <td className="px-3 py-2">
+                      <span className="font-medium text-[var(--text-primary)]">
+                        {({
+                          'account.suspend': 'Khóa tài khoản',
+                          'account.restore': 'Mở khóa',
+                          'submission.rejudge': 'Chấm lại',
+                          'profile.role': 'Đổi vai trò',
+                          'permissions.change': 'Đổi quyền',
+                        } as Record<string, string>)[row.action] || 'Thao tác quản trị'}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 font-mono text-[11px] text-[var(--text-muted)]" title={row.actor_id || ''}>
+                      {row.actor_id?.slice(0, 8) || 'Hệ thống'}
+                    </td>
+                    <td className="px-3 py-2 font-mono text-[11px] text-[var(--text-muted)]" title={row.target_id || ''}>
+                      {row.target_id?.slice(0, 8)}
+                    </td>
+                    <td className="px-3 py-2 text-[var(--text-secondary)]">
+                      {String(row.payload.reason || row.payload.previous_status || '—')}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {audit.length === 0 && (
+              <p className="py-6 text-center text-xs text-[var(--text-muted)]">Chưa có bản ghi nhật ký nào.</p>
+            )}
+          </div>
+        )}
+        {auditMore && (
+          <button
+            disabled={auditBusy}
+            onClick={() => loadAudit(auditPage + 1)}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer disabled:opacity-50"
+          >
+            Tải thêm nhật ký
+          </button>
+        )}
       </section>
+
+      {/* Permission modal */}
       {permUser && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in"
@@ -296,7 +434,7 @@ export default function AdminUsersTab({ myUserId }: AdminUsersTabProps) {
             <div className="flex items-center justify-between border-b border-[var(--border)] pb-2.5">
               <div>
                 <h3 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
-                   Phân Quyền
+                  Phân Quyền
                 </h3>
                 <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">{permUser.full_name || permUser.email}</p>
               </div>

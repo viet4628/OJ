@@ -216,7 +216,7 @@ export default function UserHome({ currentUser }: UserHomeProps) {
 
       {/* 2. MAIN CONTAINER: 2 COLUMNS (GITHUB USER PROFILE LAYOUT) */}
       <div className="max-w-[1280px] mx-auto">
-        <ProfileBanner banner={profile.equipped_banner} className="h-24 sm:h-28 rounded-2xl mb-6" />
+        <ProfileBanner banner={profile.equipped_banner} className="h-24 sm:h-28 rounded-md mb-6" />
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
 
           {/* CỘT TRÁI (3-4 cols): GITHUB USER SIDEBAR */}
@@ -286,16 +286,10 @@ export default function UserHome({ currentUser }: UserHomeProps) {
             )}
 
             {/* Metadata (Email & Tham gia) */}
-            <div className="space-y-2 pt-3 border-t border-[var(--border)] text-xs text-[var(--text-secondary)]">
-              <div className="flex items-center gap-2 min-w-0">
-
-                <span className="truncate">{profile.email || 'Email được giữ riêng tư'}</span>
-              </div>
-              <div className="flex items-center gap-2">
-
-                <span>
-                  Tham gia tháng {new Date(profile.created_at).getMonth() + 1}/{new Date(profile.created_at).getFullYear()}
-                </span>
+            <div className="space-y-1.5 pt-3 border-t border-[var(--border)] text-xs text-[var(--text-secondary)]">
+              <div className="truncate">{profile.email || 'Email được giữ riêng tư'}</div>
+              <div>
+                Tham gia tháng {new Date(profile.created_at).getMonth() + 1}/{new Date(profile.created_at).getFullYear()}
               </div>
             </div>
 
@@ -304,21 +298,21 @@ export default function UserHome({ currentUser }: UserHomeProps) {
               <h3 className="text-xs font-semibold text-[var(--text-primary)]">
                 Chỉ Số Lập Trình
               </h3>
-              <div className="grid grid-cols-3 gap-2 p-3 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] text-center font-mono">
+              <div className="grid grid-cols-3 gap-2 p-3.5 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] text-center font-mono shadow-xs">
                 <div>
-                  <div className="text-base font-bold text-[var(--accent-text)]">
+                  <div className="text-lg font-bold text-[var(--accent-text)]">
                     {stats?.accepted_number ?? solvedProblems.length}
                   </div>
                   <div className="text-[10px] text-[var(--text-muted)]">Đã giải</div>
                 </div>
                 <div className="border-x border-[var(--border)]">
-                  <div className="text-base font-bold text-[var(--text-primary)]">
+                  <div className="text-lg font-bold text-[var(--text-primary)]">
                     {stats?.submission_number ?? subs.length}
                   </div>
                   <div className="text-[10px] text-[var(--text-muted)]">Lượt nộp</div>
                 </div>
                 <div>
-                  <div className="text-base font-bold text-[var(--text-primary)]">
+                  <div className="text-lg font-bold text-[var(--text-primary)]">
                     {stats?.total_score ?? 0}
                   </div>
                   <div className="text-[10px] text-[var(--text-muted)]">Điểm OI</div>

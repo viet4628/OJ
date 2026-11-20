@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import MorphIcon from '../../components/MorphIcon';
 import ProblemDifficulty, { difficultyLabels } from '../../components/ProblemDifficulty';
 import { CheckCircle2, CircleDot, Circle } from 'lucide-react';
-import { Shuffle as ShuffleData, RefreshCw as RefreshCwData, ChevronLeft as ChevronLeftData, ChevronRight as ChevronRightData, ChevronUp as ChevronUpData, ChevronDown as ChevronDownData, ChevronsUpDown as ChevronsUpDownData, Loader2 as Loader2Data } from 'lucide';
+import { Shuffle as ShuffleData, RefreshCw as RefreshCwData, ChevronLeft as ChevronLeftData, ChevronRight as ChevronRightData, ChevronUp as ChevronUpData, ChevronDown as ChevronDownData, ChevronsUpDown as ChevronsUpDownData, Loader2 as Loader2Data, Search as SearchData } from 'lucide';
 import { getProblemPage, type ProblemPageRow } from '../../lib/api';
 
 type SortKey = 'title' | 'difficulty' | 'time' | 'memory';
@@ -36,6 +36,20 @@ export default function Problems() {
   const [sortKey, setSortKey] = useState<SortKey>('title');
   const [sortDir, setSortDir] = useState<1 | -1>(1);
   const [page, setPage] = useState(0);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleSlash = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable) return;
+      if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleSlash);
+    return () => window.removeEventListener('keydown', handleSlash);
+  }, []);
 
   useEffect(() => {
     const t = searchParams.get('tag');
@@ -110,60 +124,95 @@ export default function Problems() {
   } as const;
 
   return (
-    <div className="w-full flex flex-col lg:flex-row items-start gap-4">
-      {/* Left Column: Problem List Table */}
-      <div className="w-full lg:w-3/4 space-y-3 min-w-0">
-        <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] overflow-hidden">
-          {/* GitHub-style Box Header Toolbar */}
-          <div className="p-3 border-b border-[var(--border)] bg-[var(--bg-secondary)] space-y-2.5">
-            <div className="flex flex-wrap items-center justify-between gap-2.5">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-[var(--text-primary)]">
-                  Bài Tập Lập Trình
-                </span>
-                {!isLoading && (
-                  <span className="px-1.5 py-0.2 rounded-full border border-[var(--border)] text-[10px] font-mono text-[var(--text-secondary)] bg-[var(--bg-tertiary)]">
-                    {total}/{diffCounts.ALL}
+    <div className="space-y-4">
+      {/* Progsity Style Problem Library Hero */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[var(--bg-secondary)] p-4 sm:p-5 rounded-md border border-[var(--border)] shadow-xs">
+        <div>
+          <h1 className="text-base sm:text-lg font-semibold tracking-tight text-[var(--text-primary)]">
+            Thư viện bài tập
+          </h1>
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+            Kho bài tập đa dạng từ các kỳ thi thuật toán và giáo trình lập trình thi đấu.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            to="/learn"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] border border-[var(--border)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors shadow-xs"
+          >
+            Lộ trình học tập
+          </Link>
+          <button
+            onClick={handlePickOne}
+            disabled={total === 0}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer disabled:opacity-40"
+            title="Làm một bài tập ngẫu nhiên"
+          >
+            <MorphIcon icon={ShuffleData} size={13} />
+            <span>Bài tập ngẫu nhiên</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="w-full flex flex-col lg:flex-row items-start gap-4">
+        {/* Left Column: Problem List Table */}
+        <div className="w-full lg:w-3/4 space-y-3 min-w-0">
+          <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] overflow-hidden">
+            {/* Box Header Toolbar */}
+            <div className="p-3 border-b border-[var(--border)] bg-[var(--bg-secondary)] space-y-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-[var(--text-primary)]">
+                    Danh Sách Bài
                   </span>
-                )}
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                <Link to="/learn" className="text-xs text-[var(--accent)] hover:underline">Luyện theo chủ đề</Link>
-                {/* Trạng thái cá nhân */}
-                <select aria-label="Lọc theo trạng thái"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-                  className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-2.5 py-1 text-xs text-[var(--text-primary)] font-medium focus:outline-none focus:border-[var(--accent)] cursor-pointer"
-                  title="Lọc theo trạng thái"
-                >
-                  <option value="ALL">Mọi trạng thái</option>
-                  <option value="SOLVED">Đã giải</option>
-                  <option value="ATTEMPTED">Đã thử</option>
-                  <option value="TODO">Chưa làm</option>
-                </select>
-
-                {/* Tìm kiếm */}
-                <div className="relative">
-
-                  <input aria-label="Lọc bài tập"
-                    type="text"
-                    placeholder="Lọc bài tập..."
-                    value={keyword}
-                    onChange={(e) => setKeyword(e.target.value)}
-                    className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md pl-8 pr-2.5 py-1 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] w-44 sm:w-52 transition-colors"
-                  />
+                  {!isLoading && (
+                    <span className="px-1.5 py-0.2 rounded-full border border-[var(--border)] text-[10px] font-mono text-[var(--text-secondary)] bg-[var(--bg-tertiary)]">
+                      {total}/{diffCounts.ALL}
+                    </span>
+                  )}
                 </div>
 
-                <button
-                  onClick={handleReset}
-                  className="px-2.5 py-1 rounded-md bg-[var(--bg-primary)] border border-[var(--border)] hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-medium text-xs transition-colors cursor-pointer"
-                  title="Xóa bộ lọc"
-                >
-                  <MorphIcon icon={RefreshCwData} size={13} className="inline mr-1" /> Đặt lại
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Trạng thái cá nhân */}
+                  <select aria-label="Lọc theo trạng thái"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+                    className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-2.5 py-1 text-xs text-[var(--text-primary)] font-medium focus:outline-none focus:border-[var(--accent)] cursor-pointer"
+                    title="Lọc theo trạng thái"
+                  >
+                    <option value="ALL">Mọi trạng thái</option>
+                    <option value="SOLVED">Đã giải</option>
+                    <option value="ATTEMPTED">Đã thử</option>
+                    <option value="TODO">Chưa làm</option>
+                  </select>
+
+                  {/* Tìm kiếm */}
+                  <div className="relative">
+                    <MorphIcon
+                      icon={SearchData}
+                      size={13}
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none"
+                    />
+                    <input aria-label="Lọc bài tập"
+                      ref={searchInputRef}
+                      type="text"
+                      placeholder="Tìm bài tập... (nhấn /)"
+                      value={keyword}
+                      onChange={(e) => setKeyword(e.target.value)}
+                      className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md pl-8 pr-2.5 py-1 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] w-44 sm:w-56 transition-colors shadow-xs"
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleReset}
+                    className="px-2.5 py-1 rounded-md bg-[var(--bg-primary)] border border-[var(--border)] hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-medium text-xs transition-colors cursor-pointer"
+                    title="Xóa bộ lọc"
+                  >
+                    <MorphIcon icon={RefreshCwData} size={13} className="inline mr-1" /> Đặt lại
+                  </button>
+                </div>
               </div>
-            </div>
 
             {/* GitHub-style Underline Filter Tabs */}
             <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pt-1">
@@ -384,5 +433,6 @@ export default function Problems() {
         </div>
       </div>
     </div>
+  </div>
   );
 }

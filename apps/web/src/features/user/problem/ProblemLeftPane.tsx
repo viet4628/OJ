@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Play } from 'lucide-react';
 import MorphIcon from '../../../components/MorphIcon';
 import VerdictBadge from '../../../components/VerdictBadge';
 import { Copy as CopyData, Check as CheckData } from 'lucide';
@@ -24,6 +24,7 @@ interface ProblemLeftPaneProps {
   onCopy: (text: string, id: number) => void;
   widthPercent?: number;
   onSelectSubmission?: (sub: any) => void;
+  onRunSample?: (sampleId: number) => void;
 }
 
 export default function ProblemLeftPane({
@@ -42,6 +43,7 @@ export default function ProblemLeftPane({
   onCopy,
   widthPercent = 42,
   onSelectSubmission,
+  onRunSample,
 }: ProblemLeftPaneProps) {
   const formatWhen = (iso: string) => {
     const d = new Date(iso);
@@ -177,17 +179,30 @@ export default function ProblemLeftPane({
                             <span className="font-mono font-semibold text-[11px] text-[var(--text-secondary)]">
                               Ví dụ {idx + 1}
                             </span>
-                            <button
-                              onClick={() => onCopy(tc.input, tc.id)}
-                              className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] transition-colors cursor-pointer"
-                            >
-                              <MorphIcon
-                                icon={copiedId === tc.id ? CheckData : CopyData}
-                                size={12}
-                                className={copiedId === tc.id ? 'text-[var(--accent-text)]' : ''}
-                              />
-                              <span>{copiedId === tc.id ? 'Đã sao chép' : 'Sao chép Input'}</span>
-                            </button>
+                            <div className="flex items-center gap-1.5">
+                              {onRunSample && (
+                                <button
+                                  onClick={() => onRunSample(tc.id)}
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-[var(--accent-text)] font-semibold transition-colors cursor-pointer shadow-xs"
+                                  title="Nạp vào tab kiểm thử và chạy thử ngay"
+                                >
+                                  <Play className="w-2.5 h-2.5 fill-current" />
+                                  <span>Chạy test này</span>
+                                </button>
+                              )}
+                              <button
+                                onClick={() => onCopy(tc.input, tc.id)}
+                                className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] transition-colors cursor-pointer shadow-xs"
+                                title="Sao chép dữ liệu đầu vào"
+                              >
+                                <MorphIcon
+                                  icon={copiedId === tc.id ? CheckData : CopyData}
+                                  size={11}
+                                  className={copiedId === tc.id ? 'text-[var(--accent-text)]' : ''}
+                                />
+                                <span>{copiedId === tc.id ? 'Đã sao chép' : 'Sao chép Input'}</span>
+                              </button>
+                            </div>
                           </div>
                           <div className="p-3 bg-[var(--bg-primary)] space-y-2.5 font-mono text-xs">
                             <div>
@@ -197,7 +212,21 @@ export default function ProblemLeftPane({
                               </pre>
                             </div>
                             <div>
-                              <span className="text-[10px] font-semibold text-[var(--text-muted)] block mb-1">Đầu ra (Expected):</span>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase">Đầu ra (Expected):</span>
+                                <button
+                                  onClick={() => onCopy(tc.expected, tc.id + 1000)}
+                                  className="inline-flex items-center gap-1 text-[10px] font-mono text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
+                                  title="Sao chép kết quả kỳ vọng"
+                                >
+                                  <MorphIcon
+                                    icon={copiedId === tc.id + 1000 ? CheckData : CopyData}
+                                    size={10}
+                                    className={copiedId === tc.id + 1000 ? 'text-[var(--accent-text)]' : ''}
+                                  />
+                                  <span>{copiedId === tc.id + 1000 ? 'Đã chép' : 'Chép'}</span>
+                                </button>
+                              </div>
                               <pre className="p-2.5 rounded border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--accent-text)] font-semibold whitespace-pre-wrap break-all">
                                 {tc.expected || '(luồng rỗng)'}
                               </pre>

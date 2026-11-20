@@ -12,5 +12,7 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
+    // Allow tunnel hosts (ngrok/localtunnel/...) so the dev server can be exposed publicly.
+    allowedHosts: ['.ngrok-free.dev', '.ngrok.io', '.ngrok.app', '.loca.lt', '.trycloudflare.com'],
   },
 });

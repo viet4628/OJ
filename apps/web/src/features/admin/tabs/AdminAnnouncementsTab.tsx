@@ -63,14 +63,23 @@ export default function AdminAnnouncementsTab() {
 
   return (
     <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] p-4 space-y-4">
-      <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]">
-        <h3 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
-           Quản Lý Thông Báo
-        </h3>
-        {annNotice && <span className="text-[11px] text-[var(--accent-text)] font-mono">{annNotice}</span>}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[var(--border)]">
+        <div>
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">
+            Quản Lý Thông Báo
+          </h2>
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+            Đăng tải và quản trị thông báo toàn hệ thống cho học sinh và giáo viên.
+          </p>
+        </div>
+        {annNotice && (
+          <span className="text-xs text-[var(--accent-text)] font-mono bg-accent/10 px-2 py-0.5 rounded border border-accent/25">
+            {annNotice}
+          </span>
+        )}
       </div>
 
-      <form onSubmit={saveAnn} className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3.5 rounded-md bg-[var(--bg-primary)] border border-[var(--border)]">
+      <form onSubmit={saveAnn} className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 rounded-md bg-[var(--bg-primary)] border border-[var(--border)] shadow-xs">
         <div className="space-y-1">
           <label className={labelCls}>Nhãn (Tag)</label>
           <input aria-label="Nhãn (Tag)"
@@ -101,7 +110,7 @@ export default function AdminAnnouncementsTab() {
             className={`${inputCls} resize-y`}
           />
         </div>
-        <div className="flex items-center gap-3 md:col-span-2">
+        <div className="flex items-center gap-3 md:col-span-2 pt-1">
           <label className="flex items-center gap-2 text-xs font-medium text-[var(--text-secondary)] cursor-pointer">
             <input
               type="checkbox"
@@ -124,23 +133,23 @@ export default function AdminAnnouncementsTab() {
 
       <div className="space-y-2">
         {anns.map((a) => (
-          <div key={a.id} className="flex items-center justify-between gap-3 p-3 rounded-md border border-[var(--border)] bg-[var(--bg-primary)]">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="px-1.5 py-0.2 rounded bg-accent/10 text-[var(--accent-text)] text-[10px] font-mono border border-accent/20">
+          <div key={a.id} className="flex items-start justify-between gap-3 p-3.5 rounded-md border border-[var(--border)] bg-[var(--bg-primary)] hover:border-[var(--text-muted)] hover:shadow-xs transition-all">
+            <div className="min-w-0 space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-1.5 py-0.2 rounded bg-accent/10 text-[var(--accent-text)] text-[10px] font-mono border border-accent/25">
                   {a.tag}
                 </span>
-                <span className="text-xs font-semibold text-[var(--text-primary)] truncate">{a.title}</span>
+                <span className="text-xs font-semibold text-[var(--text-primary)]">{a.title}</span>
               </div>
-              <p className="text-[11px] text-[var(--text-secondary)] truncate mt-1">{a.content}</p>
+              <p className="text-xs text-[var(--text-secondary)] whitespace-pre-line leading-relaxed">{a.content}</p>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0 self-start">
               <span className="text-[10px] text-[var(--text-muted)] font-mono">
                 {new Date(a.created_at).toLocaleDateString('vi-VN')}
               </span>
               <button
                 onClick={() => handleDeleteAnn(a.id, a.title)}
-                className="p-1 rounded text-[var(--danger)] hover:bg-danger/10 transition-colors cursor-pointer"
+                className="p-1.5 rounded-md text-[var(--danger)] hover:bg-danger/10 transition-colors cursor-pointer"
                 title="Xóa thông báo"
               >
                 <MorphIcon icon={Trash2Data} size={14} />
@@ -148,7 +157,11 @@ export default function AdminAnnouncementsTab() {
             </div>
           </div>
         ))}
-        {anns.length === 0 && <p className="text-xs text-[var(--text-muted)] text-center py-4">Chưa có thông báo nào.</p>}
+        {anns.length === 0 && (
+          <div className="p-8 text-center text-xs text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-md">
+            Chưa có thông báo nào được tạo.
+          </div>
+        )}
       </div>
     </div>
   );

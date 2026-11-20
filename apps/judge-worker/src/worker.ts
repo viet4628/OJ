@@ -20,7 +20,7 @@ async function main(): Promise<void> {
   const client = createClient(config.supabaseUrl, config.serviceRoleKey, {
     realtime: { params: { eventsPerSecond: 2 } },
   });
-  const repository = new JudgeRepository(client, config.requestTimeoutMs);
+  const repository = new JudgeRepository(client, config.requestTimeoutMs, config.cacheTtlMs);
   // rsjudge engine mode: worker chỉ điều phối qua engine Rust và phục vụ testcase qua gRPC.
   const judge = config.engineEndpoint
     ? new EngineJudge(repository, config.engineEndpoint, config.providerBind)

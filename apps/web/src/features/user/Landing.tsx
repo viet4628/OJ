@@ -87,8 +87,8 @@ export default function Landing({ onOpenAuth }: LandingProps) {
               <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-center">
                 {/* Left Text */}
                 <div className="xl:col-span-7 space-y-4">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border)] text-xs font-mono">
-                     Nền tảng chấm bài tự động &amp; luyện tập thuật toán
+                  <div className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border)] text-xs font-mono">
+                    Nền tảng chấm bài tự động &amp; luyện tập thuật toán
                   </div>
 
                   <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-[var(--text-primary)] leading-tight">
@@ -143,21 +143,68 @@ export default function Landing({ onOpenAuth }: LandingProps) {
                       </code>
                     </pre>
 
-                    {/* Result Bar */}
-                    <div className="bg-[#161b22] border-t border-[#30363d] p-2.5 flex items-center justify-between text-xs font-mono">
-                      <span className="inline-flex items-center gap-1.5 text-[#3fb950] font-semibold text-[11px]">
-                         ACCEPTED (AC)
-                      </span>
-                      <div className="flex items-center gap-2.5 text-[10px] text-[#7d8590]">
-                        <span>Kết quả minh họa</span>
-                        <span>·</span>
-                        <span>1.2 MB</span>
-                        <span>·</span>
-                        <span>5/5 tests</span>
+                    {/* Progsity Style Result Bar & Test Matrix */}
+                    <div className="bg-[#161b22] border-t border-[#30363d] p-3 space-y-2 text-xs font-mono">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-[#3fb950]" />
+                          <span className="text-[#3fb950] font-semibold text-[11px]">ACCEPTED (AC)</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-[#7d8590]">
+                          <span className="px-1.5 py-0.5 rounded bg-[#21262d] text-[#e6edf3] border border-[#30363d]">10/10 Đạt</span>
+                          <span>12ms</span>
+                          <span>·</span>
+                          <span>2.4 MB</span>
+                        </div>
+                      </div>
+
+                      {/* Test Matrix Tiles */}
+                      <div className="flex flex-wrap gap-1 pt-0.5">
+                        {['S1', 'S2', '1', '2', '3', '4', '5', '6', '7', '8'].map((tile) => (
+                          <div
+                            key={tile}
+                            className="h-5 min-w-[24px] px-1 rounded flex items-center justify-center text-[9px] font-bold bg-[#3fb950]/15 text-[#3fb950] border border-[#3fb950]/30 select-none"
+                          >
+                            {tile}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
                 </div>
+              </div>
+            </section>
+
+            {/* 3-Pillar Learning Pathway (Progsity style) */}
+            <section className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="p-4 rounded-md border border-[var(--border)] bg-[var(--bg-secondary)] space-y-1.5 shadow-xs">
+                <span className="text-[10px] font-mono font-bold text-[var(--accent-text)] uppercase tracking-wider block">
+                  01 Luyện tập
+                </span>
+                <h3 className="text-xs font-semibold text-[var(--text-primary)]">Kho bài tập đa dạng</h3>
+                <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                  Hàng trăm bài toán thuật toán từ cơ bản đến nâng cao, phân loại theo chủ đề và độ khó.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-md border border-[var(--border)] bg-[var(--bg-secondary)] space-y-1.5 shadow-xs">
+                <span className="text-[10px] font-mono font-bold text-[var(--accent-text)] uppercase tracking-wider block">
+                  02 Chấm tự động
+                </span>
+                <h3 className="text-xs font-semibold text-[var(--text-primary)]">Sandbox an toàn & Ma trận test</h3>
+                <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                  Mã nguồn được biên dịch và chạy cách ly trong mili-giây, phản hồi verdict và chi tiết từng bộ test.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-md border border-[var(--border)] bg-[var(--bg-secondary)] space-y-1.5 shadow-xs">
+                <span className="text-[10px] font-mono font-bold text-[var(--accent-text)] uppercase tracking-wider block">
+                  03 Thi đấu thực chiến
+                </span>
+                <h3 className="text-xs font-semibold text-[var(--text-primary)]">Contest ACM & OI Realtime</h3>
+                <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                  Tham gia các kỳ thi lập trình có tính giờ, theo dõi bảng xếp hạng trực tiếp theo thời gian thực.
+                </p>
               </div>
             </section>
 

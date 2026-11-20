@@ -69,6 +69,7 @@ export interface ContestProblemRow {
   problem_id: string;
   sort_order: number;
   score?: number;
+  practice_visible?: boolean;
   problems: Problem;
 }
 

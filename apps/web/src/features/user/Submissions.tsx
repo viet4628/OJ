@@ -166,53 +166,51 @@ export default function Submissions({ user }: { user: AppUser | null }) {
     <div className="space-y-5">
       {actionNotice && <p role="status" className="text-xs text-[var(--accent-text)]">{actionNotice}</p>}
       {/* Header & Filter */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[var(--bg-primary)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[var(--bg-secondary)] p-4 sm:p-5 rounded-md border border-[var(--border)] shadow-xs">
         <div>
-          <h1 className="text-xl font-extrabold text-[var(--text-primary)] flex items-center gap-2 tracking-tight">
-             Nhật Ký Nộp Bài Realtime (Submissions)
+          <h1 className="text-base sm:text-lg font-semibold tracking-tight text-[var(--text-primary)] flex items-center gap-2">
+            <span>Lịch sử nộp bài</span>
           </h1>
-          <p className="text-[var(--text-secondary)] text-xs mt-1">Theo dõi thời gian thực các bài nộp từ toàn bộ thí sinh trên hệ thống</p>
+          <p className="text-[var(--text-secondary)] text-xs mt-0.5">
+            Theo dõi trạng thái chấm và kết quả thực thi mã nguồn theo thời gian thực.
+          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/10 text-[var(--accent-text)] border border-accent/20 text-xs font-bold font-code">
-            <RefreshCw className={`w-3.5 h-3.5 text-[var(--accent-text)] ${isRefreshing ? 'animate-spin' : ''}`} /> Realtime Active
-          </div>
-
           {/* Mine / All Toggle */}
-          <div
-            className={`flex items-center rounded-lg border font-bold text-[10px] overflow-hidden cursor-pointer transition-colors ${
-              mineOnly
-                ? 'bg-accent/10 border-accent/30 text-[var(--accent-text)]'
-                : 'bg-[var(--bg-secondary)] border-[var(--border)] text-[var(--text-secondary)]'
-            }`}
-            onClick={handleMineToggle}
-            title="Chỉ hiển thị bài nộp của tôi"
-            role="switch"
-            aria-checked={mineOnly}
-          >
-            <span className="px-2.5 py-1.5">CỦA TÔI</span>
+          <div className="bg-[var(--bg-primary)] p-0.5 rounded-md border border-[var(--border)] flex items-center gap-0.5 text-xs shadow-xs">
+            <button
+              onClick={() => {
+                if (mineOnly) handleMineToggle();
+              }}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                !mineOnly
+                  ? 'bg-[var(--accent)] text-white shadow-xs'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+              }`}
+            >
+              Toàn bộ
+            </button>
+            <button
+              onClick={() => {
+                if (!mineOnly) handleMineToggle();
+              }}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                mineOnly
+                  ? 'bg-[var(--accent)] text-white shadow-xs'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+              }`}
+            >
+              Bài của tôi
+            </button>
           </div>
-
-          <select aria-label="Lọc theo kết quả"
-            value={statusFilter}
-            onChange={(e) => handleStatusChange(e.target.value)}
-            className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg px-3 py-1.5 text-xs text-[var(--text-primary)] font-bold focus:outline-none focus:border-[var(--accent)] cursor-pointer"
-          >
-            <option value="ALL">Tất cả trạng thái</option>
-            <option value="ACCEPTED">ACCEPTED</option>
-            <option value="WRONG_ANSWER">WRONG_ANSWER</option>
-            <option value="TIME_LIMIT_EXCEEDED">TIME_LIMIT_EXCEEDED</option>
-            <option value="COMPILE_ERROR">COMPILE_ERROR</option>
-            <option value="RUNTIME_ERROR">RUNTIME_ERROR</option>
-          </select>
 
           <select aria-label="Lọc theo ngôn ngữ"
             value={langFilter}
             onChange={(e) => setLangFilter(e.target.value)}
-            className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg px-3 py-1.5 text-xs text-[var(--text-primary)] font-bold focus:outline-none focus:border-[var(--accent)] cursor-pointer"
+            className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-2.5 py-1.5 text-xs text-[var(--text-primary)] font-medium focus:outline-none focus:border-[var(--accent)] cursor-pointer shadow-xs"
           >
-            <option value="ALL">Ngôn ngữ</option>
+            <option value="ALL">Mọi ngôn ngữ</option>
             <option value="cpp">C++</option>
             <option value="python">Python</option>
             <option value="rust">Rust</option>
@@ -220,24 +218,49 @@ export default function Submissions({ user }: { user: AppUser | null }) {
 
           <button
             onClick={handleRefresh}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--text-primary)] font-bold text-xs transition-all shadow-sm cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] border border-[var(--border)] text-[var(--text-primary)] font-medium text-xs transition-colors shadow-xs cursor-pointer"
             title="Làm mới danh sách"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} /> Refresh
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[var(--accent-text)]' : ''}`} />
+            <span>Làm mới</span>
           </button>
         </div>
       </div>
 
+      {/* Progsity Style Status Pills */}
+      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+        {[
+          { id: 'ALL', label: 'Tất cả kết quả' },
+          { id: 'ACCEPTED', label: 'Accepted (AC)' },
+          { id: 'WRONG_ANSWER', label: 'Wrong Answer (WA)' },
+          { id: 'TIME_LIMIT_EXCEEDED', label: 'Time Limit (TLE)' },
+          { id: 'RUNTIME_ERROR', label: 'Runtime Error (RTE)' },
+          { id: 'COMPILE_ERROR', label: 'Compile Error (CE)' },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => handleStatusChange(tab.id)}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+              statusFilter === tab.id
+                ? 'bg-[var(--bg-secondary)] text-[var(--text-primary)] font-semibold border border-[var(--border)] shadow-xs'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] border border-transparent'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* Submissions Table */}
-      <div className="bg-[var(--bg-primary)] rounded-2xl overflow-hidden border border-[var(--border)] shadow-sm">
+      <div className="bg-[var(--bg-secondary)] rounded-md overflow-hidden border border-[var(--border)] shadow-xs">
         {isLoading ? (
-          <div className="flex items-center justify-center gap-2 py-16 text-xs text-[var(--text-secondary)] font-bold">
+          <div className="flex items-center justify-center gap-2 py-16 text-xs text-[var(--text-secondary)] font-medium">
             <Loader2 className="w-4 h-4 animate-spin text-[var(--accent-text)]" /> Đang tải danh sách bài nộp...
           </div>
         ) : loadError ? (
           <div className="py-16 text-center text-xs text-danger font-semibold">
             Không thể tải danh sách bài nộp. Vui lòng thử lại.
-            <button onClick={handleRefresh} className="block mx-auto mt-3 px-4 py-1.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] font-bold text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer">
+            <button onClick={handleRefresh} className="block mx-auto mt-3 px-4 py-1.5 rounded-md bg-[var(--bg-primary)] border border-[var(--border)] font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer text-xs">
               Tải lại
             </button>
           </div>
@@ -248,51 +271,51 @@ export default function Submissions({ user }: { user: AppUser | null }) {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-b border-[var(--border)] font-bold text-[11px] uppercase tracking-wider">
+              <thead className="bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border-b border-[var(--border)] font-semibold text-[11px]">
                 <tr>
-                  <th className="px-5 py-3.5">Giờ Nộp (When)</th>
-                  <th className="px-5 py-3.5">Mã Nộp</th>
-                  <th className="px-5 py-3.5">Tên Bài Tập</th>
-                  <th className="px-5 py-3.5">Tác Giả</th>
-                  <th className="px-5 py-3.5">Ngôn Ngữ</th>
-                  <th className="px-5 py-3.5">Kết Quả Chấm</th>
-                  <th className="px-5 py-3.5">Thời Gian</th>
-                  <th className="px-5 py-3.5">Bộ Nhớ</th>
-                  <th className="px-5 py-3.5 text-right">Chi Tiết</th>
+                  <th className="px-3.5 py-2.5">Thời Gian</th>
+                  <th className="px-3.5 py-2.5">Mã Nộp</th>
+                  <th className="px-3.5 py-2.5">Tên Bài Tập</th>
+                  <th className="px-3.5 py-2.5">Tác Giả</th>
+                  <th className="px-3.5 py-2.5">Ngôn Ngữ</th>
+                  <th className="px-3.5 py-2.5">Kết Quả Chấm</th>
+                  <th className="px-3.5 py-2.5">Thời Gian</th>
+                  <th className="px-3.5 py-2.5">Bộ Nhớ</th>
+                  <th className="px-3.5 py-2.5 text-right">Chi Tiết</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[var(--border)] font-code">
+              <tbody className="divide-y divide-[var(--border)]">
                 {filteredSubmissions.map((sub) => (
-                  <tr key={sub.id} className="hover:bg-surface/80 transition-colors">
-                    <td className="px-5 py-4 text-[var(--text-secondary)] font-code whitespace-nowrap">{formatTime(sub.created_at)}</td>
-                    <td className="px-5 py-4 text-[var(--text-secondary)] font-bold">{sub.id.slice(0, 12)}</td>
-                    <td className="px-5 py-4 font-bold text-[var(--text-primary)] font-sans text-xs">
+                  <tr key={sub.id} className="hover:bg-[var(--bg-tertiary)] transition-colors">
+                    <td className="px-3.5 py-2.5 text-[var(--text-secondary)] font-mono text-[11px] whitespace-nowrap">{formatTime(sub.created_at)}</td>
+                    <td className="px-3.5 py-2.5 text-[var(--text-muted)] font-mono text-[11px]">#{sub.id.slice(0, 8)}</td>
+                    <td className="px-3.5 py-2.5 font-medium text-[var(--text-primary)]">
                       <Link
                         to={`/problems/${sub.problems?.slug}?sub=${sub.id}`}
                         state={{ code: sub.code, language: sub.language, submissionId: sub.id }}
-                        className="hover:text-[var(--accent-text)] transition-colors"
+                        className="hover:text-[var(--accent-text)] transition-colors line-clamp-1"
                       >
                         {sub.problems?.title || 'Bài tập'}
                       </Link>
                     </td>
-                    <td className="px-5 py-4 font-sans text-[var(--accent-text)] font-bold">
+                    <td className="px-3.5 py-2.5 text-[var(--text-primary)] font-medium">
                       {sub.profiles?.full_name || sub.profiles?.email?.split('@')[0] || 'user'}
                     </td>
-                    <td className="px-5 py-4">
-                      <span className="px-2 py-0.5 rounded bg-[var(--bg-secondary)] text-[var(--text-primary)] uppercase font-bold text-[10px] border border-[var(--border)]">
+                    <td className="px-3.5 py-2.5">
+                      <span className="px-1.5 py-0.2 rounded bg-[var(--bg-primary)] text-[var(--text-secondary)] uppercase font-mono text-[10px] border border-[var(--border)]">
                         {sub.language}
                       </span>
                     </td>
-                    <td className="px-5 py-4 font-sans font-bold"><VerdictBadge status={sub.status} long /></td>
-                    <td className="px-5 py-4 text-[var(--text-secondary)]">{sub.time_used_ms} ms</td>
-                    <td className="px-5 py-4 text-[var(--text-secondary)]">{sub.memory_used_mb} MB</td>
-                    <td className="px-5 py-4 text-right font-sans">
+                    <td className="px-3.5 py-2.5"><VerdictBadge status={sub.status} long /></td>
+                    <td className="px-3.5 py-2.5 font-mono text-[11px] text-[var(--text-secondary)]">{sub.time_used_ms} ms</td>
+                    <td className="px-3.5 py-2.5 font-mono text-[11px] text-[var(--text-secondary)]">{sub.memory_used_mb} MB</td>
+                    <td className="px-3.5 py-2.5 text-right">
                       <button
                         onClick={() => openSubmission(sub)}
-                        className="p-1.5 rounded-lg hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--accent-text)] transition-colors cursor-pointer"
-                        title="Xem mã nguồn & thông số"
+                        className="p-1 rounded-md hover:bg-[var(--bg-primary)] border border-transparent hover:border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+                        title="Xem mã nguồn & chi tiết chấm"
                       >
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-3.5 h-3.5" />
                       </button>
                     </td>
                   </tr>
@@ -312,14 +335,14 @@ export default function Submissions({ user }: { user: AppUser | null }) {
               <button
                 onClick={() => goToPage(page - 1)}
                 disabled={page === 0 || isRefreshing}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[var(--bg-primary)] border border-[var(--border)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="w-3.5 h-3.5" /> Trước
               </button>
               <button
                 onClick={() => goToPage(page + 1)}
                 disabled={page >= totalPages - 1 || isRefreshing}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[var(--bg-primary)] border border-[var(--border)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Sau <ChevronRight className="w-3.5 h-3.5" />
               </button>
@@ -331,17 +354,17 @@ export default function Submissions({ user }: { user: AppUser | null }) {
       {/* QingdaoU Style Submission Code Inspector Modal */}
       {selectedSubmission && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedSubmission(null)}>
-          <div role="dialog" aria-modal="true" aria-label="Chi tiết bài nộp" className="bg-[var(--bg-primary)] rounded-2xl max-w-2xl w-full p-6 border border-[var(--border)] shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
+          <div role="dialog" aria-modal="true" aria-label="Chi tiết bài nộp" className="bg-[var(--bg-primary)] rounded-md max-w-2xl w-full p-5 border border-[var(--border)] shadow-xl space-y-4" onClick={(e) => e.stopPropagation()}>
             {actionError && <p role="alert" className="text-xs text-[var(--danger)]">{actionError}</p>}
             {canRejudge && canManageSelectedContest && <button onClick={handleRejudge} disabled={rejudging || ['PENDING','JUDGING'].includes(selectedSubmission.status)} className="text-xs border border-[var(--border)] rounded px-3 py-1.5 disabled:opacity-50">{rejudging ? 'Đang yêu cầu...' : 'Chấm lại'}</button>}
             <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
               <div>
-                <h3 className="font-extrabold text-sm text-[var(--text-primary)]">Chi Tiết Bài Nộp #{selectedSubmission.id.slice(0, 12)}</h3>
+                <h3 className="font-semibold text-sm text-[var(--text-primary)]">Chi Tiết Bài Nộp #{selectedSubmission.id.slice(0, 12)}</h3>
                 <p className="text-xs text-[var(--text-secondary)]">{selectedSubmission.problems?.title} • {selectedSubmission.profiles?.full_name || selectedSubmission.profiles?.email?.split('@')[0]}</p>
               </div>
               <button
                 onClick={() => setSelectedSubmission(null)}
-                className="p-1 rounded-lg hover:bg-[var(--bg-secondary)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                className="p-1 rounded-md hover:bg-[var(--bg-secondary)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
               >
                 <X className="w-4 h-4" />
               </button>

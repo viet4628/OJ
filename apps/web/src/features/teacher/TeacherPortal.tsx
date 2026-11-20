@@ -1,15 +1,43 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import MorphIcon from '../../components/MorphIcon';
-import { ArrowLeft as ArrowLeftData, LogIn as LogInData } from 'lucide';
-import { getUserPermissions, type AppUser } from '../../lib/api';
+import {
+  ArrowLeft as ArrowLeftData,
+  LogIn as LogInData,
+  GraduationCap as GraduationCapData,
+  LayoutDashboard as LayoutDashboardData,
+  School as SchoolData,
+  BookOpen as BookOpenData,
+  Compass as CompassData,
+  Trophy as TrophyData,
+  Send as SendData,
+  ShieldCheck as ShieldCheckData,
+  ShieldAlert as ShieldAlertData,
+} from 'lucide';
+import { getUserPermissions, type AppUser, type Classroom } from '../../lib/api';
 import AdminProblemsTab from '../admin/tabs/AdminProblemsTab';
 import AdminContestsTab from '../admin/tabs/AdminContestsTab';
-import AdminAnnouncementsTab from '../admin/tabs/AdminAnnouncementsTab';
+import AdminSubmissionsTab from '../admin/tabs/AdminSubmissionsTab';
 import TeacherClassroomsTab from './tabs/TeacherClassroomsTab';
 import LearningTracksTab from './tabs/LearningTracksTab';
+import TeacherOverviewTab from './tabs/TeacherOverviewTab';
 
-type TeacherTab = 'classrooms' | 'problems' | 'tracks' | 'contests' | 'announcements';
+export type TeacherTab =
+  | 'overview'
+  | 'classrooms'
+  | 'problems'
+  | 'tracks'
+  | 'contests'
+  | 'submissions';
+
+const TEACHER_TAB_ICONS: Record<TeacherTab, any> = {
+  overview: LayoutDashboardData,
+  classrooms: SchoolData,
+  problems: BookOpenData,
+  tracks: CompassData,
+  contests: TrophyData,
+  submissions: SendData,
+};
 
 interface TeacherPortalProps {
   user: AppUser | null;
@@ -17,10 +45,42 @@ interface TeacherPortalProps {
 }
 
 export default function TeacherPortal({ user, onOpenAuth }: TeacherPortalProps) {
-  const [activeTab, setActiveTab] = useState<TeacherTab>('classrooms');
-  const [problemMode, setProblemMode] = useState<'list' | 'create'>('list');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Parse active tab from URL path /teacher/:tab or fallback
+  const subpath = location.pathname.replace(/^\/teacher\/?/, '').split('/')[0];
+  const validTabs: TeacherTab[] = [
+    'overview',
+    'classrooms',
+    'problems',
+    'tracks',
+    'contests',
+    'submissions',
+  ];
+  const currentTab: TeacherTab = validTabs.includes(subpath as TeacherTab)
+    ? (subpath as TeacherTab)
+    : (validTabs.includes(searchParams.get('tab') as TeacherTab)
+        ? (searchParams.get('tab') as TeacherTab)
+        : 'overview');
+
+  const [activeTab, setActiveTab] = useState<TeacherTab>(currentTab);
+  const [problemMode, setProblemMode] = useState<'list' | 'create'>(
+    searchParams.get('mode') === 'create' ? 'create' : 'list'
+  );
+  const [selectedClassroom, setSelectedClassroom] = useState<Classroom | null>(null);
   const [permissions, setPermissions] = useState<string[]>([]);
   const [permLoaded, setPermLoaded] = useState(false);
+
+  // Sync state if URL subpath changes
+  useEffect(() => {
+    if (validTabs.includes(subpath as TeacherTab)) {
+      setActiveTab(subpath as TeacherTab);
+    } else if (location.pathname === '/teacher' || location.pathname === '/teacher/') {
+      setActiveTab('overview');
+    }
+  }, [location.pathname, subpath]);
 
   useEffect(() => {
     if (!user) {
@@ -33,7 +93,6 @@ export default function TeacherPortal({ user, onOpenAuth }: TeacherPortalProps) 
         'problems.manage',
         'testcases.manage',
         'contests.manage',
-        'announcements.manage',
         'submissions.view_all',
       ]);
       setPermLoaded(true);
@@ -49,6 +108,7 @@ export default function TeacherPortal({ user, onOpenAuth }: TeacherPortalProps) 
 
   const canAccessTab = (tab: TeacherTab): boolean => {
     switch (tab) {
+      case 'overview':
       case 'classrooms':
         return true;
       case 'problems':
@@ -56,8 +116,8 @@ export default function TeacherPortal({ user, onOpenAuth }: TeacherPortalProps) 
         return can('problems.manage');
       case 'contests':
         return can('contests.manage');
-      case 'announcements':
-        return can('announcements.manage');
+      case 'submissions':
+        return can('submissions.view_all');
       default:
         return false;
     }
@@ -65,36 +125,44 @@ export default function TeacherPortal({ user, onOpenAuth }: TeacherPortalProps) 
 
   useEffect(() => {
     if (permLoaded && !canAccessTab(activeTab)) {
-      if (can('problems.manage')) setActiveTab('problems');
-      else if (can('contests.manage')) setActiveTab('contests');
-      else setActiveTab('classrooms');
+      if (can('problems.manage')) handleTabChange('problems');
+      else if (can('contests.manage')) handleTabChange('contests');
+      else handleTabChange('classrooms');
     }
   }, [permLoaded, permissions]);
 
-  const handleTabChange = (tab: TeacherTab) => {
+  const handleTabChange = (tab: TeacherTab, mode?: 'list' | 'create') => {
     if (!canAccessTab(tab)) return;
+    setActiveTab(tab);
     if (tab === 'problems') {
-      setProblemMode('list');
-      setActiveTab('problems');
+      const targetMode = mode || 'list';
+      setProblemMode(targetMode);
+      navigate(targetMode === 'create' ? '/teacher/problems?mode=create' : '/teacher/problems');
+    } else if (tab === 'overview') {
+      navigate('/teacher');
     } else {
-      setActiveTab(tab);
+      navigate(`/teacher/${tab}`);
     }
   };
 
   if (!user) {
     return (
-      <div className="max-w-md mx-auto my-16 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-md p-8 text-center space-y-4">
-
+      <div className="max-w-md mx-auto my-16 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-md p-8 text-center space-y-3 shadow-xs">
+        <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-accent/10 border border-accent/25 text-[var(--accent-text)] mb-1">
+          <MorphIcon icon={GraduationCapData} size={20} />
+        </div>
         <h1 className="text-base font-semibold text-[var(--text-primary)]">Cổng Giáo Viên</h1>
         <p className="text-xs text-[var(--text-secondary)]">
           Vui lòng đăng nhập bằng tài khoản Giáo viên để truy cập không gian soạn đề và quản lý kỳ thi.
         </p>
-        <button
-          onClick={onOpenAuth}
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-medium border border-[rgba(27,31,36,0.15)] shadow-xs transition-colors cursor-pointer"
-        >
-          <MorphIcon icon={LogInData} size={16} /> Đăng Nhập Ngay
-        </button>
+        <div className="pt-2">
+          <button
+            onClick={onOpenAuth}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-medium border border-[rgba(27,31,36,0.15)] shadow-xs transition-colors cursor-pointer"
+          >
+            <MorphIcon icon={LogInData} size={14} /> Đăng Nhập Ngay
+          </button>
+        </div>
       </div>
     );
   }
@@ -103,19 +171,21 @@ export default function TeacherPortal({ user, onOpenAuth }: TeacherPortalProps) 
 
   if (permLoaded && !isAllowed) {
     return (
-      <div className="max-w-md mx-auto my-16 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-md p-8 text-center space-y-4">
-
+      <div className="max-w-md mx-auto my-16 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-md p-8 text-center space-y-3 shadow-xs">
+        <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-danger/10 border border-danger/25 text-[var(--danger)] mb-1">
+          <MorphIcon icon={ShieldAlertData} size={20} />
+        </div>
         <h1 className="text-base font-semibold text-[var(--text-primary)]">Chưa Được Cấp Quyền Giáo Viên</h1>
         <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-          Tài khoản hiện tại (<b className="text-[var(--text-primary)]">{user.username}</b>) đang là tài khoản học sinh.
+          Tài khoản hiện tại (<b className="text-[var(--text-primary)] font-mono">{user.username}</b>) đang là tài khoản học sinh.
           Vui lòng liên hệ Quản trị viên để được nâng cấp quyền Giáo viên.
         </p>
         <div className="pt-2">
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--bg-tertiary)] hover:bg-[var(--border)] text-[var(--text-primary)] text-xs font-medium border border-[var(--border)] transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] text-xs font-medium border border-[var(--border)] transition-colors cursor-pointer"
           >
-            <MorphIcon icon={ArrowLeftData} size={14} /> Về Trang Chủ Học Sinh
+            <MorphIcon icon={ArrowLeftData} size={13} /> Về Trang Chủ Học Sinh
           </Link>
         </div>
       </div>
@@ -124,68 +194,101 @@ export default function TeacherPortal({ user, onOpenAuth }: TeacherPortalProps) 
 
   const menuBtn = (tab: TeacherTab, text: string, isSpecialActive = false) => {
     const isActive = isSpecialActive || (activeTab === tab && (tab !== 'problems' || problemMode === 'list'));
+    const IconComponent = TEACHER_TAB_ICONS[tab];
     return (
       <button
         onClick={() => handleTabChange(tab)}
-        className={`w-auto shrink-0 lg:w-full whitespace-nowrap flex items-center gap-2 px-2.5 py-3 lg:py-1.5 rounded-md transition-colors cursor-pointer text-xs ${
+        className={`w-auto shrink-0 lg:w-full whitespace-nowrap flex items-center justify-between px-2.5 py-2 rounded-md transition-all cursor-pointer text-xs ${
           isActive
-            ? 'bg-[var(--bg-tertiary)] text-[var(--text-primary)] font-semibold'
-            : 'text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] font-normal'
+            ? 'bg-[var(--bg-tertiary)] text-[var(--text-primary)] font-semibold shadow-xs'
+            : 'text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] font-medium'
         }`}
       >
-        {text}
+        <div className="flex items-center gap-2.5">
+          <MorphIcon
+            icon={IconComponent}
+            size={14}
+            className={isActive ? 'text-[var(--accent-text)]' : 'text-[var(--text-muted)]'}
+          />
+          <span>{text}</span>
+        </div>
+        {isActive && <div className="hidden lg:block w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />}
       </button>
     );
   };
 
   return (
     <div className="flex flex-col lg:flex-row items-start gap-6">
-      {/* LEFT: Sidebar */}
-      <aside className="w-full lg:w-56 shrink-0 lg:sticky lg:top-20 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] overflow-hidden">
-        <div className="p-3.5 border-b border-[var(--border)] flex items-center gap-2.5">
-
-          <div className="min-w-0">
-            <p className="text-xs font-semibold text-[var(--text-primary)] truncate">Cổng Giáo Viên</p>
-
+      {/* LEFT: Sidebar Navigation */}
+      <aside className="w-full lg:w-60 shrink-0 lg:sticky lg:top-6 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] overflow-hidden">
+        {/* Brand header */}
+        <div className="p-3.5 border-b border-[var(--border)] flex items-center justify-between bg-surface/50">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded bg-accent/10 border border-accent/25 flex items-center justify-center text-[var(--accent-text)]">
+              <MorphIcon icon={GraduationCapData} size={14} />
+            </div>
+            <p className="text-sm font-semibold tracking-tight text-[var(--text-primary)]">Teacher Workspace</p>
           </div>
+          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full border border-[var(--border)] bg-[var(--bg-tertiary)] text-[var(--text-muted)]">
+            {user.role === 'admin' ? 'Admin' : 'Giáo viên'}
+          </span>
         </div>
 
-        <nav aria-label="Điều hướng giáo viên" className="p-2 flex lg:block items-center gap-1 lg:space-y-0.5 overflow-x-auto text-xs">
+        <nav aria-label="Điều hướng giáo viên" className="p-2 flex lg:block items-center gap-1 lg:space-y-3 overflow-x-auto text-xs">
+          {/* Section: Overview */}
+          <div className="space-y-0.5">
+            <p className="hidden lg:block px-2 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+              Tổng Quan
+            </p>
+            {menuBtn('overview', 'Bảng Điều Khiển')}
+          </div>
 
-          <p className="hidden lg:block px-2.5 pt-3 pb-1 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-            Lớp Học
-          </p>
-          {menuBtn('classrooms', 'Quản Lý Lớp Học')}
+          {/* Section: Classrooms */}
+          <div className="space-y-0.5">
+            <p className="hidden lg:block px-2 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+              Giảng Dạy & Lớp Học
+            </p>
+            {menuBtn('classrooms', 'Quản Lý Lớp Học')}
+          </div>
 
           {can('problems.manage') && (
-            <>
-              <p className="hidden lg:block px-2.5 pt-3 pb-1 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-                Bài Tập
+            <div className="space-y-0.5">
+              <p className="hidden lg:block px-2 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                Bài Tập & Lộ Trình
               </p>
-              {menuBtn('problems', 'Danh Sách Bài Tập', activeTab === 'problems' && problemMode === 'list')}
+              {menuBtn('problems', 'Ngân Hàng Bài Tập', activeTab === 'problems' && problemMode === 'list')}
               {menuBtn('tracks', 'Lộ Trình Luyện Tập')}
-            </>
+            </div>
           )}
 
           {can('contests.manage') && (
-            <>
-              <p className="hidden lg:block px-2.5 pt-3 pb-1 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+            <div className="space-y-0.5">
+              <p className="hidden lg:block px-2 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
                 Kỳ Thi & Kiểm Tra
               </p>
               {menuBtn('contests', 'Danh Sách Kỳ Thi')}
-            </>
+            </div>
           )}
 
-          {can('announcements.manage') && (
-            <>
-              <p className="hidden lg:block px-2.5 pt-3 pb-1 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-                Thông Báo
+          {can('submissions.view_all') && (
+            <div className="space-y-0.5">
+              <p className="hidden lg:block px-2 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                Giám Sát Bài Làm
               </p>
-              {menuBtn('announcements', 'Bảng Thông Báo')}
-            </>
+              {menuBtn('submissions', 'Nhật Ký Bài Nộp')}
+            </div>
           )}
 
-          <div className="hidden lg:block pt-2 mt-2 border-t border-[var(--border)]">
+          <div className="hidden lg:block pt-2 border-t border-[var(--border)] space-y-1">
+            {user.role === 'admin' && (
+              <Link
+                to="/admin"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[var(--accent-text)] bg-accent/5 hover:bg-accent/10 border border-accent/20 transition-colors text-xs font-medium"
+              >
+                <MorphIcon icon={ShieldCheckData} size={14} /> Chuyển sang Admin Console
+              </Link>
+            )}
+
             <Link
               to="/"
               className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] transition-colors text-xs font-medium"
@@ -198,31 +301,39 @@ export default function TeacherPortal({ user, onOpenAuth }: TeacherPortalProps) 
 
       {/* RIGHT: Content */}
       <div className="flex-1 min-w-0 w-full space-y-4">
-        {activeTab === 'classrooms' && <>
-        <div className="bg-[var(--bg-secondary)] px-4 py-3 rounded-md border border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="space-y-0.5">
-            <h1 className="text-sm font-semibold text-[var(--text-primary)]">Trung Tâm Giảng Dạy & Lớp Học</h1>
-            <p className="text-[var(--text-secondary)] text-xs">
-              Mở lớp học · Quản lý học sinh · Giao bài tập & xem tiến độ trực tiếp
-            </p>
-          </div>
-
-
-        </div>
-
-          <TeacherClassroomsTab />
-        </>}
+        {activeTab === 'overview' && (
+          <TeacherOverviewTab
+            onNavigateTab={handleTabChange}
+            onSelectClassroom={(c) => {
+              setSelectedClassroom(c);
+              handleTabChange('classrooms');
+            }}
+            teacherName={user.username}
+          />
+        )}
+        {activeTab === 'classrooms' && (
+          <TeacherClassroomsTab initialClass={selectedClassroom} />
+        )}
         {activeTab === 'problems' && can('problems.manage') && (
           <AdminProblemsTab
             mode={problemMode}
-            onModeChange={(m) => setProblemMode(m)}
+            onModeChange={(m) => {
+              setProblemMode(m);
+              navigate(m === 'create' ? '/teacher/problems?mode=create' : '/teacher/problems');
+            }}
             userId={user.id}
             isAdmin={user.role === 'admin'}
           />
         )}
-        {activeTab === 'tracks' && can('problems.manage') && <LearningTracksTab userId={user.id} isAdmin={user.role === 'admin'} />}
-        {activeTab === 'contests' && can('contests.manage') && <AdminContestsTab userId={user.id} isAdmin={user.role === 'admin'} />}
-        {activeTab === 'announcements' && can('announcements.manage') && <AdminAnnouncementsTab />}
+        {activeTab === 'tracks' && can('problems.manage') && (
+          <LearningTracksTab userId={user.id} isAdmin={user.role === 'admin'} />
+        )}
+        {activeTab === 'contests' && can('contests.manage') && (
+          <AdminContestsTab userId={user.id} isAdmin={user.role === 'admin'} />
+        )}
+        {activeTab === 'submissions' && can('submissions.view_all') && (
+          <AdminSubmissionsTab canRejudge={can('problems.manage') || can('contests.manage')} />
+        )}
       </div>
     </div>
   );

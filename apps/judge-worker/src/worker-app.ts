@@ -14,6 +14,7 @@ export class WorkerApp {
   private started = false;
   private lastPollAt = 0;
   private lastHeartbeatAt = 0;
+  private lastRecoverAt = 0;
   private lastPollDurationMs = 0;
   private lastPollError: string | null = null;
   private realtimeStatus = 'CONNECTING';
@@ -134,12 +135,18 @@ export class WorkerApp {
       for (const submission of pending) this.enqueue(submission);
       try {
         if (Date.now() - this.lastHeartbeatAt >= 10000) {
-          await this.repository.recoverStale(this.queue.activeIds);
           try {
             await this.repository.heartbeat(this.config.workerId, this.judge.mode,
               !this.stopping && this.judge.isReady(), this.queue.queuedCount, this.queue.activeIds.size);
             this.lastHeartbeatAt = Date.now();
           } catch (err) { console.error('[Worker]', err); }
+        }
+        // Quét bài bị bỏ rơi thưa hơn: mỗi lần quét là một vòng ghi lên DB.
+        if (Date.now() - this.lastRecoverAt >= 60000) {
+          try {
+            await this.repository.recoverStale(this.queue.activeIds);
+            this.lastRecoverAt = Date.now();
+          } catch (err) { console.error('[Worker] Loop error:', classifyNetworkError(err)); }
         }
       } catch (err) { console.error('[Worker] Loop error:', classifyNetworkError(err)); }
       await new Promise((resolve) => setTimeout(resolve, this.config.pollIntervalMs));

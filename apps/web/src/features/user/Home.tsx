@@ -143,23 +143,25 @@ export default function Home() {
   return (
     <div className="space-y-6">
       {/* 1. STATS ROW — GitHub Primer Metric Cards */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
         {STAT_CARDS.map((stat) => (
           <div
             key={stat.label}
-            className="bg-[var(--bg-secondary)] rounded-md p-3.5 border border-[var(--border)] flex items-center gap-3 transition-colors"
+            className="bg-[var(--bg-secondary)] rounded-md p-4 border border-[var(--border)] hover:border-[var(--text-muted)] flex flex-col justify-between transition-all duration-200 shadow-xs hover:shadow-sm group"
           >
-
-            <div className="min-w-0">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-[var(--text-secondary)]">{stat.label}</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--border)] group-hover:bg-[var(--accent)] transition-colors" />
+            </div>
+            <div className="mt-2.5">
               {isLoading ? (
-                <div className="w-14 h-5 rounded bg-[var(--bg-tertiary)] animate-pulse" />
+                <div className="w-16 h-7 rounded bg-[var(--bg-tertiary)] animate-pulse" />
               ) : (
-                <div className="text-xl font-semibold text-[var(--text-primary)] leading-tight">
+                <div className="text-2xl font-bold tracking-tight text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors leading-none">
                   {stat.value.toLocaleString('vi-VN')}
                 </div>
               )}
-              <div className="text-xs font-medium text-[var(--text-primary)] truncate mt-0.5">{stat.label}</div>
-              <div className="text-[11px] text-[var(--text-muted)] truncate hidden sm:block">{stat.sub}</div>
+              <div className="text-[11px] text-[var(--text-muted)] mt-1 truncate">{stat.sub}</div>
             </div>
           </div>
         ))}
@@ -230,7 +232,7 @@ export default function Home() {
                     {displayedProblems.map((p) => {
                       const isAc = acceptedIds.includes(p.id);
                       return (
-                        <tr key={p.id} className="hover:bg-[var(--bg-primary)] transition-colors group">
+                        <tr key={p.id} className="hover:bg-[var(--bg-tertiary)]/60 transition-colors group">
                           <td className="px-3 py-2 text-center">
                             <span role="img" aria-label={isAc ? 'Đã giải' : 'Chưa làm'} title={isAc ? 'Đã giải' : 'Chưa làm'} className="inline-flex align-middle">
                               {isAc ? <CheckCircle2 size={16} className="text-[var(--accent-text)]" aria-hidden="true" /> : <Circle size={16} className="text-[var(--text-muted)] opacity-40" aria-hidden="true" />}
@@ -240,7 +242,7 @@ export default function Home() {
                             <div className="flex items-center gap-2 flex-wrap">
                               <Link
                                 to={`/problems/${p.slug}`}
-                                className="font-medium text-[var(--text-primary)] hover:text-[var(--accent-text)] transition-colors"
+                                className="font-semibold text-xs text-[var(--text-primary)] hover:text-[var(--accent-text)] transition-colors"
                               >
                                 {p.title}
                               </Link>
@@ -248,7 +250,7 @@ export default function Home() {
                                 <Link
                                   key={t}
                                   to={`/problems?tag=${encodeURIComponent(t)}`}
-                                  className="whitespace-nowrap px-1.5 py-0.5 rounded text-[10px] font-mono border border-[var(--border)] bg-[var(--bg-tertiary)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                                  className="whitespace-nowrap px-1.5 py-0.2 rounded text-[10px] font-mono border border-[var(--border)] bg-[var(--bg-tertiary)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                                 >
                                   {t}
                                 </Link>
@@ -259,10 +261,7 @@ export default function Home() {
                             <ProblemDifficulty difficulty={p.difficulty} />
                           </td>
                           <td className="px-3 py-2 text-[var(--text-secondary)] font-mono text-[11px] hidden sm:table-cell">
-                            <span className="inline-flex items-center gap-1">
-
-                              {p.time_limit_ms}ms · {p.memory_limit_mb}MB
-                            </span>
+                            {p.time_limit_ms}ms · {p.memory_limit_mb}MB
                           </td>
                           <td className="px-3 py-2 text-right whitespace-nowrap">
                             <Link
@@ -284,8 +283,8 @@ export default function Home() {
           {/* Announcements & Quick Guide */}
           <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] overflow-hidden">
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)] bg-tertiary/50">
-              <h2 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
-                 Tin Tức &amp; Thông Báo
+              <h2 className="text-xs font-semibold text-[var(--text-primary)]">
+                Tin Tức &amp; Thông Báo
               </h2>
               <span className="text-[10px] text-[var(--text-muted)] font-mono">Cập nhật hệ thống</span>
             </div>
@@ -338,14 +337,18 @@ export default function Home() {
 
           {/* 1. Daily Challenge Pick */}
           {dailyProblem && (
-            <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] p-4 space-y-4">
+            <div className="bg-[var(--bg-secondary)] rounded-md border border-accent/40 relative overflow-hidden p-4 space-y-3.5 shadow-xs transition-all duration-200 hover:shadow-sm">
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-[var(--accent)]" />
               <div className="flex items-center justify-between">
-                <h2 className="text-xs font-medium text-[var(--text-secondary)]">Thử thách hôm nay</h2>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+                  <h2 className="text-[11px] font-semibold uppercase tracking-wider text-[var(--accent-text)]">Thử thách hôm nay</h2>
+                </div>
                 <ProblemDifficulty difficulty={dailyProblem.difficulty} />
               </div>
 
               <div>
-                <h3 className="font-semibold text-sm text-[var(--text-primary)] leading-6">
+                <h3 className="font-semibold text-sm text-[var(--text-primary)] leading-snug">
                   <Link
                     to={`/problems/${dailyProblem.slug}`}
                     className="hover:text-[var(--accent-text)] transition-colors"
@@ -353,7 +356,7 @@ export default function Home() {
                     {dailyProblem.title}
                   </Link>
                 </h3>
-                <p className="text-sm text-[var(--text-secondary)] line-clamp-3 mt-2 leading-relaxed break-words">
+                <p className="text-xs text-[var(--text-secondary)] line-clamp-3 mt-1.5 leading-relaxed break-words">
                   {renderInline(getProblemSummary(dailyDescription))}
                 </p>
               </div>
@@ -361,14 +364,14 @@ export default function Home() {
               <div className="flex items-center justify-between border-t border-[var(--border)] pt-3 gap-3">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {(dailyProblem.tags || []).slice(0, 2).map((t) => (
-                    <span key={t} className="whitespace-nowrap px-2 py-0.5 rounded bg-[var(--bg-tertiary)] text-[11px] text-[var(--text-secondary)]">
+                    <span key={t} className="whitespace-nowrap px-1.5 py-0.2 rounded text-[10px] font-mono border border-[var(--border)] bg-[var(--bg-tertiary)] text-[var(--text-muted)]">
                       {t}
                     </span>
                   ))}
                 </div>
                 <Link
                   to={`/problems/${dailyProblem.slug}`}
-                  className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-medium border border-[rgba(27,31,36,0.15)] shadow-xs transition-colors whitespace-nowrap shrink-0"
+                  className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold border border-[rgba(27,31,36,0.15)] shadow-xs transition-colors whitespace-nowrap shrink-0"
                 >
                   Giải ngay <MorphIcon icon={ArrowRightData} size={12} />
                 </Link>
@@ -379,8 +382,8 @@ export default function Home() {
           {/* 2. Contests Preview */}
           <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] overflow-hidden">
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)] bg-tertiary/50">
-              <h2 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
-                 Cuộc Thi
+              <h2 className="text-xs font-semibold text-[var(--text-primary)]">
+                Cuộc Thi
               </h2>
               <Link to="/contests" className="text-xs text-[var(--accent-text)] hover:underline font-medium">
                 Tất cả →
@@ -401,10 +404,10 @@ export default function Home() {
                     <Link
                       key={c.id}
                       to={`/contests/${c.id}`}
-                      className="group flex items-center gap-2.5 p-2.5 rounded-md bg-[var(--bg-primary)] border border-[var(--border)] transition-colors hover:bg-[var(--bg-tertiary)]"
+                      className="group flex items-center gap-2.5 p-2.5 rounded-md bg-[var(--bg-primary)] border border-[var(--border)] hover:border-[var(--text-muted)] hover:shadow-xs transition-all hover:bg-[var(--bg-tertiary)]"
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="truncate text-xs font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors flex items-center gap-1.5">
+                        <p className="truncate text-xs font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors flex items-center gap-1.5">
                           {c.title}
                           {!c.is_public && <MorphIcon icon={LockData} size={10} className="text-[var(--text-muted)] shrink-0" />}
                         </p>
@@ -423,7 +426,7 @@ export default function Home() {
               {!isLoading && featuredContests.length > 0 && (
                 <Link
                   to="/contests"
-                  className="flex items-center justify-center gap-1.5 w-full py-1.5 rounded-md border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-xs font-medium text-[var(--text-secondary)] transition-colors mt-1"
+                  className="flex items-center justify-center gap-1.5 w-full py-1.5 rounded-md border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] hover:border-[var(--text-muted)] text-xs font-medium text-[var(--text-secondary)] transition-all mt-1 shadow-xs"
                 >
                   <MorphIcon icon={PlayData} size={12} /> Xem lịch thi đấu đầy đủ
                 </Link>
@@ -434,8 +437,8 @@ export default function Home() {
           {/* 3. Top Ranklist Widget */}
           <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] overflow-hidden">
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)] bg-tertiary/50">
-              <h2 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
-                 Bảng Xếp Hạng
+              <h2 className="text-xs font-semibold text-[var(--text-primary)]">
+                Bảng Xếp Hạng
               </h2>
               <Link to="/ranklist" className="text-xs text-[var(--accent-text)] hover:underline font-medium">
                 Xem tất cả →
@@ -450,18 +453,21 @@ export default function Home() {
                 <div className="py-6 text-center text-xs text-[var(--text-secondary)]">Chưa có dữ liệu xếp hạng</div>
               ) : (
                 rankUsers.map((u, idx) => (
-                  <div
+                  <Link
                     key={u.user_id}
-                    className="flex items-center justify-between p-2 rounded-md bg-[var(--bg-primary)] border border-[var(--border)] font-medium gap-2"
+                    to={`/users/${u.user_id}`}
+                    className="flex items-center justify-between p-2 rounded-md bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] border border-[var(--border)] hover:border-[var(--text-muted)] font-medium gap-2 transition-all shadow-xs group"
                   >
                     <span className="text-[var(--text-primary)] flex items-center gap-2 min-w-0 flex-1">
-                      <span className="w-5 text-center shrink-0 text-[10px] text-[var(--text-muted)] font-mono">#{idx + 1}</span>
-                      <span className="truncate text-xs">{u.username || 'user'}</span>
+                      <span className={`w-5 text-center shrink-0 text-[10px] font-mono ${
+                        idx === 0 ? 'text-[var(--accent-text)] font-bold' : idx < 3 ? 'text-[var(--text-primary)] font-semibold' : 'text-[var(--text-muted)]'
+                      }`}>#{idx + 1}</span>
+                      <span className="truncate text-xs group-hover:text-[var(--accent-text)] transition-colors">{u.username || 'user'}</span>
                     </span>
                     <span className="text-[11px] font-semibold text-[var(--accent-text)] bg-accent/10 px-2 py-0.2 rounded border border-accent/30 shrink-0">
                       {u.accepted_number} AC
                     </span>
-                  </div>
+                  </Link>
                 ))
               )}
             </div>
@@ -471,8 +477,8 @@ export default function Home() {
           {popularTags.length > 0 && (
             <div className="bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] p-3.5 space-y-2 text-xs">
               <div className="flex items-center justify-between pb-1.5 border-b border-[var(--border)]">
-                <h3 className="font-semibold text-xs text-[var(--text-primary)] flex items-center gap-1.5">
-                   Chủ Đề Trọng Tâm
+                <h3 className="font-semibold text-xs text-[var(--text-primary)]">
+                  Chủ Đề Trọng Tâm
                 </h3>
                 <Link to="/problems" className="text-[11px] text-[var(--accent-text)] hover:underline font-medium">
                   Kho bài tập →

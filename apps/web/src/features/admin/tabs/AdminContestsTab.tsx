@@ -3,7 +3,13 @@ import MorphIcon from '../../../components/MorphIcon';
 import ContestProblemsEditor from '../components/ContestProblemsEditor';
 import ContestRewardsEditor from '../components/ContestRewardsEditor';
 import ContestRegistrationsDialog from '../components/ContestRegistrationsDialog';
-import { Edit as EditData, Trash2 as Trash2Data } from 'lucide';
+import {
+  Edit as EditData,
+  Trash2 as Trash2Data,
+  Search as SearchData,
+  Plus as PlusData,
+  ArrowLeft as ArrowLeftData,
+} from 'lucide';
 import {
   getContests,
   createContest,
@@ -135,9 +141,23 @@ export default function AdminContestsTab({ userId, isAdmin = false }: { userId: 
   return (
     <div className="space-y-4 text-[var(--text-primary)]">
       {editorOpen ? <>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">{contestEditingId ? 'Chỉnh sửa kỳ thi' : 'Tạo kỳ thi'}</h2>
-          <button type="button" disabled={contestSaving || problemSaving} onClick={() => setEditorOpen(false)} className={secondary}>Quay lại danh sách kỳ thi</button>
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[var(--border)]">
+          <div>
+            <h2 className="text-base font-semibold text-[var(--text-primary)]">
+              {contestEditingId ? 'Chỉnh sửa kỳ thi' : 'Tạo kỳ thi mới'}
+            </h2>
+            <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+              Cấu hình thời gian, thể thức ACM/OI và quyền truy cập kỳ thi.
+            </p>
+          </div>
+          <button
+            type="button"
+            disabled={contestSaving || problemSaving}
+            onClick={() => setEditorOpen(false)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <MorphIcon icon={ArrowLeftData} size={13} /> Quay lại danh sách
+          </button>
         </div>
         {contestNotice && <p role="status" className="text-sm text-[var(--accent)]">{contestNotice}</p>}
         <form onSubmit={saveContest} className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-md p-4 sm:p-5 space-y-5">
@@ -190,31 +210,160 @@ export default function AdminContestsTab({ userId, isAdmin = false }: { userId: 
             ended={!!contestForm.end_time && new Date(contestForm.end_time).getTime() <= Date.now()} />
         </> : <p className="text-xs text-[var(--text-secondary)]">Lưu thông tin kỳ thi để thêm bài thi và phần thưởng.</p>}
       </> : <>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">Quản Lý Kỳ Thi</h2>
-          <button type="button" className={primary} onClick={() => { setContestEditingId(null); setContestForm(emptyForm); setContestError(null); setContestNotice(null); setEditorOpen(true); }}>Tạo kỳ thi</button>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[var(--border)]">
+          <div>
+            <h2 className="text-base font-semibold text-[var(--text-primary)]">Quản Lý Kỳ Thi</h2>
+            <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+              Tổ chức kỳ thi trực tuyến, kiểm soát đăng ký và cấu hình đề thi.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-medium transition-colors cursor-pointer w-fit shadow-xs border border-[rgba(27,31,36,0.15)]"
+            onClick={() => {
+              setContestEditingId(null);
+              setContestForm(emptyForm);
+              setContestError(null);
+              setContestNotice(null);
+              setEditorOpen(true);
+            }}
+          >
+            <MorphIcon icon={PlusData} size={14} /> Tạo kỳ thi
+          </button>
         </div>
-        {contestNotice && <p role="status" className="text-xs text-[var(--accent)]">{contestNotice}</p>}
-        <input type="search" aria-label="Tìm kỳ thi" placeholder="Tìm kỳ thi..." value={search} onChange={e => setSearch(e.target.value)} className={`${inputCls} max-w-sm`} />
-        {loadError && <div role="alert" className="text-xs text-[var(--danger)]">{loadError} <button type="button" onClick={() => fetchContests()} className="underline">Thử lại</button></div>}
-        {loading && <p role="status" className="text-xs text-[var(--text-secondary)]">Đang tải kỳ thi...</p>}
-        {!loading && !loadError && <div className="overflow-x-auto bg-[var(--bg-secondary)] border border-[var(--border)] rounded-md">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[var(--bg-tertiary)]"><tr><th className="px-4 py-3">Kỳ thi</th><th className="px-4 py-3">Thời gian</th><th className="px-4 py-3 text-right">Thao tác</th></tr></thead>
-            <tbody className="divide-y divide-[var(--border)]">
-              {filtered.map(c => <tr key={c.id}>
-                <td className="px-4 py-3"><p className="font-medium">{c.title}</p><p className="mt-1 text-[var(--text-secondary)]">{c.rule_type} · {c.is_public ? 'Công khai' : 'Riêng tư'}</p></td>
-                <td className="px-4 py-3 text-[var(--text-secondary)]"><p>{new Date(c.start_time).toLocaleString('vi-VN')}</p><p>đến {new Date(c.end_time).toLocaleString('vi-VN')}</p></td>
-                <td className="px-4 py-3"><div className="flex justify-end flex-wrap gap-2">
-                  {(c.registration_required || !c.is_public) && <button onClick={() => setRegistrationsContest(c)} className={secondary}>Duyệt đăng ký</button>}
-                  <button aria-label="Chỉnh sửa kỳ thi" title="Chỉnh sửa kỳ thi" onClick={() => startEditContest(c)} className={secondary}><MorphIcon icon={EditData} size={14} /></button>
-                  <button aria-label="Xóa kỳ thi" title="Xóa kỳ thi" onClick={() => handleDeleteContest(c.id, c.title)} className={`${secondary} text-[var(--danger)]`}><MorphIcon icon={Trash2Data} size={14} /></button>
-                </div></td>
-              </tr>)}
-              {filtered.length === 0 && <tr><td colSpan={3} className="p-6 text-center text-[var(--text-secondary)]">{search ? 'Không có kỳ thi phù hợp.' : 'Chưa có kỳ thi.'}</td></tr>}
-            </tbody>
-          </table>
-        </div>}
+
+        {contestNotice && (
+          <div className="p-2.5 rounded-md bg-accent/10 border border-accent/25 text-xs text-[var(--accent-text)] font-medium">
+            {contestNotice}
+          </div>
+        )}
+
+        {/* Search */}
+        <div className="relative max-w-sm">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--text-muted)]">
+            <MorphIcon icon={SearchData} size={13} />
+          </div>
+          <input
+            type="text"
+            aria-label="Tìm kỳ thi"
+            placeholder="Tìm theo tên kỳ thi..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className={`${inputCls} pl-8`}
+          />
+        </div>
+
+        {loadError && (
+          <div role="alert" className="p-2.5 rounded-md bg-danger/10 border border-danger/20 text-xs text-[var(--danger)] font-medium">
+            {loadError} <button type="button" onClick={() => fetchContests()} className="underline ml-1 cursor-pointer">Thử lại</button>
+          </div>
+        )}
+
+        {loading && (
+          <div className="space-y-2">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-16 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] animate-pulse" />
+            ))}
+          </div>
+        )}
+
+        {!loading && !loadError && (
+          <div className="overflow-x-auto bg-[var(--bg-secondary)] border border-[var(--border)] rounded-md shadow-xs">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-[var(--bg-primary)] text-[var(--text-secondary)] border-b border-[var(--border)] font-medium text-[11px]">
+                <tr>
+                  <th className="px-4 py-2.5">Kỳ Thi</th>
+                  <th className="px-4 py-2.5">Trạng Thái</th>
+                  <th className="px-4 py-2.5">Thời Gian</th>
+                  <th className="px-4 py-2.5 text-right">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--border)]">
+                {filtered.map((c) => {
+                  const now = Date.now();
+                  const start = new Date(c.start_time).getTime();
+                  const end = new Date(c.end_time).getTime();
+                  const isUnderway = now >= start && now <= end;
+                  const isEnded = now > end;
+
+                  return (
+                    <tr key={c.id} className="hover:bg-[var(--bg-primary)] transition-colors">
+                      <td className="px-4 py-3">
+                        <p className="font-semibold text-xs text-[var(--text-primary)]">{c.title}</p>
+                        <div className="flex items-center gap-2 mt-1 text-[11px] font-mono text-[var(--text-muted)]">
+                          <span>{c.rule_type}</span>
+                          <span>·</span>
+                          <span className={c.is_public ? 'text-[var(--text-secondary)]' : 'text-[var(--text-muted)]'}>
+                            {c.is_public ? 'Công khai' : 'Riêng tư'}
+                          </span>
+                          {c.registration_required && (
+                            <>
+                              <span>·</span>
+                              <span className="text-[var(--accent-text)]">Yêu cầu duyệt</span>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono border ${
+                            isUnderway
+                              ? 'bg-accent/10 text-[var(--accent-text)] border-accent/25'
+                              : isEnded
+                              ? 'bg-[var(--bg-tertiary)] text-[var(--text-muted)] border-[var(--border)]'
+                              : 'bg-[var(--bg-tertiary)] text-[var(--text-primary)] border-[var(--border)]'
+                          }`}
+                        >
+                          {isUnderway && <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />}
+                          {isUnderway ? 'Đang diễn ra' : isEnded ? 'Đã kết thúc' : 'Sắp diễn ra'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-[var(--text-secondary)] font-mono text-[11px] whitespace-nowrap">
+                        <p>{new Date(c.start_time).toLocaleString('vi-VN')}</p>
+                        <p className="text-[var(--text-muted)]">đến {new Date(c.end_time).toLocaleString('vi-VN')}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {(c.registration_required || !c.is_public) && (
+                            <button
+                              onClick={() => setRegistrationsContest(c)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-xs font-medium text-[var(--text-primary)] transition-colors cursor-pointer"
+                            >
+                              Duyệt đăng ký
+                            </button>
+                          )}
+                          <button
+                            aria-label="Chỉnh sửa kỳ thi"
+                            title="Chỉnh sửa kỳ thi"
+                            onClick={() => startEditContest(c)}
+                            className="p-1.5 rounded-md hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-transparent hover:border-[var(--border)] transition-colors cursor-pointer"
+                          >
+                            <MorphIcon icon={EditData} size={14} />
+                          </button>
+                          <button
+                            aria-label="Xóa kỳ thi"
+                            title="Xóa kỳ thi"
+                            onClick={() => handleDeleteContest(c.id, c.title)}
+                            className="p-1.5 rounded-md text-[var(--danger)] hover:bg-danger/10 transition-colors cursor-pointer"
+                          >
+                            <MorphIcon icon={Trash2Data} size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {filtered.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="p-8 text-center text-xs text-[var(--text-muted)]">
+                      {search ? 'Không có kỳ thi nào phù hợp với tìm kiếm.' : 'Chưa có kỳ thi nào được tạo.'}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </>}
       {registrationsContest && <ContestRegistrationsDialog contest={registrationsContest} onClose={() => setRegistrationsContest(null)} />}
     </div>

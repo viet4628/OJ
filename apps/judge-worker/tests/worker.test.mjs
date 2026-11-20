@@ -108,6 +108,11 @@ function serviceFixture() {
     claim: async () => { calls.push('claim'); return true; },
     getProblem: async () => { calls.push('problem'); return { id: 'problem' }; },
     getTestcases: async () => { calls.push('testcases'); return [{ id: 'tc' }]; },
+    getProblemBundle: async () => {
+      calls.push('problem');
+      calls.push('testcases');
+      return { problem: { id: 'problem' }, testcases: [{ id: 'tc' }] };
+    },
     saveResult: async (id, result) => { calls.push(['save', id, result]); },
   };
   const backend = {

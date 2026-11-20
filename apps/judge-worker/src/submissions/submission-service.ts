@@ -19,14 +19,16 @@ export class SubmissionService {
     try {
       // CHẠY THỬ: is_run + custom_input trong details → chỉ chạy 1 lần, không so đáp án.
       const runInput = submission.is_run ? (submission.details as unknown as { custom_input?: unknown })?.custom_input : undefined;
-      const [problem, testcases] = await Promise.all([
-        this.repository.getProblem(submission.problem_id),
-        typeof runInput === 'string' ? Promise.resolve([]) : this.repository.getTestcases(submission.problem_id),
-      ]);
-      loaded = performance.now();
-      result = typeof runInput === 'string'
-        ? await this.judge.run(submission, problem, runInput)
-        : await this.judge.judge(submission, problem, testcases);
+      if (typeof runInput === 'string') {
+        const problem = await this.repository.getProblem(submission.problem_id);
+        loaded = performance.now();
+        result = await this.judge.run(submission, problem, runInput);
+      } else {
+        // Một round trip lấy cả problem lẫn testcases (cache trong worker).
+        const { problem, testcases } = await this.repository.getProblemBundle(submission.problem_id);
+        loaded = performance.now();
+        result = await this.judge.judge(submission, problem, testcases);
+      }
     } catch (err) {
       if (loaded === claimed) loaded = performance.now();
       console.error(`[Worker] Unexpected error for submission ${submission.id}:`, err);
@@ -40,7 +42,9 @@ export class SubmissionService {
     console.log('[Timing]', JSON.stringify({ submissionId: submission.id, mode: this.judge.mode, status: result.status,
       claimMs: Math.round(claimed - started), loadMs: Math.round(loaded - claimed),
       judgeMs: Math.round(judged - loaded), saveMs: Math.round(performance.now() - judged),
-      totalMs: Math.round(performance.now() - started) }));
+      totalMs: Math.round(performance.now() - started),
+      // Số liệu chi tiết chỉ nằm trong log server, không ghi xuống DB cho học sinh đọc.
+      cases: result.details.map(d => [d.status, d.time_ms ?? 0, d.memory_mb ?? 0]) }));
     console.log(`[Worker] Finished ${this.judge.mode} submission ${submission.id}: ${result.status}`);
   }
 }

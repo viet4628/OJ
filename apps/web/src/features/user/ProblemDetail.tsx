@@ -1,6 +1,21 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useParams, useSearchParams, useLocation, Link } from 'react-router-dom';
-import { ChevronLeft, Play, Send, RefreshCw, RotateCcw } from 'lucide-react';
+import {
+  ChevronLeft,
+  Play,
+  Send,
+  RefreshCw,
+  RotateCcw,
+  Sparkles,
+  Copy,
+  Check,
+  Upload,
+  Download,
+  Maximize2,
+  Minimize2,
+  Plus,
+  Minus,
+} from 'lucide-react';
 import MorphIcon from '../../components/MorphIcon';
 import { Sun as SunData, Moon as MoonData } from 'lucide';
 import { type SidebarTab } from '../../components/Sidebar';
@@ -30,6 +45,8 @@ import ProblemLeftPane from './problem/ProblemLeftPane';
 import ProblemTestPanel from './problem/ProblemTestPanel';
 import Markdown from '../../components/Markdown';
 import { readCodeDraft, saveCodeDraft } from '../../lib/codeDrafts';
+import { formatCode } from '../../lib/formatters';
+import { useEscapeKey } from '../../lib/useEscapeKey';
 
 const DynamicMonacoEditor = lazy(() => import('../../components/LocalCodeEditor'));
 
@@ -207,6 +224,71 @@ export default function ProblemDetail({ user, onOpenAuth, contest, contestProble
   const [submissionResult, setSubmissionResult] = useState<any>(null);
   const [systemStatus, setSystemStatus] = useState<'ready' | 'judging' | 'done'>('ready');
   const resultRef = useRef<HTMLDivElement>(null);
+  const [copiedEditorCode, setCopiedEditorCode] = useState(false);
+  const [isEditorFullscreen, setIsEditorFullscreen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEscapeKey(isEditorFullscreen, () => setIsEditorFullscreen(false));
+
+  const handleFormatCode = () => {
+    // 1. Try Monaco's formatDocument action first
+    const action = editorRef.current?.getAction('editor.action.formatDocument');
+    if (action) {
+      action.run();
+      return;
+    }
+    // 2. Fallback to formatCode directly
+    const formatted = formatCode(code, language);
+    if (formatted && formatted !== code) {
+      setCode(formatted);
+      codeCache.current[language] = formatted;
+      if (problem && hasResolvedInitialCode) saveCodeDraft(draftScope, problem.id, language, formatted);
+    }
+  };
+
+  const handleCopyEditorCode = () => {
+    if (!code) return;
+    navigator.clipboard.writeText(code);
+    setCopiedEditorCode(true);
+    setTimeout(() => setCopiedEditorCode(false), 2000);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      if (typeof content === 'string') {
+        setCode(content);
+        codeCache.current[language] = content;
+        if (problem && hasResolvedInitialCode) saveCodeDraft(draftScope, problem.id, language, content);
+      }
+    };
+    reader.readAsText(file);
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext === 'cpp' || ext === 'cc' || ext === 'cxx' || ext === 'c') {
+      if (language !== 'cpp') handleLanguageChange('cpp');
+    } else if (ext === 'py') {
+      if (language !== 'python') handleLanguageChange('python');
+    } else if (ext === 'rs') {
+      if (language !== 'rust') handleLanguageChange('rust');
+    }
+    e.target.value = '';
+  };
+
+  const handleDownloadCode = () => {
+    if (!code) return;
+    const ext = language === 'cpp' ? 'cpp' : language === 'python' ? 'py' : language === 'rust' ? 'rs' : 'txt';
+    const filename = `${problem?.slug || 'solution'}.${ext}`;
+    const blob = new Blob([code], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const sampleTestcases = (problem?.samples || []).map((s, idx) => ({
     id: idx + 1,
@@ -372,7 +454,7 @@ export default function ProblemDetail({ user, onOpenAuth, contest, contestProble
     return waitForSubmission(submissionId, controller.signal, onProgress);
   };
 
-  const handleRun = async () => {
+  const executeRun = async (overrideInput?: string) => {
     if (!problem || isBusy || contest && getContestStatusFromTime(contest.start_time, contest.end_time) === 'NOT_STARTED') return;
     setSubmissionError(null);
     setIsRunning(true);
@@ -381,7 +463,7 @@ export default function ProblemDetail({ user, onOpenAuth, contest, contestProble
     setSubmissionResult(null);
     setTestPanelOpen(true);
 
-    const input = activeTestTab === -1 ? customInput : (activeSample?.input || '');
+    const input = overrideInput !== undefined ? overrideInput : (activeTestTab === -1 ? customInput : (activeSample?.input || ''));
     const res = await runProblemCode({ problem_id: problem.id, language, code, input });
     if (!res.ok || !res.id) {
       setSubmissionError(res.error || 'Chạy thử thất bại');
@@ -407,6 +489,14 @@ export default function ProblemDetail({ user, onOpenAuth, contest, contestProble
     }
     setIsRunning(false);
     setSystemStatus('done');
+  };
+
+  const handleRun = () => executeRun();
+
+  const handleRunSample = (sampleId: number) => {
+    setActiveTestTab(sampleId);
+    const sample = sampleTestcases.find((t) => t.id === sampleId);
+    executeRun(sample?.input ?? '');
   };
 
   const handleSubmit = async () => {
@@ -445,8 +535,6 @@ export default function ProblemDetail({ user, onOpenAuth, contest, contestProble
           name: `Testcase #${idx + 1}${d.is_sample ? ' (Mẫu)' : ''}`,
           isSample: !!d.is_sample,
           status: d.status,
-          timeMs: d.time_ms,
-          memoryMb: d.memory_mb,
         })),
         errorLog: sub.error_log,
       });
@@ -510,13 +598,10 @@ export default function ProblemDetail({ user, onOpenAuth, contest, contestProble
             )}
           </div>
 
-          <div className="hidden sm:flex items-center gap-2.5 text-[11px] text-[var(--text-secondary)] font-mono pl-2.5 border-l border-[var(--border)]">
-            <span className="flex items-center gap-1" title="Giới hạn thời gian">
-               {(problem?.time_limit_ms || 1000) / 1000}s
-            </span>
-            <span className="flex items-center gap-1" title="Giới hạn bộ nhớ">
-               {problem?.memory_limit_mb || 256}MB
-            </span>
+          <div className="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-[var(--text-secondary)] font-mono px-2 py-0.5 rounded-md border border-[var(--border)] bg-[var(--bg-secondary)] shadow-xs">
+            <span title="Giới hạn thời gian">{(problem?.time_limit_ms || 1000) / 1000}s</span>
+            <span className="text-[var(--text-muted)]">·</span>
+            <span title="Giới hạn bộ nhớ">{problem?.memory_limit_mb || 256}MB</span>
           </div>
         </div>
 
@@ -584,6 +669,7 @@ export default function ProblemDetail({ user, onOpenAuth, contest, contestProble
           onCopy={handleCopy}
           widthPercent={leftWidthPercent}
           onSelectSubmission={handleSelectSubmission}
+          onRunSample={handleRunSample}
         />
 
         {/* Horizontal Resizer between Left Pane and Right Editor */}
@@ -617,11 +703,18 @@ export default function ProblemDetail({ user, onOpenAuth, contest, contestProble
         </div>
 
         {/* Right Code Editor & Test Pane */}
-        <div className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-hidden min-w-0">
+        <div
+          className={
+            isEditorFullscreen
+              ? 'fixed inset-0 z-50 flex flex-col bg-[var(--bg-primary)]'
+              : 'flex-1 flex flex-col bg-[var(--bg-primary)] overflow-hidden min-w-0'
+          }
+        >
           {/* Top Editor Toolbar */}
-          <div className="h-10 shrink-0 bg-[var(--bg-secondary)] border-b border-[var(--border)] px-3 flex items-center justify-between select-none">
-            <div className="flex items-center gap-2">
-              <select aria-label="Ngôn ngữ lập trình"
+          <div className="h-10 shrink-0 bg-[var(--bg-secondary)] border-b border-[var(--border)] px-3 flex items-center justify-between select-none gap-2">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+              <select
+                aria-label="Ngôn ngữ lập trình"
                 value={language}
                 disabled={isProblemLoading || !hasResolvedInitialCode}
                 onChange={(e) => handleLanguageChange(e.target.value as any)}
@@ -634,13 +727,93 @@ export default function ProblemDetail({ user, onOpenAuth, contest, contestProble
                 ))}
               </select>
 
+              {/* Format Code Button */}
+              <button
+                onClick={handleFormatCode}
+                disabled={isProblemLoading || !hasResolvedInitialCode}
+                className="flex items-center gap-1 px-2 py-1 rounded-md border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer shadow-xs"
+                title="Định dạng mã nguồn (Shift+Alt+F)"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+                <span className="hidden md:inline">Định dạng</span>
+              </button>
+
+              {/* Reset starter code */}
               <button
                 onClick={handleResetCode}
                 disabled={isProblemLoading || !hasResolvedInitialCode}
-                className="flex items-center gap-1 px-2 py-1 rounded-md border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-xs font-medium text-[var(--text-secondary)] transition-colors cursor-pointer shadow-xs"
+                className="flex items-center gap-1 px-2 py-1 rounded-md border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer shadow-xs"
                 title="Đặt lại mẫu code ban đầu"
               >
-                <RotateCcw className="w-3.5 h-3.5" /> Đặt lại mẫu
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span className="hidden lg:inline">Đặt lại</span>
+              </button>
+
+              {/* Copy Code Button */}
+              <button
+                onClick={handleCopyEditorCode}
+                disabled={isProblemLoading || !hasResolvedInitialCode || !code}
+                className="flex items-center gap-1 px-2 py-1 rounded-md border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer shadow-xs"
+                title={copiedEditorCode ? 'Đã sao chép' : 'Sao chép toàn bộ mã nguồn'}
+              >
+                {copiedEditorCode ? <Check className="w-3.5 h-3.5 text-[var(--accent-text)]" /> : <Copy className="w-3.5 h-3.5" />}
+                <span className="hidden lg:inline">{copiedEditorCode ? 'Đã chép' : 'Sao chép'}</span>
+              </button>
+
+              {/* Upload File Input & Button */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                accept=".cpp,.c,.cc,.cxx,.py,.rs,.java,.txt"
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isProblemLoading || !hasResolvedInitialCode}
+                className="flex items-center gap-1 px-2 py-1 rounded-md border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer shadow-xs"
+                title="Tải tệp từ máy tính (.cpp, .py, .rs)"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span className="hidden xl:inline">Tải tệp</span>
+              </button>
+
+              {/* Download File Button */}
+              <button
+                onClick={handleDownloadCode}
+                disabled={isProblemLoading || !hasResolvedInitialCode || !code}
+                className="flex items-center gap-1 px-2 py-1 rounded-md border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer shadow-xs"
+                title="Lưu file về máy tính"
+              >
+                <Download className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Font Size Steppers */}
+              <div className="hidden sm:inline-flex items-center rounded-md border border-[var(--border)] bg-[var(--bg-primary)] p-0.5 text-[10px] font-mono text-[var(--text-secondary)] shadow-xs">
+                <button
+                  onClick={() => setEditorFontSize((p) => Math.max(11, p - 1))}
+                  className="px-1.5 py-0.5 hover:bg-[var(--bg-tertiary)] rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+                  title="Giảm cỡ chữ"
+                >
+                  <Minus className="w-3 h-3" />
+                </button>
+                <span className="px-1 font-semibold">{editorFontSize}px</span>
+                <button
+                  onClick={() => setEditorFontSize((p) => Math.min(22, p + 1))}
+                  className="px-1.5 py-0.5 hover:bg-[var(--bg-tertiary)] rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+                  title="Tăng cỡ chữ"
+                >
+                  <Plus className="w-3 h-3" />
+                </button>
+              </div>
+
+              {/* Fullscreen Toggle Button */}
+              <button
+                onClick={() => setIsEditorFullscreen(!isEditorFullscreen)}
+                className="p-1 rounded-md border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer shadow-xs"
+                title={isEditorFullscreen ? 'Thu nhỏ editor (Esc)' : 'Toàn màn hình editor'}
+              >
+                {isEditorFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
               </button>
 
               {loadedSubInfo && (
@@ -652,13 +825,6 @@ export default function ProblemDetail({ user, onOpenAuth, contest, contestProble
                   <span>Code bài nộp ({loadedSubInfo.status === 'ACCEPTED' ? 'AC' : loadedSubInfo.status})</span>
                 </span>
               )}
-
-              <span
-                className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-primary)] font-mono text-[10px] text-[var(--text-muted)]"
-                title="Cỡ chữ code — Ctrl + lăn chuột trong editor để đổi"
-              >
-                {editorFontSize}px
-              </span>
             </div>
 
             <div className="flex items-center gap-2 shrink-0">

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MorphIcon from './MorphIcon';
-import { Code2 as Code2Data, ChevronRight as ChevronRightData, X as XData, Loader2 as Loader2Data } from 'lucide';
+import { Code2 as Code2Data, ChevronRight as ChevronRightData, X as XData, Loader2 as Loader2Data, Search as SearchData } from 'lucide';
 import { searchProblems, type Problem } from '../lib/api';
 
 interface SearchModalProps {
@@ -80,8 +80,8 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input Bar */}
-        <div className="flex items-center px-3.5 py-2.5 border-b border-[var(--border)] gap-2.5 bg-[var(--bg-primary)]">
-
+        <div className="flex items-center px-3.5 py-2.5 border-b border-[var(--border)] gap-2 bg-[var(--bg-primary)]">
+          <MorphIcon icon={SearchData} size={15} className="text-[var(--text-muted)] shrink-0" />
           <input
             type="text"
             autoFocus

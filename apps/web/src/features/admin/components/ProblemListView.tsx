@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import MorphIcon from '../../../components/MorphIcon';
-import { Edit as EditData, ExternalLink as ExternalLinkData, Plus as PlusData, Trash2 as Trash2Data, X as XData } from 'lucide';
+import {
+  Edit as EditData,
+  ExternalLink as ExternalLinkData,
+  Plus as PlusData,
+  Trash2 as Trash2Data,
+  X as XData,
+  Search as SearchData,
+} from 'lucide';
 import type { Problem } from '../../../lib/api';
 
 export type ProblemNotice = { type: 'success' | 'error'; text: string } | null;
@@ -27,7 +34,7 @@ export default function ProblemListView({ problems, loading, testcaseCounts, not
 
   return (
     <div className="space-y-4 font-sans">
-      {/* GitHub Subhead */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[var(--border)]">
         <div>
           <h2 className="text-base font-semibold text-[var(--text-primary)]">
@@ -41,7 +48,7 @@ export default function ProblemListView({ problems, loading, testcaseCounts, not
         <button
           type="button"
           onClick={onCreate}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold transition-colors cursor-pointer w-fit shadow-xs border border-line/20"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-medium transition-colors cursor-pointer w-fit shadow-xs border border-[rgba(27,31,36,0.15)]"
         >
           <MorphIcon icon={PlusData} size={14} /> Soạn bài mới
         </button>
@@ -56,22 +63,24 @@ export default function ProblemListView({ problems, loading, testcaseCounts, not
           }`}
         >
           <span>{notice.text}</span>
-          <button type="button" aria-label="Đóng thông báo" onClick={onDismissNotice} className="cursor-pointer">
+          <button type="button" aria-label="Đóng thông báo" onClick={onDismissNotice} className="cursor-pointer text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
             <MorphIcon icon={XData} size={14} />
           </button>
         </div>
       )}
 
-      {/* GitHub Issue Search & Filter Bar */}
+      {/* Search & Filter Bar */}
       <div className="flex flex-col sm:flex-row items-center gap-2">
         <div className="relative flex-1 w-full">
-
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--text-muted)]">
+            <MorphIcon icon={SearchData} size={13} />
+          </div>
           <input aria-label="Tìm bài tập"
             type="text"
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
             placeholder="Tìm theo tên bài, slug hoặc thẻ chủ đề..."
-            className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md pl-9 pr-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]"
+            className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md pl-8 pr-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-colors"
           />
         </div>
 
@@ -87,7 +96,7 @@ export default function ProblemListView({ problems, loading, testcaseCounts, not
                 className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors cursor-pointer ${
                   isSel
                     ? 'bg-[var(--bg-secondary)] text-[var(--text-primary)] border-[var(--border)] font-semibold shadow-xs'
-                    : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border-[var(--border)] hover:bg-line/60'
+                    : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] border-[var(--border)] hover:bg-[var(--bg-tertiary)]'
                 }`}
               >
                 {label}
@@ -97,9 +106,9 @@ export default function ProblemListView({ problems, loading, testcaseCounts, not
         </div>
       </div>
 
-      {/* GitHub Box Table */}
+      {/* Problem Box Table */}
       <div className="border border-[var(--border)] rounded-md bg-[var(--bg-secondary)] overflow-hidden shadow-xs">
-        <div className="bg-tertiary/75 px-4 py-2.5 border-b border-[var(--border)] flex items-center justify-between text-xs font-medium text-[var(--text-secondary)]">
+        <div className="bg-[var(--bg-primary)] px-4 py-2.5 border-b border-[var(--border)] flex items-center justify-between text-xs font-medium text-[var(--text-secondary)]">
           <span>{filteredProblems.length} bài tập</span>
         </div>
 
@@ -127,7 +136,7 @@ export default function ProblemListView({ problems, loading, testcaseCounts, not
               return (
                 <div
                   key={p.id}
-                  className="px-4 py-3 hover:bg-tertiary/40 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  className="px-4 py-3 hover:bg-[var(--bg-primary)] transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                 >
                   <div className="min-w-0 space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -146,10 +155,10 @@ export default function ProblemListView({ problems, loading, testcaseCounts, not
 
                       {/* Visibility Label */}
                       <span
-                        className={`text-[10px] px-2 py-0.2 rounded-full font-mono ${
+                        className={`text-[10px] px-2 py-0.2 rounded-full font-mono border ${
                           p.is_public
-                            ? 'bg-accent/10 text-[var(--accent-text)] border border-accent/30'
-                            : 'bg-tertiary text-[var(--text-muted)] border border-[var(--border)]'
+                            ? 'bg-accent/10 text-[var(--accent-text)] border-accent/30'
+                            : 'bg-[var(--bg-tertiary)] text-[var(--text-muted)] border-[var(--border)]'
                         }`}
                       >
                         {p.is_public ? 'public' : 'private'}

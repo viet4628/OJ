@@ -377,6 +377,9 @@ CREATE TABLE IF NOT EXISTS public.contest_problems (
 -- Upgrade existing installs: per-problem max score for OI contests
 ALTER TABLE public.contest_problems ADD COLUMN IF NOT EXISTS score INT DEFAULT 100 NOT NULL;
 
+-- Bài trong kỳ thi có còn xuất hiện ở kho luyện tập không (false = chỉ vào được qua kỳ thi).
+ALTER TABLE public.contest_problems ADD COLUMN IF NOT EXISTS practice_visible BOOLEAN NOT NULL DEFAULT true;
+
 ALTER TABLE public.contest_problems ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Contest problems viewable with contest" ON public.contest_problems;
@@ -1059,6 +1062,15 @@ DO $$ BEGIN
     WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'submissions'
   ) THEN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.submissions;
+  END IF;
+END $$;
+-- Worker cache: sửa bài (kèm testcase) phát tín hiệu realtime để worker bỏ cache.
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'problems'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.problems;
   END IF;
 END $$;
 -- --------------------------------------------------------
@@ -1942,7 +1954,13 @@ $$;
 CREATE OR REPLACE FUNCTION public.can_read_problem(p_problem_id UUID)
 RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   SELECT (auth.uid() IS NULL OR public.is_active_user(auth.uid())) AND EXISTS (SELECT 1 FROM public.problems p WHERE p.id = p_problem_id AND (
-    p.is_public OR public.can_manage_problem(p.id)
+    -- Bài công khai chỉ mở ở kho luyện tập khi không bị kỳ thi ẩn.
+    (p.is_public AND NOT EXISTS (
+        SELECT 1 FROM public.contest_problems cp WHERE cp.problem_id = p.id AND cp.practice_visible = false))
+    OR public.can_manage_problem(p.id)
+    -- Người quản lý kỳ thi luôn thấy bài của kỳ thi mình quản lý.
+    OR EXISTS (SELECT 1 FROM public.contest_problems cp JOIN public.contests c ON c.id = cp.contest_id
+      WHERE cp.problem_id = p.id AND public.can_manage_contest(c.id))
     OR EXISTS (SELECT 1 FROM public.contest_problems cp JOIN public.contests c ON c.id = cp.contest_id
       WHERE cp.problem_id = p.id AND public.can_enter_contest(c.id) AND now() >= c.start_time)
     OR EXISTS (SELECT 1 FROM public.classroom_problems cp JOIN public.classrooms c ON c.id = cp.classroom_id

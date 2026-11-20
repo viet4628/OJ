@@ -854,13 +854,14 @@ test('Soạn contest tìm bài, sắp thứ tự và đặt điểm OI ngay tron
   await section.getByRole('checkbox', { name: 'Bài thứ hai', exact: true }).check();
   await section.getByRole('button', { name: 'Đưa Bài thứ hai lên', exact: true }).click();
   await section.getByLabel('Điểm Bài thứ hai', { exact: true }).fill('50');
+  await section.getByLabel('Luyện tập Bài thứ hai', { exact: true }).uncheck();
   const saved = page.waitForRequest(request => request.method() === 'POST' && new URL(request.url()).pathname.endsWith('/contest_problems'));
   await section.getByRole('button', { name: 'Lưu bài thi', exact: true }).click();
   expect((await saved).postDataJSON()).toEqual([
-    expect.objectContaining({ problem_id: second.id, sort_order: 0, score: 50 }),
-    expect.objectContaining({ problem_id: problem.id, sort_order: 1, score: 100 }),
+    expect.objectContaining({ problem_id: second.id, sort_order: 0, score: 50, practice_visible: false }),
+    expect.objectContaining({ problem_id: problem.id, sort_order: 1, score: 100, practice_visible: true }),
   ]);
-  await expect(section.getByRole('status')).toContainText('Đã lưu 2 bài thi');
+  await expect(section.getByRole('status')).toContainText('1 bài chỉ mở trong kỳ thi');
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: 'test-results/contest-editor-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });

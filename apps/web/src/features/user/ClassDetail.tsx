@@ -78,11 +78,11 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
     return (
       <div className="max-w-md mx-auto my-16 p-8 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-center space-y-4">
 
-        <h2 className="text-base font-black text-[var(--text-primary)]">Không Tìm Thấy Lớp Học</h2>
+        <h2 className="text-base font-semibold text-[var(--text-primary)]">Không Tìm Thấy Lớp Học</h2>
         <p className="text-xs text-[var(--text-muted)]">{error || 'Bạn không có quyền truy cập lớp này hoặc lớp đã bị đóng.'}</p>
         <Link
           to="/classes"
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-bold"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--accent)] text-white text-xs font-semibold"
         >
           <ArrowLeft className="w-4 h-4" /> Quay lại danh sách lớp
         </Link>
@@ -130,26 +130,25 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
       <div className="space-y-4">
         <Link
           to="/classes"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--accent-text)] transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--accent-text)] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Tất cả lớp học
         </Link>
 
-        <div className="p-6 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="p-5 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
-
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-black text-[var(--text-primary)]">{classroom.name}</h1>
-                <span className="px-2.5 py-0.5 rounded-full bg-[var(--bg-secondary)] border border-[var(--border)] font-mono text-xs font-bold text-[var(--accent-text)]">
+                <h1 className="text-xl font-semibold text-[var(--text-primary)]">{classroom.name}</h1>
+                <span className="px-2 py-0.5 rounded-full bg-[var(--bg-tertiary)] border border-[var(--border)] font-mono text-xs font-semibold text-[var(--accent-text)]">
                   {classroom.code}
                 </span>
               </div>
               <p className="text-xs text-[var(--text-secondary)]">
-                Giảng viên: <span className="font-bold text-[var(--text-primary)]">{classroom.teacher?.full_name || classroom.teacher?.username || 'Giáo viên'}</span>
+                Giảng viên: <span className="font-medium text-[var(--text-primary)]">{classroom.teacher?.full_name || classroom.teacher?.username || 'Giáo viên'}</span>
               </p>
               {classroom.description && (
-                <p className="text-xs text-[var(--text-muted)] mt-2 max-w-2xl">
+                <p className="text-xs text-[var(--text-muted)] mt-1.5 max-w-2xl">
                   {classroom.description}
                 </p>
               )}
@@ -157,31 +156,31 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
           </div>
 
           {/* Quick stats box */}
-          <div className="flex items-center gap-3 bg-[var(--bg-secondary)] p-3.5 rounded-xl border border-[var(--border)] shrink-0 self-start md:self-auto">
+          <div className="flex items-center gap-3 bg-[var(--bg-primary)] p-3 rounded-md border border-[var(--border)] shrink-0 self-start md:self-auto">
             <div className="text-center px-3">
-              <div className="text-lg font-black text-[var(--accent-text)] font-mono">
+              <div className="text-base font-semibold text-[var(--accent-text)] font-mono">
                 {mySolvedCount}/{problems.length}
               </div>
-              <div className="text-[10px] text-[var(--text-muted)] font-semibold">Đã hoàn thành</div>
+              <div className="text-[10px] text-[var(--text-muted)] font-medium">Đã hoàn thành</div>
             </div>
-            <div className="w-px h-8 bg-[var(--border)]" />
+            <div className="w-px h-7 bg-[var(--border)]" />
             <div className="text-center px-3">
-              <div className="text-lg font-black text-[var(--text-primary)] font-mono">
+              <div className="text-base font-semibold text-[var(--text-primary)] font-mono">
                 {members.length}
               </div>
-              <div className="text-[10px] text-[var(--text-muted)] font-semibold">Học sinh</div>
+              <div className="text-[10px] text-[var(--text-muted)] font-medium">Học sinh</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Subtabs Header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)]">
+      <div className="flex items-center gap-1 border-b border-[var(--border)]">
         <button
           onClick={() => setActiveTab('assignments')}
-          className={`flex items-center gap-2 px-4 py-2.5 border-b-2 text-xs font-bold transition-colors cursor-pointer ${
+          className={`flex items-center gap-2 px-3.5 py-2 border-b-2 text-xs font-medium transition-colors cursor-pointer ${
             activeTab === 'assignments'
-              ? 'border-[var(--accent)] text-[var(--accent-text)]'
+              ? 'border-[var(--accent)] text-[var(--accent-text)] font-semibold'
               : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
@@ -189,9 +188,9 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
         </button>
         <button
           onClick={() => setActiveTab('leaderboard')}
-          className={`flex items-center gap-2 px-4 py-2.5 border-b-2 text-xs font-bold transition-colors cursor-pointer ${
+          className={`flex items-center gap-2 px-3.5 py-2 border-b-2 text-xs font-medium transition-colors cursor-pointer ${
             activeTab === 'leaderboard'
-              ? 'border-[var(--accent)] text-[var(--accent-text)]'
+              ? 'border-[var(--accent)] text-[var(--accent-text)] font-semibold'
               : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
@@ -199,9 +198,9 @@ export default function ClassDetail({ user, onOpenAuth }: ClassDetailProps) {
         </button>
         <button
           onClick={() => setActiveTab('members')}
-          className={`flex items-center gap-2 px-4 py-2.5 border-b-2 text-xs font-bold transition-colors cursor-pointer ${
+          className={`flex items-center gap-2 px-3.5 py-2 border-b-2 text-xs font-medium transition-colors cursor-pointer ${
             activeTab === 'members'
-              ? 'border-[var(--accent)] text-[var(--accent-text)]'
+              ? 'border-[var(--accent)] text-[var(--accent-text)] font-semibold'
               : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >

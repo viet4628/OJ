@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import MorphIcon from '../../components/MorphIcon';
-import { Loader2 as Loader2Data } from 'lucide';
+import { Loader2 as Loader2Data, Search as SearchData, Trophy as TrophyData } from 'lucide';
 import { getRanklist, type RankUser } from '../../lib/api';
 
 export default function Ranklist() {
@@ -33,22 +33,25 @@ export default function Ranklist() {
   return (
     <div className="space-y-4">
       {/* Header & Toggle */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[var(--bg-secondary)] p-4 rounded-md border border-[var(--border)]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[var(--bg-secondary)] p-4 sm:p-5 rounded-md border border-[var(--border)] shadow-xs">
         <div>
-          <h1 className="text-sm font-semibold text-[var(--text-primary)] flex items-center gap-2">
-             Bảng Xếp Hạng Cao Thủ (Ranklist)
+          <h1 className="text-base sm:text-lg font-semibold tracking-tight text-[var(--text-primary)] flex items-center gap-2">
+            <MorphIcon icon={TrophyData} size={18} className="text-[var(--accent-text)]" />
+            <span>Bảng xếp hạng cao thủ</span>
           </h1>
-          <p className="text-[var(--text-secondary)] text-xs mt-0.5">Xếp hạng lập trình viên xuất sắc nhất theo thể thức ACM &amp; OI Subtask</p>
+          <p className="text-[var(--text-secondary)] text-xs mt-0.5">
+            Tôn vinh các lập trình viên có số lượng bài giải và điểm số cao nhất trên hệ thống.
+          </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* ACM / OI Toggle */}
-          <div className="bg-[var(--bg-tertiary)] p-0.5 rounded-md border border-[var(--border)] flex items-center gap-0.5 text-xs">
+          <div className="bg-[var(--bg-primary)] p-0.5 rounded-md border border-[var(--border)] flex items-center gap-0.5 text-xs shadow-xs">
             <button
               onClick={() => setRankType('ACM')}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
                 rankType === 'ACM'
-                  ? 'bg-[var(--accent)] text-white'
+                  ? 'bg-[var(--accent)] text-white shadow-xs'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
@@ -56,9 +59,9 @@ export default function Ranklist() {
             </button>
             <button
               onClick={() => setRankType('OI')}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
                 rankType === 'OI'
-                  ? 'bg-[var(--accent)] text-white'
+                  ? 'bg-[var(--accent)] text-white shadow-xs'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
@@ -68,17 +71,80 @@ export default function Ranklist() {
 
           {/* Search box */}
           <div className="relative">
-
+            <MorphIcon
+              icon={SearchData}
+              size={13}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none"
+            />
             <input aria-label="Tìm tài khoản"
               type="text"
               placeholder="Tìm tài khoản..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 pr-2.5 py-1 bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-accent"
+              className="pl-8 pr-2.5 py-1.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] w-36 sm:w-48 transition-colors shadow-xs"
             />
           </div>
         </div>
       </div>
+
+      {/* Top 3 Podium Cards (when page 0 and no active search) */}
+      {page === 0 && !search && filteredRank.length >= 3 && !isLoading && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* Rank #2 Silver */}
+          <div className="order-2 md:order-1 p-4 rounded-md border border-[var(--border)] bg-[var(--bg-secondary)] flex flex-col items-center text-center relative shadow-xs">
+            <div className="w-6 h-6 rounded-full bg-[var(--bg-tertiary)] border border-[var(--border)] font-mono text-[11px] font-bold text-[var(--text-secondary)] flex items-center justify-center absolute top-3 left-3">
+              #2
+            </div>
+            <div className="w-12 h-12 rounded-full bg-[var(--bg-tertiary)] border-2 border-[var(--border)] text-[var(--text-primary)] font-bold flex items-center justify-center text-sm mb-2 shadow-xs">
+              {(filteredRank[1].username || 'u').charAt(0).toUpperCase()}
+            </div>
+            <span className="font-semibold text-xs text-[var(--text-primary)] truncate max-w-[150px]">
+              {filteredRank[1].username}
+            </span>
+            <div className="flex items-center gap-2 mt-1.5 text-[11px] font-mono text-[var(--text-secondary)]">
+              <span className="text-[var(--accent-text)] font-semibold">{filteredRank[1].accepted_number} AC</span>
+              <span>·</span>
+              <span>{rankType === 'ACM' ? `${filteredRank[1].accepted_number * 10} pts` : `${filteredRank[1].total_score} pts`}</span>
+            </div>
+          </div>
+
+          {/* Rank #1 Gold */}
+          <div className="order-1 md:order-2 p-4 rounded-md border-2 border-accent/40 bg-[var(--bg-secondary)] flex flex-col items-center text-center relative shadow-xs">
+            <div className="w-6 h-6 rounded-full bg-[var(--accent)] text-white font-mono text-[11px] font-bold flex items-center justify-center absolute top-3 left-3 shadow-xs">
+              #1
+            </div>
+            <div className="w-12 h-12 rounded-full bg-accent/15 border-2 border-[var(--accent)] text-[var(--accent-text)] font-bold flex items-center justify-center text-sm mb-2 shadow-xs">
+              {(filteredRank[0].username || 'u').charAt(0).toUpperCase()}
+            </div>
+            <span className="font-semibold text-xs text-[var(--text-primary)] truncate max-w-[150px]">
+              {filteredRank[0].username}
+            </span>
+            <div className="flex items-center gap-2 mt-1.5 text-[11px] font-mono text-[var(--text-secondary)]">
+              <span className="text-[var(--accent-text)] font-semibold">{filteredRank[0].accepted_number} AC</span>
+              <span>·</span>
+              <span className="font-semibold">{rankType === 'ACM' ? `${filteredRank[0].accepted_number * 10} pts` : `${filteredRank[0].total_score} pts`}</span>
+            </div>
+          </div>
+
+          {/* Rank #3 Bronze */}
+          <div className="order-3 md:order-3 p-4 rounded-md border border-[var(--border)] bg-[var(--bg-secondary)] flex flex-col items-center text-center relative shadow-xs">
+            <div className="w-6 h-6 rounded-full bg-[var(--bg-tertiary)] border border-[var(--border)] font-mono text-[11px] font-bold text-[var(--text-secondary)] flex items-center justify-center absolute top-3 left-3">
+              #3
+            </div>
+            <div className="w-12 h-12 rounded-full bg-[var(--bg-tertiary)] border-2 border-[var(--border)] text-[var(--text-primary)] font-bold flex items-center justify-center text-sm mb-2 shadow-xs">
+              {(filteredRank[2].username || 'u').charAt(0).toUpperCase()}
+            </div>
+            <span className="font-semibold text-xs text-[var(--text-primary)] truncate max-w-[150px]">
+              {filteredRank[2].username}
+            </span>
+            <div className="flex items-center gap-2 mt-1.5 text-[11px] font-mono text-[var(--text-secondary)]">
+              <span className="text-[var(--accent-text)] font-semibold">{filteredRank[2].accepted_number} AC</span>
+              <span>·</span>
+              <span>{rankType === 'ACM' ? `${filteredRank[2].accepted_number * 10} pts` : `${filteredRank[2].total_score} pts`}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {error && <p role="alert">{error}</p>}
       {/* Leaderboard Table */}

@@ -125,9 +125,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
         <form onSubmit={handleSubmit} className="space-y-3 text-xs">
           {mode === 'register' && (
             <div className="space-y-1">
-              <label className="font-semibold text-[var(--text-secondary)]">Tên Người Dùng</label>
-              <div className="relative">
-
+              <label className="font-medium text-[var(--text-secondary)]">Tên Người Dùng</label>
+              <div>
                 <input aria-label="Tên Người Dùng"
                   type="text"
                   required
@@ -135,16 +134,15 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
                   placeholder="viet4628"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md pl-8 pr-2.5 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-accent transition-colors"
+                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-accent transition-colors"
                 />
               </div>
             </div>
           )}
 
           <div className="space-y-1">
-            <label className="font-semibold text-[var(--text-secondary)]">Địa Chỉ Email</label>
-            <div className="relative">
-
+            <label className="font-medium text-[var(--text-secondary)]">Địa Chỉ Email</label>
+            <div>
               <input aria-label="Địa Chỉ Email"
                 type="email"
                 required
@@ -152,23 +150,22 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
                 placeholder="user@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md pl-8 pr-2.5 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-accent transition-colors"
+                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-accent transition-colors"
               />
             </div>
           </div>
 
           {mode !== 'forgot' && (
             <div className="space-y-1">
-              <label className="font-semibold text-[var(--text-secondary)]">Mật Khẩu</label>
-              <div className="relative">
-
+              <label className="font-medium text-[var(--text-secondary)]">Mật Khẩu</label>
+              <div>
                 <input aria-label="Mật Khẩu"
                   type="password"
                   required
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md pl-8 pr-2.5 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-accent transition-colors"
+                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-accent transition-colors"
                 />
               </div>
               {mode === 'login' && (

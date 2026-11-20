@@ -1,7 +1,19 @@
 import { useEffect, useState } from 'react';
 import { downloadBlob } from '../../../lib/zip';
 import MorphIcon from '../../../components/MorphIcon';
-import { Plus as PlusData, Users as UsersData, BookOpen as BookOpenData, Copy as CopyData, Check as CheckData, Trash2 as Trash2Data, ArrowLeft as ArrowLeftData, X as XData, Award as AwardData } from 'lucide';
+import {
+  Plus as PlusData,
+  Users as UsersData,
+  BookOpen as BookOpenData,
+  Copy as CopyData,
+  Check as CheckData,
+  Trash2 as Trash2Data,
+  ArrowLeft as ArrowLeftData,
+  X as XData,
+  Award as AwardData,
+  Download as DownloadData,
+  Search as SearchData,
+} from 'lucide';
 import {
   getClassroomDetail,
   addClassroomProblem,
@@ -191,20 +203,21 @@ export default function ClassroomDetailView({ classId, initialClassroom, notice,
   }
 
   return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Navigation & Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--border)]">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[var(--border)]">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={onBack}
-              className="p-2 rounded-xl bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border)] transition-colors cursor-pointer"
+              className="p-1.5 rounded-md bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border)] transition-colors cursor-pointer"
+              title="Quay lại danh sách lớp"
             >
-              <MorphIcon icon={ArrowLeftData} size={16} />
+              <MorphIcon icon={ArrowLeftData} size={15} />
             </button>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-black text-[var(--text-primary)]">{activeClass.name}</h2>
-                <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] font-mono text-xs font-bold">
+                <h2 className="text-base font-semibold text-[var(--text-primary)]">{activeClass.name}</h2>
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--accent-text)] font-mono text-xs font-semibold">
                   <span>Mã: {activeClass.code}</span>
                   <button
                     onClick={() => handleCopyCode(activeClass.code)}
@@ -217,7 +230,7 @@ export default function ClassroomDetailView({ classId, initialClassroom, notice,
                 </div>
               </div>
               {activeClass.description && (
-                <p className="text-xs text-[var(--text-muted)] mt-0.5">{activeClass.description}</p>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5 leading-relaxed">{activeClass.description}</p>
               )}
             </div>
           </div>
@@ -225,7 +238,7 @@ export default function ClassroomDetailView({ classId, initialClassroom, notice,
           <div className="flex items-center gap-2">
             <button
               onClick={handleOpenAddProblem}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-medium border border-[rgba(27,31,36,0.15)] shadow-xs transition-colors cursor-pointer"
             >
               <MorphIcon icon={PlusData} size={14} /> Giao Bài Tập
             </button>
@@ -234,7 +247,7 @@ export default function ClassroomDetailView({ classId, initialClassroom, notice,
 
         {/* Notices */}
         {notice && (
-          <div className="p-3 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] text-xs flex items-center justify-between">
+          <div className="p-3 rounded-md bg-accent/10 border border-accent/25 text-[var(--accent-text)] text-xs font-medium flex items-center justify-between">
             <span>{notice}</span>
             <button onClick={() => setNotice(null)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer">
               <MorphIcon icon={XData} size={16} />
@@ -242,44 +255,44 @@ export default function ClassroomDetailView({ classId, initialClassroom, notice,
           </div>
         )}
 
-        {error && <p role="alert" className="text-xs text-[var(--danger)]">{error}</p>}
+        {error && <div className="p-2.5 rounded-md bg-danger/10 border border-danger/20 text-xs text-[var(--danger)] font-medium">{error}</div>}
         {!detailLoading && members.length === 0 && (
-          <div className="p-3 border border-[var(--border)] rounded-md text-xs text-[var(--text-secondary)]">
+          <div className="p-3 border border-[var(--border)] rounded-md text-xs text-[var(--text-secondary)] bg-[var(--bg-secondary)]">
             Mời học sinh vào mục Lớp học và nhập mã <strong className="font-mono text-[var(--text-primary)]">{activeClass.code}</strong> để tham gia.
           </div>
         )}
 
         {/* Subtabs */}
-        <div className="flex items-center gap-2 border-b border-[var(--border)]">
+        <div className="flex items-center gap-1 border-b border-[var(--border)]">
           <button
             onClick={() => setActiveSubTab('assignments')}
-            className={`flex items-center gap-2 px-4 py-2.5 border-b-2 text-xs font-bold transition-colors cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3.5 py-2 border-b-2 text-xs transition-colors cursor-pointer ${
               activeSubTab === 'assignments'
-                ? 'border-[var(--accent)] text-[var(--accent-text)]'
-                : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                ? 'border-[var(--accent)] text-[var(--accent-text)] font-semibold'
+                : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-medium'
             }`}
           >
-            <MorphIcon icon={BookOpenData} size={14} /> Bài Tập ({classProblems.length})
+            <MorphIcon icon={BookOpenData} size={13} /> Bài Tập ({classProblems.length})
           </button>
           <button
             onClick={() => setActiveSubTab('students')}
-            className={`flex items-center gap-2 px-4 py-2.5 border-b-2 text-xs font-bold transition-colors cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3.5 py-2 border-b-2 text-xs transition-colors cursor-pointer ${
               activeSubTab === 'students'
-                ? 'border-[var(--accent)] text-[var(--accent-text)]'
-                : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                ? 'border-[var(--accent)] text-[var(--accent-text)] font-semibold'
+                : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-medium'
             }`}
           >
-            <MorphIcon icon={UsersData} size={14} /> Học Sinh ({members.length})
+            <MorphIcon icon={UsersData} size={13} /> Học Sinh ({members.length})
           </button>
           <button
             onClick={() => setActiveSubTab('gradebook')}
-            className={`flex items-center gap-2 px-4 py-2.5 border-b-2 text-xs font-bold transition-colors cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3.5 py-2 border-b-2 text-xs transition-colors cursor-pointer ${
               activeSubTab === 'gradebook'
-                ? 'border-[var(--accent)] text-[var(--accent-text)]'
-                : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                ? 'border-[var(--accent)] text-[var(--accent-text)] font-semibold'
+                : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-medium'
             }`}
           >
-            <MorphIcon icon={AwardData} size={14} /> Bảng Điểm & Tiến Độ
+            <MorphIcon icon={AwardData} size={13} /> Bảng Điểm & Tiến Độ
           </button>
         </div>
 
@@ -293,27 +306,26 @@ export default function ClassroomDetailView({ classId, initialClassroom, notice,
             {activeSubTab === 'assignments' && (
               <div className="space-y-4">
                 {classProblems.length === 0 ? (
-                  <div className="text-center py-12 border border-dashed border-[var(--border)] rounded-2xl bg-[var(--bg-secondary)] space-y-3">
-
-                    <div className="text-xs font-bold text-[var(--text-primary)]">Chưa có bài tập nào trong lớp</div>
-                    <p className="text-[11px] text-[var(--text-muted)]">Hãy thêm bài tập từ kho đề để học sinh bắt đầu làm bài.</p>
+                  <div className="text-center py-10 border border-dashed border-[var(--border)] rounded-md bg-[var(--bg-secondary)] space-y-2.5">
+                    <div className="text-xs font-semibold text-[var(--text-primary)]">Chưa có bài tập nào trong lớp</div>
+                    <p className="text-[11px] text-[var(--text-secondary)]">Hãy giao bài tập từ ngân hàng đề để học sinh bắt đầu làm bài.</p>
                     <button
                       onClick={handleOpenAddProblem}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white text-xs font-bold cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-medium cursor-pointer shadow-xs border border-[rgba(27,31,36,0.15)]"
                     >
-                      <MorphIcon icon={PlusData} size={14} /> Giao bài tập ngay
+                      <MorphIcon icon={PlusData} size={13} /> Giao bài tập ngay
                     </button>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto border border-[var(--border)] rounded-xl">
+                  <div className="overflow-x-auto border border-[var(--border)] rounded-md">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-[var(--bg-secondary)] text-[var(--text-secondary)] font-bold text-[11px] uppercase border-b border-[var(--border)]">
+                      <thead className="bg-[var(--bg-primary)] text-[var(--text-secondary)] font-medium text-[11px] border-b border-[var(--border)]">
                         <tr>
-                          <th className="px-4 py-3">Bài Tập</th>
-                          <th className="px-4 py-3">Độ Khó</th>
-                          <th className="px-4 py-3">Thời Gian / RAM</th>
-                          <th className="px-4 py-3">Hạn Nộp</th>
-                          <th className="px-4 py-3 text-right">Thao Tác</th>
+                          <th className="px-4 py-2.5">Bài Tập</th>
+                          <th className="px-4 py-2.5">Độ Khó</th>
+                          <th className="px-4 py-2.5">Giới Hạn</th>
+                          <th className="px-4 py-2.5">Hạn Nộp</th>
+                          <th className="px-4 py-2.5 text-right">Thao Tác</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[var(--border)]">
@@ -322,35 +334,34 @@ export default function ClassroomDetailView({ classId, initialClassroom, notice,
                           const hasDeadline = !!cp.deadline;
                           const isExpired = hasDeadline && new Date(cp.deadline!).getTime() < Date.now();
                           return (
-                            <tr key={cp.problem_id} className="hover:bg-[var(--bg-secondary)] transition-colors">
-                              <td className="px-4 py-3 font-semibold text-[var(--text-primary)]">
-                                <div className="font-bold">{p?.title || cp.problem_id}</div>
-                                <div className="text-[11px] font-mono text-[var(--text-muted)]">/{p?.slug}</div>
+                            <tr key={cp.problem_id} className="hover:bg-[var(--bg-primary)] transition-colors">
+                              <td className="px-4 py-2.5 font-medium text-[var(--text-primary)]">
+                                <div>{p?.title || cp.problem_id}</div>
+                                <div className="text-[10px] font-mono text-[var(--text-muted)]">/{p?.slug}</div>
                               </td>
-                              <td className="px-4 py-3">
+                              <td className="px-4 py-2.5">
                                 <span
-                                  className={`text-[10px] px-2 py-0.5 rounded font-bold border ${
+                                  className={`text-[10px] px-2 py-0.2 rounded font-mono border ${
                                     p?.difficulty === 'Easy'
-                                      ? 'bg-accent/10 text-[var(--accent-text)] border-accent/30'
+                                      ? 'bg-accent/10 text-[var(--accent-text)] border-accent/25'
                                       : p?.difficulty === 'Medium'
-                                      ? 'bg-warning/10 text-warning border-warning/30'
-                                      : 'bg-danger/10 text-danger border-danger/30'
+                                      ? 'bg-warning/10 text-[var(--warning)] border-warning/25'
+                                      : 'bg-danger/10 text-[var(--danger)] border-danger/25'
                                   }`}
                                 >
                                   {p?.difficulty || 'N/A'}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 font-mono text-[var(--text-secondary)]">
-                                {p ? `${p.time_limit_ms}ms / ${p.memory_limit_mb}MB` : '-'}
+                              <td className="px-4 py-2.5 font-mono text-[11px] text-[var(--text-secondary)]">
+                                {p ? `${p.time_limit_ms}ms · ${p.memory_limit_mb}MB` : '-'}
                               </td>
-                              <td className="px-4 py-3">
+                              <td className="px-4 py-2.5">
                                 {hasDeadline ? (
                                   <span
-                                    className={`inline-flex items-center gap-1 font-mono text-xs ${
-                                      isExpired ? 'text-danger font-bold' : 'text-[var(--text-secondary)]'
+                                    className={`inline-flex items-center gap-1 font-mono text-[11px] ${
+                                      isExpired ? 'text-[var(--danger)] font-medium' : 'text-[var(--text-secondary)]'
                                     }`}
                                   >
-
                                     {new Date(cp.deadline!).toLocaleString('vi-VN', {
                                       hour: '2-digit',
                                       minute: '2-digit',
@@ -361,13 +372,13 @@ export default function ClassroomDetailView({ classId, initialClassroom, notice,
                                     {isExpired && ' (Hết hạn)'}
                                   </span>
                                 ) : (
-                                  <span className="text-[var(--text-muted)] italic">Không có hạn</span>
+                                  <span className="text-[var(--text-muted)] text-[11px]">Không có hạn</span>
                                 )}
                               </td>
-                              <td className="px-4 py-3 text-right">
+                              <td className="px-4 py-2.5 text-right">
                                 <button
                                   onClick={() => handleRemoveProblem(cp.problem_id, p?.title || 'Bài tập')}
-                                  className="p-1.5 rounded-lg text-danger hover:bg-danger/10 transition-colors cursor-pointer"
+                                  className="p-1.5 rounded-md text-[var(--danger)] hover:bg-danger/10 transition-colors cursor-pointer"
                                   title="Gỡ khỏi lớp"
                                 >
                                   <MorphIcon icon={Trash2Data} size={14} />
@@ -387,63 +398,62 @@ export default function ClassroomDetailView({ classId, initialClassroom, notice,
             {activeSubTab === 'students' && (
               <div className="space-y-4">
                 {/* Invite Code Box */}
-                <div className="p-4 rounded-2xl bg-accent/5 border border-accent/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="p-3.5 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <div className="text-xs font-bold text-[var(--accent-text)]">Mã Mời Tham Gia Lớp Học</div>
-                    <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
-                      Gửi mã này cho học sinh. Học sinh chỉ cần nhập mã tại mục "Lớp Học" để tự động gia nhập lớp.
+                    <div className="text-xs font-semibold text-[var(--text-primary)]">Mã Mời Tham Gia Lớp Học</div>
+                    <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
+                      Gửi mã này cho học sinh để tự gia nhập lớp tại mục "Lớp Học".
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="px-4 py-2 rounded-xl bg-[var(--bg-primary)] border border-accent/30 text-[var(--accent-text)] font-mono text-base font-black tracking-wider">
+                    <span className="px-3 py-1 rounded-md bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--accent-text)] font-mono text-sm font-semibold tracking-wider">
                       {activeClass.code}
                     </span>
                     <button
                       onClick={() => handleCopyCode(activeClass.code)}
-                      className="px-3 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-bold hover:bg-[var(--accent-hover)] transition-colors flex items-center gap-1.5 cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-medium transition-colors cursor-pointer shadow-xs border border-[rgba(27,31,36,0.15)]"
                     >
-                      {copiedCode ? <MorphIcon icon={CheckData} size={14} /> : <MorphIcon icon={CopyData} size={14} />}
+                      {copiedCode ? <MorphIcon icon={CheckData} size={13} /> : <MorphIcon icon={CopyData} size={13} />}
                       <span>{copiedCode ? 'Đã sao chép' : 'Sao chép mã'}</span>
                     </button>
                   </div>
                 </div>
 
                 {members.length === 0 ? (
-                  <div className="text-center py-12 border border-dashed border-[var(--border)] rounded-2xl bg-[var(--bg-secondary)] space-y-2">
-
-                    <div className="text-xs font-bold text-[var(--text-primary)]">Chưa có học sinh nào trong lớp</div>
-                    <p className="text-[11px] text-[var(--text-muted)]">Hãy chia sẻ mã mời trên để học sinh tham gia.</p>
+                  <div className="text-center py-10 border border-dashed border-[var(--border)] rounded-md bg-[var(--bg-secondary)] space-y-2">
+                    <div className="text-xs font-semibold text-[var(--text-primary)]">Chưa có học sinh nào trong lớp</div>
+                    <p className="text-[11px] text-[var(--text-secondary)]">Hãy chia sẻ mã mời trên để học sinh tham gia.</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto border border-[var(--border)] rounded-xl">
+                  <div className="overflow-x-auto border border-[var(--border)] rounded-md">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-[var(--bg-secondary)] text-[var(--text-secondary)] font-bold text-[11px] uppercase border-b border-[var(--border)]">
+                      <thead className="bg-[var(--bg-primary)] text-[var(--text-secondary)] font-medium text-[11px] border-b border-[var(--border)]">
                         <tr>
-                          <th className="px-4 py-3">Học Sinh</th>
-                          <th className="px-4 py-3">Tên Hiển Thị</th>
-                          <th className="px-4 py-3">Ngày Gia Nhập</th>
-                          <th className="px-4 py-3 text-right">Thao Tác</th>
+                          <th className="px-4 py-2.5">Học Sinh</th>
+                          <th className="px-4 py-2.5">Tên Hiển Thị</th>
+                          <th className="px-4 py-2.5">Ngày Gia Nhập</th>
+                          <th className="px-4 py-2.5 text-right">Thao Tác</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[var(--border)]">
                         {members.map((m) => (
-                          <tr key={m.user_id} className="hover:bg-[var(--bg-secondary)] transition-colors">
-                            <td className="px-4 py-3 font-semibold text-[var(--text-primary)] flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-full bg-[var(--accent)] flex items-center justify-center text-white text-xs font-black">
+                          <tr key={m.user_id} className="hover:bg-[var(--bg-primary)] transition-colors">
+                            <td className="px-4 py-2.5 font-medium text-[var(--text-primary)] flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full bg-[var(--bg-tertiary)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)] text-[10px] font-mono font-semibold">
                                 {(m.profile?.username || 'U').charAt(0).toUpperCase()}
                               </div>
-                              <span className="font-bold">{m.profile?.username || 'Học sinh'}</span>
+                              <span>{m.profile?.username || 'Học sinh'}</span>
                             </td>
-                            <td className="px-4 py-3 text-[var(--text-secondary)]">
-                              {m.profile?.full_name || '-'}
+                            <td className="px-4 py-2.5 text-[var(--text-secondary)]">
+                              {m.profile?.full_name || '—'}
                             </td>
-                            <td className="px-4 py-3 font-mono text-[var(--text-muted)]">
+                            <td className="px-4 py-2.5 font-mono text-[11px] text-[var(--text-muted)]">
                               {new Date(m.joined_at).toLocaleDateString('vi-VN')}
                             </td>
-                            <td className="px-4 py-3 text-right">
+                            <td className="px-4 py-2.5 text-right">
                               <button
                                 onClick={() => handleRemoveMember(m.user_id, m.profile?.username || 'học sinh')}
-                                className="p-1.5 rounded-lg text-danger hover:bg-danger/10 transition-colors cursor-pointer"
+                                className="p-1.5 rounded-md text-[var(--danger)] hover:bg-danger/10 transition-colors cursor-pointer"
                                 title="Xóa khỏi lớp"
                               >
                                 <MorphIcon icon={Trash2Data} size={14} />
@@ -461,32 +471,45 @@ export default function ClassroomDetailView({ classId, initialClassroom, notice,
             {/* TAB 3: GRADEBOOK & PROGRESS */}
             {activeSubTab === 'gradebook' && (
               <div className="space-y-4">
-                <button onClick={exportGradebook} disabled={detailLoading || !!error} className="px-3 py-2 border border-[var(--border)] rounded text-xs disabled:opacity-50">Xuất bảng điểm CSV</button>
-                <p className="text-xs text-[var(--text-secondary)]">Chỉ tính bài nộp trong lớp, sau khi được giao và trước hạn nộp.</p>
-                {classProblems.length === 0 || members.length === 0 ? (
-                  <div className="text-center py-12 border border-dashed border-[var(--border)] rounded-2xl bg-[var(--bg-secondary)] space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-xs font-semibold text-[var(--text-primary)]">Bảng Điểm & Ma Trận Tiến Độ</h3>
+                    <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
+                      Chỉ tính bài nộp của học sinh trong lớp sau khi được giao và trước hạn nộp.
+                    </p>
+                  </div>
+                  <button
+                    onClick={exportGradebook}
+                    disabled={detailLoading || !!error}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] rounded-md text-xs font-medium text-[var(--text-primary)] transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    <MorphIcon icon={DownloadData} size={13} /> Xuất bảng điểm CSV
+                  </button>
+                </div>
 
-                    <div className="text-xs font-bold text-[var(--text-primary)]">Chưa có dữ liệu tiến độ</div>
-                    <p className="text-[11px] text-[var(--text-muted)]">
-                      Lớp học cần có ít nhất 1 bài tập và 1 học sinh để xem ma trận điểm.
+                {classProblems.length === 0 || members.length === 0 ? (
+                  <div className="text-center py-10 border border-dashed border-[var(--border)] rounded-md bg-[var(--bg-secondary)] space-y-2">
+                    <div className="text-xs font-semibold text-[var(--text-primary)]">Chưa có dữ liệu tiến độ</div>
+                    <p className="text-[11px] text-[var(--text-secondary)]">
+                      Lớp học cần có ít nhất 1 bài tập và 1 học sinh để hiển thị ma trận điểm.
                     </p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto border border-[var(--border)] rounded-xl">
+                  <div className="overflow-x-auto border border-[var(--border)] rounded-md">
                     <table className="w-full text-left text-xs border-collapse">
-                      <thead className="bg-[var(--bg-secondary)] text-[var(--text-secondary)] font-bold text-[11px] border-b border-[var(--border)]">
+                      <thead className="bg-[var(--bg-primary)] text-[var(--text-secondary)] font-medium text-[11px] border-b border-[var(--border)]">
                         <tr>
-                          <th className="px-4 py-3 sticky left-0 bg-[var(--bg-secondary)] z-10 min-w-[160px]">
+                          <th className="px-4 py-2.5 sticky left-0 bg-[var(--bg-primary)] z-10 min-w-[160px]">
                             Học Sinh
                           </th>
                           {classProblems.map((cp) => (
-                            <th key={cp.problem_id} className="px-3 py-3 text-center min-w-[100px]">
-                              <div className="font-bold truncate max-w-[120px] mx-auto" title={cp.problem?.title}>
+                            <th key={cp.problem_id} className="px-3 py-2.5 text-center min-w-[100px]">
+                              <div className="truncate max-w-[120px] mx-auto" title={cp.problem?.title}>
                                 {cp.problem?.title || 'Bài tập'}
                               </div>
                             </th>
                           ))}
-                          <th className="px-4 py-3 text-center font-bold text-[var(--accent-text)] min-w-[90px]">
+                          <th className="px-4 py-2.5 text-center font-semibold text-[var(--accent-text)] min-w-[90px]">
                             Tổng AC
                           </th>
                         </tr>
@@ -495,9 +518,9 @@ export default function ClassroomDetailView({ classId, initialClassroom, notice,
                         {members.map((m) => {
                           let totalAc = 0;
                           return (
-                            <tr key={m.user_id} className="hover:bg-[var(--bg-secondary)] transition-colors">
-                              <td className="px-4 py-3 sticky left-0 bg-[var(--bg-primary)] hover:bg-[var(--bg-secondary)] z-10 font-semibold text-[var(--text-primary)] flex items-center gap-2 border-r border-[var(--border)]">
-                                <div className="w-6 h-6 rounded-full bg-[var(--accent)] flex items-center justify-center text-white text-[10px] font-black shrink-0">
+                            <tr key={m.user_id} className="hover:bg-[var(--bg-primary)] transition-colors">
+                              <td className="px-4 py-2.5 sticky left-0 bg-[var(--bg-secondary)] hover:bg-[var(--bg-primary)] z-10 font-medium text-[var(--text-primary)] flex items-center gap-2 border-r border-[var(--border)]">
+                                <div className="w-5 h-5 rounded-full bg-[var(--bg-tertiary)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)] text-[9px] font-mono shrink-0">
                                   {(m.profile?.username || 'U').charAt(0).toUpperCase()}
                                 </div>
                                 <span className="truncate">{m.profile?.username}</span>
@@ -508,16 +531,15 @@ export default function ClassroomDetailView({ classId, initialClassroom, notice,
                                 if (isAc) totalAc++;
 
                                 return (
-                                  <td key={cp.problem_id} className="px-3 py-2.5 text-center">
+                                  <td key={cp.problem_id} className="px-3 py-2 text-center">
                                     {prog ? (
                                       <span
-                                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono font-bold ${
+                                        className={`inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[11px] font-mono font-medium ${
                                           isAc
-                                            ? 'bg-accent/15 text-[var(--accent-text)] border border-accent/30'
-                                            : 'bg-danger/15 text-danger border border-danger/30'
+                                            ? 'bg-accent/10 text-[var(--accent-text)] border border-accent/25'
+                                            : 'bg-danger/10 text-[var(--danger)] border border-danger/25'
                                         }`}
                                       >
-
                                         {prog.score}đ
                                       </span>
                                     ) : (
@@ -526,7 +548,7 @@ export default function ClassroomDetailView({ classId, initialClassroom, notice,
                                   </td>
                                 );
                               })}
-                              <td className="px-4 py-3 text-center font-mono font-black text-[var(--accent-text)] border-l border-[var(--border)]">
+                              <td className="px-4 py-2.5 text-center font-mono font-semibold text-[var(--accent-text)] border-l border-[var(--border)]">
                                 {totalAc} / {classProblems.length}
                               </td>
                             </tr>
@@ -544,43 +566,49 @@ export default function ClassroomDetailView({ classId, initialClassroom, notice,
         {/* Modal: Thêm bài tập vào lớp */}
         {isAddProblemOpen && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in"
             onClick={() => { if (!isAddingProblem) setIsAddProblemOpen(false); }}
           >
             <div
               role="dialog" aria-modal="true" aria-labelledby="assignment-dialog-title"
-              className="w-full max-w-lg bg-[var(--bg-primary)] rounded-2xl border border-[var(--border)] p-6 space-y-4 shadow-2xl"
+              className="w-full max-w-lg bg-[var(--bg-secondary)] rounded-md border border-[var(--border)] p-5 space-y-4 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
-                <h3 id="assignment-dialog-title" className="text-sm font-semibold text-[var(--text-primary)]">Giao Bài Tập Cho Lớp Học</h3>
+                <div>
+                  <h3 id="assignment-dialog-title" className="text-sm font-semibold text-[var(--text-primary)]">Giao Bài Tập Cho Lớp Học</h3>
+                  <p className="text-xs text-[var(--text-secondary)] mt-0.5">Chọn bài tập từ ngân hàng và thiết lập thời hạn nộp bài.</p>
+                </div>
                 <button
                   onClick={() => { if (!isAddingProblem) setIsAddProblemOpen(false); }}
-                  className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
+                  className="p-1 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer"
                 >
                   <MorphIcon icon={XData} size={16} />
                 </button>
               </div>
 
-              {assignmentError && <p role="alert" className="text-xs text-[var(--danger)]">{assignmentError}</p>}
+              {assignmentError && <div role="alert" className="p-2.5 rounded-md bg-danger/10 border border-danger/20 text-xs text-[var(--danger)] font-medium">{assignmentError}</div>}
               {problemsLoading && <p role="status" className="text-xs text-[var(--text-muted)]">Đang tải bài tập...</p>}
               {!problemsLoading && !assignmentError && availableProblems.length === 0 && <p className="text-xs text-[var(--text-secondary)]">Ngân hàng chưa có bài tập. Hãy tạo bài tập trước khi giao cho lớp.</p>}
+              
               {/* Search problem */}
-              <div className="space-y-2">
-                <label htmlFor="class-problem-search" className="text-xs font-medium text-[var(--text-secondary)]">Chọn bài tập từ ngân hàng đề</label>
+              <div className="space-y-1.5">
+                <label htmlFor="class-problem-search" className="text-xs font-semibold text-[var(--text-secondary)]">Chọn bài tập từ ngân hàng đề</label>
                 <div className="relative">
-
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--text-muted)]">
+                    <MorphIcon icon={SearchData} size={13} />
+                  </div>
                   <input
                     type="text"
                     id="class-problem-search"
                     placeholder="Tìm theo tên bài hoặc slug..."
                     value={probSearch}
                     onChange={(e) => setProbSearch(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                    className="w-full pl-8 pr-3 py-1.5 rounded-md bg-[var(--bg-primary)] border border-[var(--border)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-colors"
                   />
                 </div>
 
-                <div className="max-h-48 overflow-y-auto border border-[var(--border)] rounded-xl divide-y divide-[var(--border)] bg-surface/50">
+                <div className="max-h-48 overflow-y-auto border border-[var(--border)] rounded-md divide-y divide-[var(--border)] bg-[var(--bg-primary)]">
                   {availableProblems
                     .filter(
                       (p) =>
@@ -600,20 +628,20 @@ export default function ClassroomDetailView({ classId, initialClassroom, notice,
                             alreadyInClass
                               ? 'opacity-40 cursor-not-allowed bg-[var(--bg-tertiary)]'
                               : selectedProblemId === p.id
-                              ? 'bg-accent/15 border-l-4 border-[var(--accent)] cursor-pointer'
+                              ? 'bg-accent/10 border-l-2 border-[var(--accent)] cursor-pointer'
                               : 'hover:bg-[var(--bg-secondary)] cursor-pointer'
                           }`}
                         >
                           <div>
-                            <div className="font-bold text-[var(--text-primary)]">{p.title}</div>
+                            <div className="font-medium text-[var(--text-primary)]">{p.title}</div>
                             <div className="text-[10px] font-mono text-[var(--text-muted)]">/{p.slug}</div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-[var(--bg-tertiary)] text-[var(--text-secondary)]">
+                            <span className="text-[10px] px-1.5 py-0.2 rounded font-mono bg-[var(--bg-tertiary)] border border-[var(--border)] text-[var(--text-secondary)]">
                               {p.difficulty}
                             </span>
                             {alreadyInClass && (
-                              <span className="text-[10px] text-[var(--text-muted)] font-bold">Đã có</span>
+                              <span className="text-[10px] text-[var(--text-muted)] font-mono">Đã có</span>
                             )}
                           </div>
                         </button>
@@ -623,8 +651,8 @@ export default function ClassroomDetailView({ classId, initialClassroom, notice,
               </div>
 
               {/* Deadline */}
-              <div className="space-y-1.5">
-                <label htmlFor="class-deadline" className="text-xs font-medium text-[var(--text-secondary)]">
+              <div className="space-y-1">
+                <label htmlFor="class-deadline" className="text-xs font-semibold text-[var(--text-secondary)]">
                   Hạn chót nộp bài (tùy chọn)
                 </label>
                 <input
@@ -633,15 +661,15 @@ export default function ClassroomDetailView({ classId, initialClassroom, notice,
                   disabled={isAddingProblem}
                   value={deadlineInput}
                   onChange={(e) => setDeadlineInput(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] font-mono"
+                  className="w-full px-3 py-1.5 rounded-md bg-[var(--bg-primary)] border border-[var(--border)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] font-mono transition-colors"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--border)]">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[var(--border)]">
                 <button
                   type="button"
                   onClick={() => { if (!isAddingProblem) setIsAddProblemOpen(false); }}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] cursor-pointer"
+                  className="px-3 py-1.5 rounded-md text-xs font-medium border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] transition-colors cursor-pointer"
                 >
                   Hủy
                 </button>
@@ -649,7 +677,7 @@ export default function ClassroomDetailView({ classId, initialClassroom, notice,
                   type="button"
                   disabled={!selectedProblemId || isAddingProblem || problemsLoading}
                   onClick={handleAddProblemSubmit}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white disabled:opacity-50 transition-colors cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-md text-xs font-medium bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white disabled:opacity-50 transition-colors cursor-pointer border border-[rgba(27,31,36,0.15)] shadow-xs"
                 >
                   {isAddingProblem ? 'Đang thêm...' : 'Xác Nhận Thêm'}
                 </button>

@@ -24,6 +24,21 @@ export default function Header({ onOpenSearch, onOpenAuth, user, onLogout, isAut
   }, [location.pathname]);
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable) {
+        return;
+      }
+      if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        onOpenSearch();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onOpenSearch]);
+
+  useEffect(() => {
     const close = () => {
       setIsProfileOpen(false);
       setIsRankMenuOpen(false);
@@ -33,13 +48,13 @@ export default function Header({ onOpenSearch, onOpenAuth, user, onLogout, isAut
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 bg-[var(--bg-secondary)] border-b border-[var(--border)] px-4 sm:px-6 lg:px-8 transition-colors">
+    <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md border-b border-[var(--border)] px-4 sm:px-6 lg:px-8 transition-colors">
       <div className="w-full h-14 flex items-center justify-between gap-4 max-w-[1600px] mx-auto">
         {/* Left: Brand Logo + Nav Bar */}
         <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto no-scrollbar md:overflow-visible">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group shrink-0">
-            <div className="w-7 h-7 rounded-md bg-[var(--text-primary)] text-[var(--bg-primary)] flex items-center justify-center font-bold transition-all shadow-xs">
+          <Link to="/" className="flex items-center gap-2.5 group shrink-0">
+            <div className="w-7 h-7 rounded-md bg-[var(--text-primary)] text-[var(--bg-primary)] flex items-center justify-center font-bold transition-transform group-hover:scale-105 shadow-xs">
               <MorphIcon icon={Code2Data} size={15} />
             </div>
             <span className="text-sm font-semibold tracking-tight text-[var(--text-primary)]">
@@ -69,6 +84,17 @@ export default function Header({ onOpenSearch, onOpenAuth, user, onLogout, isAut
               }`}
             >
               Bài Tập
+            </Link>
+
+            <Link
+              to="/learn"
+              className={`px-2.5 py-1.5 rounded-md transition-colors ${
+                location.pathname.startsWith('/learn')
+                  ? 'bg-[var(--bg-tertiary)] text-[var(--text-primary)] font-semibold'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] font-medium'
+              }`}
+            >
+              Lộ Trình
             </Link>
 
             <Link
@@ -158,15 +184,15 @@ export default function Header({ onOpenSearch, onOpenAuth, user, onLogout, isAut
           {/* GitHub-style Search Button */}
           <button
             onClick={onOpenSearch}
-            className="flex items-center justify-between w-40 sm:w-56 bg-[var(--bg-primary)] border border-[var(--border)] hover:border-[var(--text-muted)] text-[var(--text-muted)] hover:text-[var(--text-secondary)] px-2.5 py-1 rounded-md text-xs transition-colors cursor-pointer"
-            title="Tìm kiếm (⌘K)"
+            className="flex items-center justify-between w-40 sm:w-56 bg-[var(--bg-primary)] border border-[var(--border)] hover:border-[var(--text-muted)] text-[var(--text-muted)] hover:text-[var(--text-secondary)] px-2.5 py-1.5 rounded-md text-xs transition-colors cursor-pointer shadow-xs"
+            title="Tìm kiếm bài tập, kỳ thi... (Nhấn / hoặc ⌘K)"
           >
             <div className="flex items-center gap-1.5 truncate">
               <MorphIcon icon={SearchData} size={14} className="shrink-0" />
               <span className="truncate">Tìm kiếm...</span>
             </div>
             <kbd className="hidden sm:inline border border-[var(--border)] rounded px-1.5 py-0.2 text-[10px] font-mono bg-[var(--bg-tertiary)] text-[var(--text-muted)]">
-              ⌘K
+              /
             </kbd>
           </button>
 
@@ -214,7 +240,7 @@ export default function Header({ onOpenSearch, onOpenAuth, user, onLogout, isAut
                       <div className="text-[11px] text-[var(--text-muted)] font-mono">{user.rating} bài đã giải</div>
                     </div>
 
-                    {user.role === 'teacher' && (
+                    {(user.role === 'teacher' || user.role === 'admin') && (
                       <Link
                         to="/teacher"
                         className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] font-medium transition-colors"

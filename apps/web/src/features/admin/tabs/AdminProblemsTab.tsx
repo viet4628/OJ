@@ -1,6 +1,15 @@
 import React, { useEffect, useState, useRef, lazy, Suspense } from 'react';
 import MorphIcon from '../../../components/MorphIcon';
-import { Trash2 as Trash2Data, Plus as PlusData, X as XData, Eye as EyeData, ArrowLeft as ArrowLeftData, Check as CheckData, RefreshCw as RefreshCwData } from 'lucide';
+import {
+  Trash2 as Trash2Data,
+  Plus as PlusData,
+  X as XData,
+  Eye as EyeData,
+  ArrowLeft as ArrowLeftData,
+  Check as CheckData,
+  RefreshCw as RefreshCwData,
+  AlertCircle as AlertCircleData,
+} from 'lucide';
 import { supabase } from '../../../lib/supabase';
 import {
   getAllProblems,
@@ -545,7 +554,7 @@ export default function AdminProblemsTab({ mode, onModeChange, userId, isAdmin =
 
         {saveError && (
           <div className="p-3 rounded-md bg-danger/10 border border-danger/20 text-[var(--danger)] text-xs font-medium flex items-center gap-2">
-
+            <MorphIcon icon={AlertCircleData} size={15} className="shrink-0" />
             <span>{saveError}</span>
           </div>
         )}

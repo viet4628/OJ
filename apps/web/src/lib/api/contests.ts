@@ -128,13 +128,13 @@ export async function deleteContest(id: string): Promise<{ ok: boolean; error?: 
 export async function getContestProblemsAdmin(contestId: string): Promise<ContestProblemRow[]> {
   const { data, error } = await supabase
     .from('contest_problems')
-    .select('contest_id, problem_id, sort_order, score')
+    .select('contest_id, problem_id, sort_order, score, practice_visible')
     .eq('contest_id', contestId)
     .order('sort_order', { ascending: true });
   if (error) throw error;
   return (data || []) as unknown as ContestProblemRow[];
 }
-type ContestProblemSelection = string | { problem_id: string; score?: number };
+type ContestProblemSelection = string | { problem_id: string; score?: number; practice_visible?: boolean };
 
 export async function setContestProblems(
   contestId: string,
@@ -145,7 +145,8 @@ export async function setContestProblems(
   const rows = selections.map((selection, sort_order) => {
     const problem_id = typeof selection === 'string' ? selection : selection.problem_id;
     const score = typeof selection === 'string' ? 100 : selection.score ?? 100;
-    return { contest_id: contestId, problem_id, sort_order, score };
+    const practice_visible = typeof selection === 'string' ? true : selection.practice_visible ?? true;
+    return { contest_id: contestId, problem_id, sort_order, score, practice_visible };
   });
   // Write the new selection before removing obsolete rows, so a failed write
   // cannot erase the existing contest. Retrying is safe through the primary key.

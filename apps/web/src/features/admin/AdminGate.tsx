@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import MorphIcon from '../../components/MorphIcon';
-import { LogIn as LogInData, ArrowLeft as ArrowLeftData } from 'lucide';
+import {
+  LogIn as LogInData,
+  ArrowLeft as ArrowLeftData,
+  ShieldCheck as ShieldCheckData,
+} from 'lucide';
 import { supabase } from '../../lib/supabase';
 import Admin from './Admin';
 
@@ -64,10 +68,12 @@ export default function AdminGate() {
 
   return (
     <div className="flex items-center justify-center p-4 min-h-[70vh]">
-      <div className="w-full max-w-sm bg-[var(--bg-secondary)] border border-[var(--border)] rounded-md p-5 space-y-4 shadow-sm">
-        <div className="text-center space-y-1.5">
-
-          <h1 className="text-sm font-semibold text-[var(--text-primary)]">Quản Trị CodeJudge</h1>
+      <div className="w-full max-w-sm bg-[var(--bg-secondary)] border border-[var(--border)] rounded-md p-6 space-y-4 shadow-sm">
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-accent/10 border border-accent/25 text-[var(--accent-text)] mb-1">
+            <MorphIcon icon={ShieldCheckData} size={20} />
+          </div>
+          <h1 className="text-base font-semibold text-[var(--text-primary)]">Quản Trị CodeJudge</h1>
           <p className="text-xs text-[var(--text-secondary)]">
             Chỉ dành cho Quản trị viên. Đăng nhập để tiếp tục.
           </p>
@@ -111,14 +117,12 @@ export default function AdminGate() {
           >
             <MorphIcon icon={LogInData} size={14} /> {busy ? 'Đang Đăng Nhập...' : 'Đăng Nhập'}
           </button>
-
-
         </form>
 
         <div className="pt-2 text-center border-t border-[var(--border)]">
           <Link
             to="/"
-            className="inline-flex items-center gap-1 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
           >
             <MorphIcon icon={ArrowLeftData} size={13} /> Về Trang Chủ Học Sinh
           </Link>

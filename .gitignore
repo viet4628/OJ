@@ -4,7 +4,7 @@ node_modules/
 .pnp.js
 
 # External engine checkout (recreated by setup:engine)
-/engine/
+#/engine/
 
 # Build & Dist
 dist/
