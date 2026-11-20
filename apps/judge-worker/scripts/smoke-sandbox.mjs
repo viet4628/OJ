@@ -161,7 +161,7 @@ await inTempDir(async (dir) => {
     return;
   }
   record('java A+B -> ACCEPTED', r.status === 'ACCEPTED' && r.stdout.trim() === '42',
-    JSON.stringify(r).slice(0, 200));
+    r.status === 'COMPILE_ERROR' ? `COMPILE_ERROR: ${String(r.error).slice(-1500)}` : JSON.stringify(r).slice(0, 200));
 });
 
 // Empty input must close stdin, and limits must apply rather than just report RSS.

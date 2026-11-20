@@ -124,12 +124,14 @@ export class SandboxEngine {
         cwd: jobDir,
         timeout: COMPILE_TIMEOUT_MS,
         maxBuffer: 4 * 1024 * 1024,
-      }, (error, _stdout, stderr) => error ? reject(Object.assign(error, { stderr })) : resolve()));
+      }, (error, stdout, stderr) => error ? reject(Object.assign(error, { stdout, stderr })) : resolve()));
       return { success: true };
     } catch (err: any) {
+      // JVM in lỗi khởi động ra stdout, nên cần giữ cả stdout lẫn stderr.
+      const output = [err.stderr, err.stdout].filter((s) => s && String(s).trim()).join('\n');
       return {
         success: false,
-        error: String(err.stderr || err.stdout || err.message || 'Compilation Error').slice(0, 8000),
+        error: String(output || err.message || 'Compilation Error').slice(0, 8000),
       };
     }
   }
@@ -322,7 +324,9 @@ export class SandboxEngine {
       case 'rust':
         return `rustc -O ${q(sourcePath)} -o ${q(binaryPath)}`;
       case 'java':
-        return `javac -d ${q(binaryPath)} ${q(sourcePath)}`;
+        // javac chạy trên JVM: mặc định heap = 1/4 RAM máy và class space 1 GB,
+        // vượt `ulimit -v` 2 GB trên máy nhiều RAM -> JVM không khởi động được.
+        return `javac -J-Xmx512m -J-XX:CompressedClassSpaceSize=128m -J-XX:ReservedCodeCacheSize=64m -J-XX:+UseSerialGC -d ${q(binaryPath)} ${q(sourcePath)}`;
       case 'python':
         return '';
       default:
